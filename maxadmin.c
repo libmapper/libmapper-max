@@ -7,10 +7,10 @@
 
 #include "ext.h"							// standard Max include, always required
 #include "ext_obex.h"						// required for new style Max object
-#include "./src/operations.h"
-#include "./src/expression.h"
-#include "./src/mapper_internal.h"
-#include "./include/mapper/mapper.h"
+#include "src/operations.h"
+#include "src/expression.h"
+#include "src/mapper_internal.h"
+#include "include/mapper/mapper.h"
 #include <stdio.h>
 #include <math.h>
 #include "lo/lo.h"
