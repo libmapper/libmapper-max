@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define INTERVAL 1000
+#define INTERVAL 10
 
 ////////////////////////// object struct
 typedef struct _maxadmin 
@@ -30,11 +30,11 @@ typedef struct _maxadmin
     void *m_clock;          // pointer to clock object
     mapper_device device;
     mapper_signal sendsig;
+    mapper_signal recvsig;
     int ready;
 } t_maxadmin;
 
-int recvport = 9000;
-int sendport = 9000;
+int port = 9000;
 
 ///////////////////////// function prototypes
 //// standard set
@@ -45,6 +45,7 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_add_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void poll(t_maxadmin *x);
+void float_handler(mapper_signal sig, mapper_signal_value_t *v);
 
 //////////////////////// global class pointer variable
 void *maxadmin_class;
@@ -66,17 +67,25 @@ int main(void)
 	class_register(CLASS_BOX, c); /* CLASS_NOBOX */
 	maxadmin_class = c;
 
-	post("I am the maxadmin object");
+	post("I am a maxadmin object");
 	return 0;
 }
 
 void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s)
 {
 	if (m == ASSIST_INLET) { // inlet
-		sprintf(s, "I am inlet %ld", a);
+		sprintf(s, "OSC input");
 	} 
 	else {	// outlet
-		sprintf(s, "I am outlet %ld", a); 			
+        if (a == 0) {
+            sprintf(s, "Mapped OSC data");
+        }
+        else if (a == 1) {
+            sprintf(s, "Does nothing currently");
+        }
+        else {
+            sprintf(s, "Device information");
+        }
 	}
 }
 
@@ -111,26 +120,46 @@ void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 
 void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv)
 {
-	;
+	mdev_poll(x->device, 0);
+    if (x->device->num_mappings_out > 0) {
+        //find signal
+        //check if signal is mapped?
+        //update signal
+        //msig_update_scalar(x->device->outputs[0], (mval) ((i % 10) * 1.0f));
+    }
+}
+
+void float_handler(mapper_signal sig, mapper_signal_value_t *v)
+{
+    post("message received!");
+    t_maxadmin *x = sig->user_data;
+    
+    t_atom myList[2];
+    
+    atom_setsym(myList, (t_symbol *)sig->props.name);
+    atom_setfloat(myList + 1, (*v).f);
+    //outlet_list(x->m_outlet, 0L, 2, &myList);
+        
+    object_post((t_object *)x, "%s %f", sig->props.name, (*v).f);
 }
 
 /*! Creation of a local sender. */
 int setup_device(t_maxadmin *x)
 {
     //use dummy name for now
-    x->device = mdev_new("maxadmin", sendport);
+    x->device = mdev_new("maxadmin", port);
     if (!x->device)
         return 1;
     else
         post("Device created.\n");
     
     // create a dummy signal for now
-    x->sendsig = msig_float(1, "/outsig", 0, 0, 1, 0, 0, 0);
+    x->recvsig = msig_float(1, "/insig", 0, 0, 1, 0, float_handler, x);
     
-    mdev_register_output(x->device, x->sendsig);
+    mdev_register_input(x->device, x->recvsig);
     
-    post("Output signal /outsig registered.\n");
-    post("Number of outputs: %d\n", mdev_num_outputs(x->device));
+    post("Input signal /insig registered.\n");
+    post("Number of inputs: %d\n", mdev_num_inputs(x->device));
     
     return 0;
 }
@@ -144,7 +173,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     x = object_alloc(maxadmin_class);
 
     //intin(x,1);
-    x->m_outlet = outlet_new((t_object *)x,0);
+    x->m_outlet = listout((t_object *)x);
     x->m_outlet2 = outlet_new((t_object *)x,0);
     x->m_outlet3 = outlet_new((t_object *)x,0);
     object_post((t_object *)x, "a new %s object was instantiated: 0x%X", s->s_name, x);
@@ -177,6 +206,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 
 void poll(t_maxadmin *x)
 {
+    //post("polling!");
 	clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
     
     mdev_poll(x->device, 0);
@@ -184,6 +214,7 @@ void poll(t_maxadmin *x)
     if (!x->ready) {
         if (mdev_ready(x->device)) {
             mapper_db_dump();
+            //output device information: name, num i/o
             x->ready = 1;
         }
     }
