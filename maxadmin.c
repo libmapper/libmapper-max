@@ -28,11 +28,14 @@ typedef struct _maxadmin
     void *m_outlet2;
     void *m_outlet3;
     void *m_clock;          // pointer to clock object
+	char *basename;
     mapper_device device;
     mapper_signal sendsig;
     mapper_signal recvsig;
     int ready;
 } t_maxadmin;
+
+t_symbol *ps_list;
 
 int port = 9000;
 
@@ -45,7 +48,9 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_add_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void poll(t_maxadmin *x);
-void float_handler(mapper_signal sig, mapper_signal_value_t *v);
+void float_handler(mapper_signal msig, mapper_signal_value_t *v);
+void int_handler(mapper_signal msig, mapper_signal_value_t *v);
+void maxadmin_print_properties(t_maxadmin *x);
 
 //////////////////////// global class pointer variable
 void *maxadmin_class;
@@ -66,9 +71,19 @@ int main(void)
 	
 	class_register(CLASS_BOX, c); /* CLASS_NOBOX */
 	maxadmin_class = c;
-
-	post("I am a maxadmin object");
+	
+	ps_list = gensym("list");
+	
 	return 0;
+}
+
+void maxadmin_print_properties(t_maxadmin *x)
+{
+	if (x->device) {
+		//get device properties
+		//output them
+		//outlet_list(x->m_outlet3, ps_list, 2, myList);
+	}
 }
 
 void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s)
@@ -110,7 +125,14 @@ void maxadmin_free(t_maxadmin *x)
 
 void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
-	;
+	//message must include signal name and type?
+	// create a dummy signal for now
+    x->recvsig = msig_float(1, "/insig", 0, 0, 1, 0, float_handler, x);
+    
+    mdev_register_input(x->device, x->recvsig);
+    
+    post("Input signal /insig registered.\n");
+    post("Number of inputs: %d\n", mdev_num_inputs(x->device));
 }
 
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
@@ -129,37 +151,43 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv)
     }
 }
 
-void float_handler(mapper_signal sig, mapper_signal_value_t *v)
+void int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
-    post("message received!");
-    t_maxadmin *x = sig->user_data;
-    
+    t_maxadmin *x = msig->user_data;
+	char *path = strdup(msig->props.name);
+	
     t_atom myList[2];
-    
-    atom_setsym(myList, (t_symbol *)sig->props.name);
+    atom_setsym(myList, gensym(path));
+    atom_setlong(myList + 1, (*v).i32);
+    outlet_list(x->m_outlet, ps_list, 2, myList);
+}
+
+void float_handler(mapper_signal msig, mapper_signal_value_t *v)
+{
+    t_maxadmin *x = msig->user_data;
+	char *path = strdup(msig->props.name);
+	
+    t_atom myList[2];
+    atom_setsym(myList, gensym(path));
     atom_setfloat(myList + 1, (*v).f);
-    //outlet_list(x->m_outlet, 0L, 2, &myList);
-        
-    object_post((t_object *)x, "%s %f", sig->props.name, (*v).f);
+    outlet_list(x->m_outlet, ps_list, 2, myList);
 }
 
 /*! Creation of a local sender. */
 int setup_device(t_maxadmin *x)
 {
     //use dummy name for now
-    x->device = mdev_new("maxadmin", port);
+	if (x->basename) {
+		x->device = mdev_new(x->basename, port);
+	}
+	else {
+		x->device = mdev_new("maxadmin", port);
+	}
+
     if (!x->device)
         return 1;
     else
-        post("Device created.\n");
-    
-    // create a dummy signal for now
-    x->recvsig = msig_float(1, "/insig", 0, 0, 1, 0, float_handler, x);
-    
-    mdev_register_input(x->device, x->recvsig);
-    
-    post("Input signal /insig registered.\n");
-    post("Number of inputs: %d\n", mdev_num_inputs(x->device));
+        maxadmin_print_properties(x);
     
     return 0;
 }
@@ -176,18 +204,23 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     x->m_outlet = listout((t_object *)x);
     x->m_outlet2 = outlet_new((t_object *)x,0);
     x->m_outlet3 = outlet_new((t_object *)x,0);
-    object_post((t_object *)x, "a new %s object was instantiated: 0x%X", s->s_name, x);
-    object_post((t_object *)x, "it has %ld arguments", argc);
         
     for (i = 0; i < argc; i++) {
-        if ((argv + i)->a_type == A_LONG) {
-            object_post((t_object *)x, "arg %ld: long (%ld)", i, atom_getlong(argv+i));
-        } else if ((argv + i)->a_type == A_FLOAT) {
-            object_post((t_object *)x, "arg %ld: float (%f)", i, atom_getfloat(argv+i));
-        } else if ((argv + i)->a_type == A_SYM) {
-            object_post((t_object *)x, "arg %ld: symbol (%s)", i, atom_getsym(argv+i)->s_name);
-        } else {
-            object_error((t_object *)x, "forbidden argument");
+        if ((argv + i)->a_type == A_SYM) {
+			if(strcmp(atom_getsym(argv+i)->s_name, "@alias") == 0) {
+				if ((argv + i + 1)->a_type == A_SYM) {
+					x->basename = strdup(atom_getsym(argv+i+1)->s_name);
+					//object_post((t_object *)x, "got alias: %s", atom_getsym(argv+i+1)->s_name);
+					i++;
+				}
+			}
+			else if(strcmp(atom_getsym(argv+i)->s_name, "@def") == 0) {
+				if ((argv + i + 1)->a_type == A_SYM) {
+					//x->definition = strdup(atom_getsym(argv+i+1)->s_name);
+					object_post((t_object *)x, "got definition: %s", atom_getsym(argv+i+1)->s_name);
+					i++;
+				}
+			}
         }
     }
     
