@@ -221,7 +221,6 @@ void float_handler(mapper_signal msig, mapper_signal_value_t *v)
 /*! Creation of a local sender. */
 int setup_device(t_maxadmin *x)
 {
-    //use dummy name for now
 	if (x->basename) {
 		x->device = mdev_new(x->basename, port);
 	}
@@ -255,7 +254,6 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 			if(strcmp(atom_getsym(argv+i)->s_name, "@alias") == 0) {
 				if ((argv + i + 1)->a_type == A_SYM) {
 					x->basename = strdup(atom_getsym(argv+i+1)->s_name);
-					//object_post((t_object *)x, "got alias: %s", atom_getsym(argv+i+1)->s_name);
 					i++;
 				}
 			}

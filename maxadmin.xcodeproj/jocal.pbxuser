@@ -14,7 +14,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					766,
+					812,
 					20,
 					48,
 					43,
@@ -53,14 +53,13 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 304444506;
-			PBXWorkspaceStateSaveDate = 304444506;
+			PBXPerProjectTemplateStateSaveDate = 304462533;
+			PBXWorkspaceStateSaveDate = 304462533;
 		};
 		perUserProjectItems = {
 			708813CA1225797200FC9239 /* PBXTextBookmark */ = 708813CA1225797200FC9239 /* PBXTextBookmark */;
 			708813CB1225797200FC9239 /* PBXTextBookmark */ = 708813CB1225797200FC9239 /* PBXTextBookmark */;
 			708813CF12257C3A00FC9239 /* PBXTextBookmark */ = 708813CF12257C3A00FC9239 /* PBXTextBookmark */;
-			708813D012257C3A00FC9239 /* PBXTextBookmark */ = 708813D012257C3A00FC9239 /* PBXTextBookmark */;
 			708813EB122581AE00FC9239 /* PBXTextBookmark */ = 708813EB122581AE00FC9239 /* PBXTextBookmark */;
 			70AC30351224D264007405EA /* PBXTextBookmark */ = 70AC30351224D264007405EA /* PBXTextBookmark */;
 			70AC30361224D264007405EA /* PBXTextBookmark */ = 70AC30361224D264007405EA /* PBXTextBookmark */;
@@ -71,6 +70,7 @@
 			70DBCB8612231AE2003B0196 /* PBXTextBookmark */ = 70DBCB8612231AE2003B0196 /* PBXTextBookmark */;
 			70DBCB8712231AE2003B0196 /* PBXTextBookmark */ = 70DBCB8712231AE2003B0196 /* PBXTextBookmark */;
 			70DBCB8A12231AE2003B0196 /* PBXTextBookmark */ = 70DBCB8A12231AE2003B0196 /* PBXTextBookmark */;
+			70F556841225C7A000D4634A /* PBXTextBookmark */ = 70F556841225C7A000D4634A /* PBXTextBookmark */;
 		};
 		sourceControlManager = 70EC55C31222DCC000EE4B15 /* Source Control */;
 		userBuildSettings = {
@@ -105,16 +105,6 @@
 		rType = 0;
 		vrLen = 1554;
 		vrLoc = 0;
-	};
-	708813D012257C3A00FC9239 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 70EC55C61222DF2700EE4B15 /* maxadmin.c */;
-		name = "maxadmin.c: 297";
-		rLen = 0;
-		rLoc = 8453;
-		rType = 0;
-		vrLen = 1386;
-		vrLoc = 6824;
 	};
 	708813EB122581AE00FC9239 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -316,10 +306,20 @@
 	};
 	70EC55C61222DF2700EE4B15 /* maxadmin.c */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {944, 4342}}";
-			sepNavSelRange = "{3502, 0}";
-			sepNavVisRange = "{6126, 1233}";
+			sepNavIntBoundsRect = "{{0, 0}, {990, 4368}}";
+			sepNavSelRange = "{6115, 0}";
+			sepNavVisRange = "{3056, 2336}";
 		};
+	};
+	70F556841225C7A000D4634A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 70EC55C61222DF2700EE4B15 /* maxadmin.c */;
+		name = "maxadmin.c: 236";
+		rLen = 0;
+		rLoc = 6115;
+		rType = 0;
+		vrLen = 2336;
+		vrLoc = 3056;
 	};
 	8D57630D048677EA00EA77CD /* maxadmin */ = {
 		activeExec = 0;
