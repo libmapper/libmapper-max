@@ -125,14 +125,39 @@ void maxadmin_free(t_maxadmin *x)
 
 void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
-	//message must include signal name and type?
-	// create a dummy signal for now
-    x->recvsig = msig_float(1, "/insig", 0, 0, 1, 0, float_handler, x);
-    
-    mdev_register_input(x->device, x->recvsig);
-    
-    post("Input signal /insig registered.\n");
-    post("Number of inputs: %d\n", mdev_num_inputs(x->device));
+	t_atom myList[2];
+	
+	if (argc < 4)
+		return;
+	
+	if (argv->a_type == A_SYM) {
+		if (atom_getsym(argv)->s_name == "input") {
+			//extract signal name
+			if ((argv + 1)->a_type != A_SYM)
+				return;
+			//register all signals as floats for now
+			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, 0, 0, 1, 0, float_handler, x);
+			mdev_register_input(x->device, x->recvsig);
+			
+			//output numInputs
+			atom_setsym(myList, gensym("numInputs"));
+			atom_setlong(myList + 1, mdev_num_inputs(x->device));
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+		} 
+		else if (atom_getsym(argv)->s_name == "output") {
+			//extract signal name
+			if ((argv + 1)->a_type != A_SYM)
+				return;
+			//register all signals as floats for now
+			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, 0, 0, 1, 0, 0, 0);
+			mdev_register_output(x->device, x->sendsig);
+			
+			//output numOutputs
+			atom_setsym(myList, gensym("numOutputs"));
+			atom_setlong(myList + 1, mdev_num_outputs(x->device));
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+		}
+	}
 }
 
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
@@ -142,13 +167,33 @@ void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 
 void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv)
 {
-	mdev_poll(x->device, 0);
-    if (x->device->num_mappings_out > 0) {
-        //find signal
-        //check if signal is mapped?
-        //update signal
-        //msig_update_scalar(x->device->outputs[0], (mval) ((i % 10) * 1.0f));
-    }
+	//mdev_poll(x->device, 0);
+	
+	mapper_signal *msig;
+	char *path;
+	float payload;
+	
+	//get OSC path
+	if (argv->a_type == A_SYM) {
+		path = strdup(atom_getsym(argv)->s_name);
+		
+		//find signal
+		if (mdev_find_output_by_name(x->device, path, msig) == -1)
+			return;
+		
+		//get payload
+		if (argv->a_type == A_FLOAT) {
+			payload = atom_getfloat(argv);
+		} else if (argv->a_type == A_LONG) {
+			payload = (float) atom_getlong(argv);
+		} else {
+			return;
+		}
+
+	}
+	
+	//update signal
+	msig_update_scalar(*msig, (mval) payload);
 }
 
 void int_handler(mapper_signal msig, mapper_signal_value_t *v)
@@ -239,16 +284,50 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 
 void poll(t_maxadmin *x)
 {
-    //post("polling!");
-	clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
+	t_atom myList[2];
+	char *message;
     
     mdev_poll(x->device, 0);
     
     if (!x->ready) {
         if (mdev_ready(x->device)) {
             mapper_db_dump();
-            //output device information: name, num i/o
+			
+			//output name
+			message = strdup(mapper_admin_name(x->device->admin));
+			atom_setsym(myList, gensym("name"));
+			atom_setsym(myList + 1, gensym(message));
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+			
+			//output IP
+			message = strdup(inet_ntoa(x->device->admin->interface_ip));
+			atom_setsym(myList, gensym("IP"));
+			atom_setsym(myList + 1, gensym(message));
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+			
+			//output port
+			atom_setsym(myList, gensym("port"));
+			atom_setlong(myList + 1, x->device->admin->port.value);
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+			
+			//output numInputs
+			atom_setsym(myList, gensym("numInputs"));
+			atom_setlong(myList + 1, mdev_num_inputs(x->device));
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+			
+			//output numOutputs
+			atom_setsym(myList, gensym("numOutputs"));
+			atom_setlong(myList + 1, mdev_num_outputs(x->device));
+			outlet_list(x->m_outlet, ps_list, 2, myList);
+			
+			//output canAlias
+			//atom_setsym(myList, gensym("canAlias"));
+			//atom_setlong(myList + 1, x->device->can_alias);
+			//outlet_list(x->m_outlet, ps_list, 2, myList);
+			
             x->ready = 1;
         }
     }
+	
+	clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
 }
