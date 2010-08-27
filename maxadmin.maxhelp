@@ -1,9 +1,9 @@
 {
 	"patcher" : 	{
 		"fileversion" : 1,
-		"rect" : [ 25.0, 69.0, 805.0, 354.0 ],
+		"rect" : [ 25.0, 69.0, 945.0, 431.0 ],
 		"bglocked" : 0,
-		"defrect" : [ 25.0, 69.0, 805.0, 354.0 ],
+		"defrect" : [ 25.0, 69.0, 945.0, 431.0 ],
 		"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -22,13 +22,56 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"id" : "obj-16",
+					"id" : "obj-25",
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 210.0, 235.0, 18.0 ],
-					"text" : "add output /out1 @type f @min 0 @max 1"
+					"patching_rect" : [ 315.0, 135.0, 50.0, 32.0 ],
+					"text" : "/out1 0.1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-23",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 315.0, 60.0, 54.0, 18.0 ],
+					"text" : "/out1 $1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-21",
+					"maxclass" : "flonum",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "float", "bang" ],
+					"patching_rect" : [ 315.0, 30.0, 50.0, 20.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-16",
+					"linecount" : 2,
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 30.0, 210.0, 234.0, 32.0 ],
+					"text" : "add input /in1 @type f @min 0 @max 1, add output /out1 @type f @min 0 @max 1"
 				}
 
 			}
@@ -94,7 +137,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 585.0, 150.0, 186.0, 18.0 ],
+					"patching_rect" : [ 645.0, 165.0, 186.0, 18.0 ],
 					"text" : "/connect /foo.1/outsig /foo.2/insig"
 				}
 
@@ -108,7 +151,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 585.0, 105.0, 99.0, 18.0 ],
+					"patching_rect" : [ 645.0, 120.0, 99.0, 18.0 ],
 					"text" : "/link /foo.1 /foo.2"
 				}
 
@@ -122,8 +165,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 330.0, 45.0, 126.0, 18.0 ],
-					"text" : "/foo.1/namespace/get"
+					"patching_rect" : [ 390.0, 60.0, 99.0, 18.0 ],
+					"text" : "/link /foo.1 /foo.2"
 				}
 
 			}
@@ -136,8 +179,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 375.0, 150.0, 190.0, 18.0 ],
-					"text" : "/connect /tester.1/out1 /foo.1/insig"
+					"patching_rect" : [ 525.0, 60.0, 169.0, 18.0 ],
+					"text" : "/connect /foo.1/out1 /foo.2/in1"
 				}
 
 			}
@@ -150,8 +193,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 375.0, 105.0, 111.0, 18.0 ],
-					"text" : "/link /tester.1 /foo.1"
+					"patching_rect" : [ 405.0, 90.0, 112.0, 18.0 ],
+					"text" : "/unlink /foo.1 /foo.2"
 				}
 
 			}
@@ -164,7 +207,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 330.0, 195.0, 36.0, 18.0 ],
+					"patching_rect" : [ 390.0, 210.0, 36.0, 18.0 ],
 					"text" : "/who"
 				}
 
@@ -177,7 +220,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 330.0, 225.0, 137.0, 20.0 ],
+					"patching_rect" : [ 390.0, 240.0, 137.0, 20.0 ],
 					"text" : "udpsend localhost 7778"
 				}
 
@@ -191,7 +234,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 330.0, 255.0, 99.0, 20.0 ],
+					"patching_rect" : [ 390.0, 270.0, 99.0, 20.0 ],
 					"text" : "udpreceive 7777"
 				}
 
@@ -204,7 +247,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 330.0, 285.0, 70.0, 20.0 ],
+					"patching_rect" : [ 390.0, 300.0, 70.0, 20.0 ],
 					"text" : "print admin"
 				}
 
@@ -214,12 +257,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-6",
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 30.0, 220.0, 18.0 ],
-					"text" : "add input /in1 @type f @min 0 @max 1"
+					"patching_rect" : [ 30.0, 90.0, 234.0, 32.0 ],
+					"text" : "add input /in1 @type f @min 0 @max 1, add output /out1 @type f @min 0 @max 1"
 				}
 
 			}
@@ -231,7 +275,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 240.0, 120.0, 43.0, 20.0 ],
+					"patching_rect" : [ 240.0, 180.0, 43.0, 20.0 ],
 					"text" : "print c"
 				}
 
@@ -244,7 +288,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 135.0, 120.0, 44.0, 20.0 ],
+					"patching_rect" : [ 135.0, 180.0, 44.0, 20.0 ],
 					"text" : "print b"
 				}
 
@@ -257,7 +301,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 120.0, 44.0, 20.0 ],
+					"patching_rect" : [ 30.0, 180.0, 44.0, 20.0 ],
 					"text" : "print a"
 				}
 
@@ -271,7 +315,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "list" ],
-					"patching_rect" : [ 30.0, 75.0, 229.0, 20.0 ],
+					"patching_rect" : [ 30.0, 135.0, 229.0, 20.0 ],
 					"text" : "maxadmin @alias foo @def tester.xml"
 				}
 
@@ -391,6 +435,42 @@
 					"hidden" : 0,
 					"midpoints" : [  ],
 					"source" : [ "obj-20", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-23", 0 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-21", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-23", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-20", 0 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-23", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-25", 1 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-23", 0 ]
 				}
 
 			}

@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define INTERVAL 10
+#define INTERVAL 1000
 
 ////////////////////////// object struct
 typedef struct _maxadmin 
@@ -33,6 +33,7 @@ typedef struct _maxadmin
     mapper_signal sendsig;
     mapper_signal recvsig;
     int ready;
+    int ready2;
 } t_maxadmin;
 
 t_symbol *ps_list;
@@ -44,7 +45,7 @@ int port = 9000;
 void *maxadmin_new(t_symbol *s, long argc, t_atom *argv);
 void maxadmin_free(t_maxadmin *x);
 void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s);
-void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
+void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv);
 void maxadmin_add_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void poll(t_maxadmin *x);
@@ -131,10 +132,11 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 		return;
 	
 	if (argv->a_type == A_SYM) {
-		if (atom_getsym(argv)->s_name == "input") {
+		if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
 			//extract signal name
-			if ((argv + 1)->a_type != A_SYM)
+			if ((argv + 1)->a_type != A_SYM) {
 				return;
+            }
 			//register all signals as floats for now
 			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, 0, 0, 1, 0, float_handler, x);
 			mdev_register_input(x->device, x->recvsig);
@@ -144,10 +146,11 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 			atom_setlong(myList + 1, mdev_num_inputs(x->device));
 			outlet_list(x->m_outlet, ps_list, 2, myList);
 		} 
-		else if (atom_getsym(argv)->s_name == "output") {
+		else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
 			//extract signal name
-			if ((argv + 1)->a_type != A_SYM)
+			if ((argv + 1)->a_type != A_SYM) {
 				return;
+            }
 			//register all signals as floats for now
 			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, 0, 0, 1, 0, 0, 0);
 			mdev_register_output(x->device, x->sendsig);
@@ -165,35 +168,35 @@ void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 	;
 }
 
-void maxadmin_anything(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv)
+void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
 	//mdev_poll(x->device, 0);
 	
 	mapper_signal *msig;
-	char *path;
 	float payload;
 	
-	//get OSC path
-	if (argv->a_type == A_SYM) {
-		path = strdup(atom_getsym(argv)->s_name);
-		
-		//find signal
-		if (mdev_find_output_by_name(x->device, path, msig) == -1)
-			return;
-		
-		//get payload
-		if (argv->a_type == A_FLOAT) {
-			payload = atom_getfloat(argv);
-		} else if (argv->a_type == A_LONG) {
-			payload = (float) atom_getlong(argv);
-		} else {
-			return;
-		}
-
-	}
+    //find signal
+    if (mdev_find_output_by_name(x->device, s->s_name, msig) == -1)
+        return;
+    
+    //get payload
+    if (argv->a_type == A_FLOAT) {
+        payload = atom_getfloat(argv);
+    } else if (argv->a_type == A_LONG) {
+        payload = (float) atom_getlong(argv);
+    } else {
+        return;
+    }
+    
+    post("got: %s %f", s->s_name, payload);
 	
 	//update signal
-	msig_update_scalar(*msig, (mval) payload);
+    if (x->ready2) {
+        msig_update_scalar(*msig, (mval) payload);
+        x->ready2 = 0;
+    }
+    
+    mdev_poll(x->device, 0);
 }
 
 void int_handler(mapper_signal msig, mapper_signal_value_t *v)
@@ -272,6 +275,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     }
     
     x->ready = 0;
+    x->ready2 = 0;
     
     x->m_clock = clock_new(x, (method)poll);	// Create the timing clock
     
@@ -318,14 +322,9 @@ void poll(t_maxadmin *x)
 			atom_setlong(myList + 1, mdev_num_outputs(x->device));
 			outlet_list(x->m_outlet, ps_list, 2, myList);
 			
-			//output canAlias
-			//atom_setsym(myList, gensym("canAlias"));
-			//atom_setlong(myList + 1, x->device->can_alias);
-			//outlet_list(x->m_outlet, ps_list, 2, myList);
-			
             x->ready = 1;
         }
     }
-	
+	x->ready2 = 1;
 	clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
 }
