@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define INTERVAL 1000
+#define INTERVAL 1
 
 ////////////////////////// object struct
 typedef struct _maxadmin 
@@ -196,7 +196,7 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
         x->ready2 = 0;
     }
     
-    mdev_poll(x->device, 0);
+    //mdev_poll(x->device, 0);
 }
 
 void int_handler(mapper_signal msig, mapper_signal_value_t *v)
@@ -248,9 +248,9 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     x = object_alloc(maxadmin_class);
 
     //intin(x,1);
-    x->m_outlet = listout((t_object *)x);
-    x->m_outlet2 = outlet_new((t_object *)x,0);
     x->m_outlet3 = outlet_new((t_object *)x,0);
+    x->m_outlet2 = outlet_new((t_object *)x,0);
+    x->m_outlet = listout((t_object *)x);
         
     for (i = 0; i < argc; i++) {
         if ((argv + i)->a_type == A_SYM) {
@@ -299,28 +299,28 @@ void poll(t_maxadmin *x)
 			message = strdup(mapper_admin_name(x->device->admin));
 			atom_setsym(myList, gensym("name"));
 			atom_setsym(myList + 1, gensym(message));
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 			
 			//output IP
 			message = strdup(inet_ntoa(x->device->admin->interface_ip));
 			atom_setsym(myList, gensym("IP"));
 			atom_setsym(myList + 1, gensym(message));
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 			
 			//output port
 			atom_setsym(myList, gensym("port"));
 			atom_setlong(myList + 1, x->device->admin->port.value);
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 			
 			//output numInputs
 			atom_setsym(myList, gensym("numInputs"));
 			atom_setlong(myList + 1, mdev_num_inputs(x->device));
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 			
 			//output numOutputs
 			atom_setsym(myList, gensym("numOutputs"));
 			atom_setlong(myList + 1, mdev_num_outputs(x->device));
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 			
             x->ready = 1;
         }
