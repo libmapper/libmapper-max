@@ -33,7 +33,6 @@ typedef struct _maxadmin
     mapper_signal sendsig;
     mapper_signal recvsig;
     int ready;
-    int ready2;
 } t_maxadmin;
 
 t_symbol *ps_list;
@@ -144,7 +143,7 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 			//output numInputs
 			atom_setsym(myList, gensym("numInputs"));
 			atom_setlong(myList + 1, mdev_num_inputs(x->device));
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 		} 
 		else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
 			//extract signal name
@@ -158,7 +157,7 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 			//output numOutputs
 			atom_setsym(myList, gensym("numOutputs"));
 			atom_setlong(myList + 1, mdev_num_outputs(x->device));
-			outlet_list(x->m_outlet, ps_list, 2, myList);
+			outlet_list(x->m_outlet3, ps_list, 2, myList);
 		}
 	}
 }
@@ -172,29 +171,18 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
 	//mdev_poll(x->device, 0);
 	
-	mapper_signal *msig;
-	float payload;
-	
-    //find signal
-    if (mdev_find_output_by_name(x->device, s->s_name, msig) == -1)
-        return;
-    
-    //get payload
-    if (argv->a_type == A_FLOAT) {
-        payload = atom_getfloat(argv);
-    } else if (argv->a_type == A_LONG) {
-        payload = (float) atom_getlong(argv);
-    } else {
-        return;
-    }
+	//get payload
+    float payload = atom_getfloat(argv);
     
     post("got: %s %f", s->s_name, payload);
 	
+    //find signal
+    mapper_signal *msig;
+    if (mdev_find_output_by_name(x->device, s->s_name, msig) == -1)
+        return;
+	
 	//update signal
-    if (x->ready2) {
-        msig_update_scalar(*msig, (mval) payload);
-        x->ready2 = 0;
-    }
+    //msig_update_scalar(*msig, (mval) payload);
     
     //mdev_poll(x->device, 0);
 }
@@ -275,7 +263,6 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     }
     
     x->ready = 0;
-    x->ready2 = 0;
     
     x->m_clock = clock_new(x, (method)poll);	// Create the timing clock
     
@@ -325,6 +312,5 @@ void poll(t_maxadmin *x)
             x->ready = 1;
         }
     }
-	x->ready2 = 1;
 	clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
 }
