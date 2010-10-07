@@ -213,10 +213,10 @@ void float_handler(mapper_signal msig, mapper_signal_value_t *v)
 int setup_device(t_maxadmin *x)
 {
 	if (x->basename) {
-		x->device = mdev_new(x->basename, port);
+		x->device = mdev_new(x->basename, port, 0);
 	}
 	else {
-		x->device = mdev_new("maxadmin", port);
+		x->device = mdev_new("maxadmin", port, 0);
 	}
 
     if (!x->device)
