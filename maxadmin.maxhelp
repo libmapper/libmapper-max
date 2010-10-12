@@ -1,9 +1,9 @@
 {
 	"patcher" : 	{
 		"fileversion" : 1,
-		"rect" : [ 371.0, 44.0, 923.0, 649.0 ],
+		"rect" : [ 371.0, 44.0, 740.0, 613.0 ],
 		"bglocked" : 0,
-		"defrect" : [ 371.0, 44.0, 923.0, 649.0 ],
+		"defrect" : [ 371.0, 44.0, 740.0, 613.0 ],
 		"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -22,12 +22,55 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 585.0, 165.0, 101.0, 18.0 ],
+					"presentation_rect" : [ 587.0, 165.0, 0.0, 0.0 ],
+					"text" : "/foo.1/signals/get"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-48",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 525.0, 30.0, 169.0, 18.0 ],
+					"text" : "/connect /fee.1/out1 /fee.2/in1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-44",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 390.0, 30.0, 99.0, 18.0 ],
+					"text" : "/link /fee.1 /fee.2"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
 					"id" : "obj-47",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 750.0, 60.0, 128.0, 18.0 ],
+					"patching_rect" : [ 585.0, 135.0, 128.0, 18.0 ],
 					"text" : "/foo.1/connections/get"
 				}
 
@@ -186,8 +229,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 210.0, 234.0, 32.0 ],
-					"text" : "add input /in1 @type f @min 0 @max 1, add output /out1 @type f @min 0 @max 1"
+					"patching_rect" : [ 30.0, 210.0, 297.0, 32.0 ],
+					"text" : "add input /in1 @type f @units na @min 0 @max 1, add output /out1 @type f @units na @min 0 @max 1"
 				}
 
 			}
@@ -240,7 +283,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "list", "", "" ],
 					"patching_rect" : [ 30.0, 255.0, 229.0, 20.0 ],
-					"text" : "maxadmin @alias foo @def tester.xml"
+					"text" : "maxadmin @alias foo @def tester.json"
 				}
 
 			}
@@ -350,8 +393,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 60.0, 234.0, 32.0 ],
-					"text" : "add input /in1 @type f @min 0 @max 1, add output /out1 @type f @min 0 @max 1"
+					"patching_rect" : [ 30.0, 60.0, 297.0, 32.0 ],
+					"text" : "add input /in1 @type f @units na @min 0 @max 1, add output /out1 @type f @units na @min 0 @max 1"
 				}
 
 			}
@@ -404,7 +447,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "list", "", "" ],
 					"patching_rect" : [ 30.0, 105.0, 229.0, 20.0 ],
-					"text" : "maxadmin @alias foo @def tester.xml"
+					"text" : "maxadmin @alias foo"
 				}
 
 			}
@@ -442,6 +485,15 @@
 					"hidden" : 0,
 					"midpoints" : [  ],
 					"source" : [ "obj-1", 2 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-9", 0 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-10", 0 ]
 				}
 
 			}
@@ -591,6 +643,15 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-9", 0 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-44", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-7", 1 ],
 					"hidden" : 0,
 					"midpoints" : [  ],
@@ -613,6 +674,15 @@
 					"hidden" : 0,
 					"midpoints" : [  ],
 					"source" : [ "obj-47", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-9", 0 ],
+					"hidden" : 0,
+					"midpoints" : [  ],
+					"source" : [ "obj-48", 0 ]
 				}
 
 			}

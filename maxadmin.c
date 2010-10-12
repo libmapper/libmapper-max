@@ -7,6 +7,8 @@
 
 #include "ext.h"							// standard Max include, always required
 #include "ext_obex.h"						// required for new style Max object
+#include "ext_dictionary.h"
+#include "jpatcher_api.h"
 #include "src/mapper_internal.h"
 #include "include/mapper/mapper.h"
 #include <stdio.h>
@@ -17,6 +19,8 @@
 #include <arpa/inet.h>
 
 #define INTERVAL 1
+#define MAX_PATH_CHARS 2048
+#define MAX_FILENAME_CHARS 512
 
 ////////////////////////// object struct
 typedef struct _maxadmin 
@@ -27,6 +31,7 @@ typedef struct _maxadmin
     void *m_outlet3;
     void *m_clock;          // pointer to clock object
 	char *basename;
+    char *definition;
     mapper_device device;
     mapper_signal sendsig;
     mapper_signal recvsig;
@@ -38,7 +43,6 @@ t_symbol *ps_list;
 int port = 9000;
 
 ///////////////////////// function prototypes
-//// standard set
 void *maxadmin_new(t_symbol *s, long argc, t_atom *argv);
 void maxadmin_free(t_maxadmin *x);
 void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s);
@@ -48,7 +52,9 @@ void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *arg
 void poll(t_maxadmin *x);
 void float_handler(mapper_signal msig, mapper_signal_value_t *v);
 void int_handler(mapper_signal msig, mapper_signal_value_t *v);
+//void list_handler(mapper_signal msig, mapper_signal_value_t *v);
 void maxadmin_print_properties(t_maxadmin *x);
+void maxadmin_read_definition(t_maxadmin *x);
 
 //////////////////////// global class pointer variable
 void *maxadmin_class;
@@ -94,7 +100,7 @@ void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s)
             sprintf(s, "Mapped OSC data");
         }
         else if (a == 1) {
-            sprintf(s, "Does nothing currently");
+            sprintf(s, "State queries");
         }
         else {
             sprintf(s, "Device information");
@@ -124,18 +130,55 @@ void maxadmin_free(t_maxadmin *x)
 void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
 	t_atom myList[2];
-	
-	if (argc < 4)
+    //need to read attribs: type, units, min/minimum, max/maximum
+    //char *type;
+    char *units = 0;
+    float minimum = 0;
+    float maximum = 1;
+    long i;
+    
+    if (argc < 4)
 		return;
+    
+    for (i = 0; i < argc; i++) {
+        if ((argv + i)->a_type == A_SYM) {
+			if(strcmp(atom_getsym(argv+i)->s_name, "@units") == 0) {
+				if ((argv + i + 1)->a_type == A_SYM) {
+					units = strdup(atom_getsym(argv+i+1)->s_name);
+					i++;
+				}
+			}
+			else if((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
+				if ((argv + i + 1)->a_type == A_FLOAT) {
+					minimum = atom_getfloat(argv + i + 1);
+					i++;
+				}
+                else if ((argv + i + 1)->a_type == A_LONG) {
+					minimum = (float)atom_getlong(argv + i + 1);
+					i++;
+				}
+			}
+            else if((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
+				if ((argv + i + 1)->a_type == A_FLOAT) {
+					maximum = atom_getfloat(argv + i + 1);
+					i++;
+				}
+                else if ((argv + i + 1)->a_type == A_LONG) {
+					maximum = (float)atom_getlong(argv + i + 1);
+					i++;
+				}
+			}
+        }
+    }
 	
 	if (argv->a_type == A_SYM) {
+        if ((argv + 1)->a_type != A_SYM) {
+            return;
+        }
 		if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
-			//extract signal name
-			if ((argv + 1)->a_type != A_SYM) {
-				return;
-            }
+			
 			//register all signals as floats for now
-			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, 0, 0, 1, 0, float_handler, x);
+			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, minimum, maximum, 0, float_handler, x);
 			mdev_register_input(x->device, x->recvsig);
 			
 			//output numInputs
@@ -144,12 +187,8 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 			outlet_list(x->m_outlet3, ps_list, 2, myList);
 		} 
 		else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
-			//extract signal name
-			if ((argv + 1)->a_type != A_SYM) {
-				return;
-            }
 			//register all signals as floats for now
-			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, 0, 0, 1, 0, 0, 0);
+			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, minimum, maximum, 0, 0, 0);
 			mdev_register_output(x->device, x->sendsig);
 			
 			//output numOutputs
@@ -167,19 +206,20 @@ void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 
 void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
-	if (argc) {        
-        //get payload
-        float payload = atom_getfloat(argv);
-        
-        //post("got: %s %f", s->s_name, payload);
-        
+	if (argc) {
         //find signal
         mapper_signal msig;
         if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1)
             return;
         
-        //update signal
-        msig_update_scalar(msig, (mval) payload);
+        //check if message payload is correct type
+        if (argv->a_type == A_FLOAT) {  //&& msig->props.type == 'f') {
+            //get payload
+            float payload = atom_getfloat(argv);
+            
+            //update signal
+            msig_update_scalar(msig, (mval) payload);
+        }
     }
 }
 
@@ -204,6 +244,10 @@ void float_handler(mapper_signal msig, mapper_signal_value_t *v)
     atom_setfloat(myList + 1, (*v).f);
     outlet_list(x->m_outlet, ps_list, 2, myList);
 }
+
+//void list_handler(mapper_signal msig, mapper_signal_value_t *v)
+//{
+//}
 
 /*! Creation of a local sender. */
 int setup_device(t_maxadmin *x)
@@ -244,10 +288,9 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 					i++;
 				}
 			}
-			else if(strcmp(atom_getsym(argv+i)->s_name, "@def") == 0) {
+			else if ((strcmp(atom_getsym(argv+i)->s_name, "@def") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@definition") == 0)) {
 				if ((argv + i + 1)->a_type == A_SYM) {
-					//x->definition = strdup(atom_getsym(argv+i+1)->s_name);
-					object_post((t_object *)x, "got definition: %s", atom_getsym(argv+i+1)->s_name);
+					x->definition = strdup(atom_getsym(argv+i+1)->s_name);
 					i++;
 				}
 			}
@@ -264,7 +307,39 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     
     clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
     
+    if (x->definition) {
+        maxadmin_read_definition(x);
+    }
+    
 	return (x);
+}
+
+void maxadmin_read_definition (t_maxadmin *x)
+{
+    t_dictionary *d = dictionary_new();
+    
+    //t_max_err dictionary_read (char ∗ filename, short path, t_dictionary ∗∗ d)
+    post("got definition: %s", x->definition);
+    short path;
+    long filetype = 'JSON', outtype;
+    
+    //add ".json" to end of string if missing (or pick new filetype!)
+    
+    if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
+        post("located file");
+        if (dictionary_read(x->definition, path, &d) == 0) {
+            dictionary_dump(d, 1, 0);
+        }
+        else {
+            post("Could not parse file %s", x->definition);
+        }
+    }
+    else {
+        post("Could not locate file %s", x->definition);
+    }
+    
+    object_free(d);
+
 }
 
 void poll(t_maxadmin *x)
