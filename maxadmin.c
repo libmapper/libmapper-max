@@ -7,8 +7,6 @@
 
 #include "ext.h"							// standard Max include, always required
 #include "ext_obex.h"						// required for new style Max object
-#include "src/operations.h"
-#include "src/expression.h"
 #include "src/mapper_internal.h"
 #include "include/mapper/mapper.h"
 #include <stdio.h>
@@ -169,22 +167,20 @@ void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 
 void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 {
-	//mdev_poll(x->device, 0);
-	
-	//get payload
-    float payload = atom_getfloat(argv);
-    
-    post("got: %s %f", s->s_name, payload);
-	
-    //find signal
-    mapper_signal *msig;
-    if (mdev_find_output_by_name(x->device, s->s_name, msig) == -1)
-        return;
-	
-	//update signal
-    //msig_update_scalar(*msig, (mval) payload);
-    
-    //mdev_poll(x->device, 0);
+	if (argc) {        
+        //get payload
+        float payload = atom_getfloat(argv);
+        
+        //post("got: %s %f", s->s_name, payload);
+        
+        //find signal
+        mapper_signal msig;
+        if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1)
+            return;
+        
+        //update signal
+        msig_update_scalar(msig, (mval) payload);
+    }
 }
 
 void int_handler(mapper_signal msig, mapper_signal_value_t *v)
