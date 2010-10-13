@@ -30,8 +30,9 @@ typedef struct _maxadmin
     void *m_outlet2;
     void *m_outlet3;
     void *m_clock;          // pointer to clock object
-	char *basename;
+	char *name;
     char *definition;
+    t_dictionary *d;
     mapper_device device;
     mapper_signal sendsig;
     mapper_signal recvsig;
@@ -55,6 +56,7 @@ void int_handler(mapper_signal msig, mapper_signal_value_t *v);
 //void list_handler(mapper_signal msig, mapper_signal_value_t *v);
 void maxadmin_print_properties(t_maxadmin *x);
 void maxadmin_read_definition(t_maxadmin *x);
+void maxadmin_register_signals(t_maxadmin *x);
 
 //////////////////////// global class pointer variable
 void *maxadmin_class;
@@ -113,6 +115,8 @@ void maxadmin_free(t_maxadmin *x)
     clock_unset(x->m_clock);	// Remove clock routine from the scheduler
 	clock_free(x->m_clock);		// Frees memeory used by clock
     
+    object_free(x->d);          // Frees memory used by dictionary
+    
     if (x->device) {
         if (x->device->routers) {
             post("Removing router.. ");
@@ -139,6 +143,8 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
     
     if (argc < 4)
 		return;
+    
+    //add to signals dictionary (needs to be UNIQUE)
     
     for (i = 0; i < argc; i++) {
         if ((argv + i)->a_type == A_SYM) {
@@ -252,12 +258,9 @@ void float_handler(mapper_signal msig, mapper_signal_value_t *v)
 /*! Creation of a local sender. */
 int setup_device(t_maxadmin *x)
 {
-	if (x->basename) {
-		x->device = mdev_new(x->basename, port, 0);
-	}
-	else {
-		x->device = mdev_new("maxadmin", port, 0);
-	}
+    post("using name: %s", x->name);
+    
+    x->device = mdev_new(x->name, port, 0);
 
     if (!x->device)
         return 1;
@@ -272,6 +275,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 {
 	t_maxadmin *x;
     long i;
+    char *alias;
     
     x = object_alloc(maxadmin_class);
 
@@ -279,36 +283,40 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     x->m_outlet3 = outlet_new((t_object *)x,0);
     x->m_outlet2 = outlet_new((t_object *)x,0);
     x->m_outlet = listout((t_object *)x);
+    
+    x->name = strdup("Max5");
         
     for (i = 0; i < argc; i++) {
         if ((argv + i)->a_type == A_SYM) {
 			if(strcmp(atom_getsym(argv+i)->s_name, "@alias") == 0) {
 				if ((argv + i + 1)->a_type == A_SYM) {
-					x->basename = strdup(atom_getsym(argv+i+1)->s_name);
+					alias = strdup(atom_getsym(argv+i+1)->s_name);
 					i++;
 				}
 			}
 			else if ((strcmp(atom_getsym(argv+i)->s_name, "@def") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@definition") == 0)) {
 				if ((argv + i + 1)->a_type == A_SYM) {
 					x->definition = strdup(atom_getsym(argv+i+1)->s_name);
+                    maxadmin_read_definition(x);
 					i++;
 				}
 			}
         }
     }
     
+    if (alias) {
+        free(x->name);
+        x->name = alias;
+    }
+    
     if (setup_device(x)) {
         post("Error initializing device.\n");
     }
-    
-    x->ready = 0;
-    
-    x->m_clock = clock_new(x, (method)poll);	// Create the timing clock
-    
-    clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
-    
-    if (x->definition) {
-        maxadmin_read_definition(x);
+    else {
+        x->ready = 0;
+        x->m_clock = clock_new(x, (method)poll);	// Create the timing clock
+        clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
+        maxadmin_register_signals(x);
     }
     
 	return (x);
@@ -316,7 +324,14 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 
 void maxadmin_read_definition (t_maxadmin *x)
 {
-    t_dictionary *d = dictionary_new();
+    if (x->d) {
+        object_free(x->d);
+    }
+    x->d = dictionary_new();
+    t_object *info;
+    t_symbol *sym_device = gensym("device");
+    t_symbol *sym_name = gensym("name");
+    const char * my_name;
     
     //t_max_err dictionary_read (char ∗ filename, short path, t_dictionary ∗∗ d)
     post("got definition: %s", x->definition);
@@ -327,8 +342,18 @@ void maxadmin_read_definition (t_maxadmin *x)
     
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
         post("located file");
-        if (dictionary_read(x->definition, path, &d) == 0) {
-            dictionary_dump(d, 1, 0);
+        if (dictionary_read(x->definition, path, &(x->d)) == 0) {
+            //dictionary_dump(x->d, 1, 0);
+            //check that first key is "device"
+            if (dictionary_entryisdictionary(x->d, sym_device)) {
+                //recover name from dictionary
+                dictionary_getdictionary(x->d, sym_device, &info);
+                dictionary_getstring((t_dictionary *)info, sym_name, &my_name);
+                if (my_name) {
+                    free(x->name);
+                    x->name = strdup(my_name);
+                }
+            }
         }
         else {
             post("Could not parse file %s", x->definition);
@@ -337,9 +362,10 @@ void maxadmin_read_definition (t_maxadmin *x)
     else {
         post("Could not locate file %s", x->definition);
     }
-    
-    object_free(d);
+}
 
+void maxadmin_register_signals(t_maxadmin *x) {
+    post("registering signals!");
 }
 
 void poll(t_maxadmin *x)
