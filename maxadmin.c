@@ -343,7 +343,7 @@ void maxadmin_read_definition (t_maxadmin *x)
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
         post("located file");
         if (dictionary_read(x->definition, path, &(x->d)) == 0) {
-            //dictionary_dump(x->d, 1, 0);
+            dictionary_dump(x->d, 1, 0);
             //check that first key is "device"
             if (dictionary_entryisdictionary(x->d, sym_device)) {
                 //recover name from dictionary
@@ -366,6 +366,44 @@ void maxadmin_read_definition (t_maxadmin *x)
 
 void maxadmin_register_signals(t_maxadmin *x) {
     post("registering signals!");
+    t_atom *argv, *signals, *temp;
+    long argc, num_signals, i;
+    t_object *device, *inputs, *outputs;
+    t_symbol *sym_device = gensym("device");
+    t_symbol *sym_inputs = gensym("inputs");
+    t_symbol *sym_outputs = gensym("outputs");
+    t_symbol *sym_name = gensym("name");
+    t_symbol *sym_unit = gensym("unit");
+    t_symbol *sym_min = gensym("min");
+    t_symbol *sym_minimum = gensym("minimum");
+    t_symbol *sym_max = gensym("max");
+    t_symbol *sym_maximum = gensym("maximum");
+    
+    // Get pointer to device dictionary
+    if (dictionary_getdictionary(x->d, sym_device, &device) == 0) {
+        // Get pointer to inputs atom array
+        if (dictionary_getatomarray((t_dictionary *)device, sym_inputs, &inputs) == 0) {
+            atomarray_getatoms((t_atomarray *)inputs, &num_signals, &signals);
+            // iterate through array
+            for (i=0; i<num_signals; i++) {
+                if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_name, temp)) {
+                    // add "input", "@name", and name to argv
+                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_unit, temp);
+                    // add "@unit" and unit to argv
+                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_min, temp);
+                    // add "@min" and min to argv
+                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp);
+                    // add "@min" and min to argv
+                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_max, temp);
+                    // add "@max" and max to argv
+                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp);
+                    // add "@max" and max to argv
+                }
+            }
+        }
+        // Get pointer to outputs dictionary
+    }
+    //maxadmin_add_signal(x, name, argc, argv)
 }
 
 void poll(t_maxadmin *x)
