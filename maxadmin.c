@@ -306,9 +306,9 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     if (alias) {
         free(x->name);
         x->name = alias;
-        if (*x->name == '/')
-            *x->name++;
     }
+    if (*x->name == '/')
+        *x->name++;
     
     if (setup_device(x)) {
         post("Error initializing device.\n");
@@ -328,11 +328,10 @@ void maxadmin_read_definition (t_maxadmin *x)
     if (x->d) {
         object_free(x->d);
     }
-    x->d = dictionary_new();
     t_object *info;
     t_symbol *sym_device = gensym("device");
     t_symbol *sym_name = gensym("name");
-    const char * my_name;
+    const char *my_name;
     
     //t_max_err dictionary_read (char ∗ filename, short path, t_dictionary ∗∗ d)
     post("got definition: %s", x->definition);
@@ -344,7 +343,6 @@ void maxadmin_read_definition (t_maxadmin *x)
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
         post("located file");
         if (dictionary_read(x->definition, path, &(x->d)) == 0) {
-            //dictionary_dump(x->d, 1, 0);
             //check that first key is "device"
             if (dictionary_entryisdictionary(x->d, sym_device)) {
                 //recover name from dictionary
@@ -367,68 +365,82 @@ void maxadmin_read_definition (t_maxadmin *x)
 
 void maxadmin_register_signals(t_maxadmin *x) {
     post("registering signals!");
-    t_atom *argv, *signals, *temp;
-    long argc, num_signals, i;
-    t_object *device, *inputs, *outputs, *temp2;
+    t_atom *signals;
+    long num_signals, i;
+    t_object *device, *inputs, *outputs, *temp;
     t_symbol *sym_device = gensym("device");
     t_symbol *sym_inputs = gensym("inputs");
     t_symbol *sym_outputs = gensym("outputs");
     t_symbol *sym_name = gensym("name");
     t_symbol *sym_units = gensym("units");
-    t_symbol *sym_min = gensym("min");
     t_symbol *sym_minimum = gensym("minimum");
-    t_symbol *sym_max = gensym("max");
     t_symbol *sym_maximum = gensym("maximum");
-        
-    // Get pointer to device dictionary
-    if (dictionary_getdictionary(x->d, sym_device, &device) == 0) {
-        // Get pointer to inputs atom array
-        if (dictionary_getatomarray((t_dictionary *)device, sym_inputs, &inputs) == 0) {
-            atomarray_getatoms((t_atomarray *)inputs, &num_signals, &signals);
-            // iterate through array of input signals
-            for (i=0; i<num_signals; i++) {
-                // each signal is a dictionary, need to recover atoms by key
-                post("atom type %i is %d", i, atom_gettype(&signals[i]));
-                temp2 = atom_getobj(&signals[i]);
-                //dictionary_getatom((t_dictionary *)temp2, sym_name, temp);
-                if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_name, temp)) {
-                    if (atom_gettype(temp) == A_SYM) {
-                        post("name atom type is symbol\n");
-                        strdup(atom_getsym(temp)->s_name);
+    
+    const char *sig_name, *sig_units;
+    double sig_min_float = 0;
+    long sig_min_long = 0;
+    double sig_max_float = 1;
+    long sig_max_long = 1;
+    
+    if (x->d) {
+        // Get pointer to dictionary "device"
+        if (dictionary_getdictionary(x->d, sym_device, &device) == MAX_ERR_NONE) {
+            // Get pointer to atom array "inputs"
+            if (dictionary_getatomarray((t_dictionary *)device, sym_inputs, &inputs) == MAX_ERR_NONE) {
+                atomarray_getatoms((t_atomarray *)inputs, &num_signals, &signals);
+                // iterate through array of atoms
+                for (i=0; i<num_signals; i++) {
+                    // initialize variables
+                    if (sig_units) {
+                        free(&sig_units);
+                    }
+                    sig_min_float = 0;
+                    sig_min_long = 0;
+                    sig_max_float = 1;
+                    sig_max_long = 1;
+                    // each atom object points to a dictionary, need to recover atoms by key
+                    temp = atom_getobj(&(signals[i]));
+                    if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
+                        dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_float) == MAX_ERR_NONE) {}
+                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
+                            sig_min_float = (double)sig_min_long;
+                        }
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_float) == MAX_ERR_NONE) {}
+                        else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
+                            sig_max_float = (double)sig_max_long;
+                        }
+                        //register all signals as floats for now
+                        x->recvsig = msig_float(1, sig_name, sig_units, sig_min_float, sig_max_float, 0, float_handler, x);
+                        mdev_register_input(x->device, x->recvsig);
                     }
                 }
-                if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_units, temp)) {
-                    if (atom_gettype(temp) == A_SYM) {
-                        post("units atom type is symbol\n");
-                        strdup(atom_getsym(temp)->s_name);
+            }
+            // Get pointer to atom array "outputs"
+            if (dictionary_getatomarray((t_dictionary *)device, sym_outputs, &outputs) == MAX_ERR_NONE) {
+                atomarray_getatoms((t_atomarray *)outputs, &num_signals, &signals);
+                // iterate through array of atoms
+                for (i=0; i<num_signals; i++) {
+                    // each atom object points to a dictionary, need to recover atoms by key
+                    temp = atom_getobj(&(signals[i]));
+                    if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
+                        dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_float) == MAX_ERR_NONE) {}
+                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
+                            sig_min_float = (double)sig_min_long;
+                        }
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_float) == MAX_ERR_NONE) {}
+                        else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
+                            sig_max_float = (double)sig_max_long;
+                        }
+                        //register all signals as floats for now
+                        x->recvsig = msig_float(1, sig_name, sig_units, sig_min_float, sig_max_float, 0, float_handler, x);
+                        mdev_register_output(x->device, x->recvsig);
                     }
                 }
-                if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp)) {
-                    if (atom_gettype(temp) == A_FLOAT) {
-                        post("min atom type is float\n");
-                    }
-                    else if (atom_gettype(temp) == A_LONG) {
-                        post("min atom type is long\n");
-                    }
-                }
-                
-                    // add "input", "@name", and name to argv
-                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_unit, temp);
-                    // add "@unit" and unit to argv
-                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_min, temp);
-                    // add "@min" and min to argv
-                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp);
-                    // add "@min" and min to argv
-                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_max, temp);
-                    // add "@max" and max to argv
-                    //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp);
-                    // add "@max" and max to argv
-                //}
             }
         }
-        // Get pointer to outputs atom array
     }
-    //maxadmin_add_signal(x, name, argc, argv)
 }
 
 void poll(t_maxadmin *x)
