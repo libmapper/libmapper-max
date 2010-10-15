@@ -52,7 +52,7 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void poll(t_maxadmin *x);
 void float_handler(mapper_signal msig, mapper_signal_value_t *v);
-void int_handler(mapper_signal msig, mapper_signal_value_t *v);
+//void int_handler(mapper_signal msig, mapper_signal_value_t *v);
 //void list_handler(mapper_signal msig, mapper_signal_value_t *v);
 void maxadmin_print_properties(t_maxadmin *x);
 void maxadmin_read_definition(t_maxadmin *x);
@@ -229,7 +229,7 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
     }
 }
 
-void int_handler(mapper_signal msig, mapper_signal_value_t *v)
+/*void int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_maxadmin *x = msig->user_data;
 	char *path = strdup(msig->props.name);
@@ -238,7 +238,7 @@ void int_handler(mapper_signal msig, mapper_signal_value_t *v)
     atom_setsym(myList, gensym(path));
     atom_setlong(myList + 1, (*v).i32);
     outlet_list(x->m_outlet, ps_list, 2, myList);
-}
+}*/
 
 void float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
@@ -269,7 +269,6 @@ int setup_device(t_maxadmin *x)
     
     return 0;
 }
-
 
 void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 {
@@ -307,6 +306,8 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     if (alias) {
         free(x->name);
         x->name = alias;
+        if (*x->name == '/')
+            *x->name++;
     }
     
     if (setup_device(x)) {
@@ -343,7 +344,7 @@ void maxadmin_read_definition (t_maxadmin *x)
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
         post("located file");
         if (dictionary_read(x->definition, path, &(x->d)) == 0) {
-            dictionary_dump(x->d, 1, 0);
+            //dictionary_dump(x->d, 1, 0);
             //check that first key is "device"
             if (dictionary_entryisdictionary(x->d, sym_device)) {
                 //recover name from dictionary
@@ -368,25 +369,49 @@ void maxadmin_register_signals(t_maxadmin *x) {
     post("registering signals!");
     t_atom *argv, *signals, *temp;
     long argc, num_signals, i;
-    t_object *device, *inputs, *outputs;
+    t_object *device, *inputs, *outputs, *temp2;
     t_symbol *sym_device = gensym("device");
     t_symbol *sym_inputs = gensym("inputs");
     t_symbol *sym_outputs = gensym("outputs");
     t_symbol *sym_name = gensym("name");
-    t_symbol *sym_unit = gensym("unit");
+    t_symbol *sym_units = gensym("units");
     t_symbol *sym_min = gensym("min");
     t_symbol *sym_minimum = gensym("minimum");
     t_symbol *sym_max = gensym("max");
     t_symbol *sym_maximum = gensym("maximum");
-    
+        
     // Get pointer to device dictionary
     if (dictionary_getdictionary(x->d, sym_device, &device) == 0) {
         // Get pointer to inputs atom array
         if (dictionary_getatomarray((t_dictionary *)device, sym_inputs, &inputs) == 0) {
             atomarray_getatoms((t_atomarray *)inputs, &num_signals, &signals);
-            // iterate through array
+            // iterate through array of input signals
             for (i=0; i<num_signals; i++) {
+                // each signal is a dictionary, need to recover atoms by key
+                post("atom type %i is %d", i, atom_gettype(&signals[i]));
+                temp2 = atom_getobj(&signals[i]);
+                //dictionary_getatom((t_dictionary *)temp2, sym_name, temp);
                 if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_name, temp)) {
+                    if (atom_gettype(temp) == A_SYM) {
+                        post("name atom type is symbol\n");
+                        strdup(atom_getsym(temp)->s_name);
+                    }
+                }
+                if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_units, temp)) {
+                    if (atom_gettype(temp) == A_SYM) {
+                        post("units atom type is symbol\n");
+                        strdup(atom_getsym(temp)->s_name);
+                    }
+                }
+                if (dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp)) {
+                    if (atom_gettype(temp) == A_FLOAT) {
+                        post("min atom type is float\n");
+                    }
+                    else if (atom_gettype(temp) == A_LONG) {
+                        post("min atom type is long\n");
+                    }
+                }
+                
                     // add "input", "@name", and name to argv
                     //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_unit, temp);
                     // add "@unit" and unit to argv
@@ -398,10 +423,10 @@ void maxadmin_register_signals(t_maxadmin *x) {
                     // add "@max" and max to argv
                     //dictionary_getatom((t_dictionary *)atom_getobj(&signals[i]), sym_minimum, temp);
                     // add "@max" and max to argv
-                }
+                //}
             }
         }
-        // Get pointer to outputs dictionary
+        // Get pointer to outputs atom array
     }
     //maxadmin_add_signal(x, name, argc, argv)
 }
@@ -415,7 +440,7 @@ void poll(t_maxadmin *x)
     
     if (!x->ready) {
         if (mdev_ready(x->device)) {
-            mapper_db_dump();
+            //mapper_db_dump(db);
 			
 			//output name
 			message = strdup(mapper_admin_name(x->device->admin));
