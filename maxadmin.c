@@ -184,7 +184,7 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 		if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
 			
 			//register all signals as floats for now
-			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, minimum, maximum, 0, float_handler, x);
+			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, &minimum, &maximum, 0, float_handler, x);
 			mdev_register_input(x->device, x->recvsig);
 			
 			//output numInputs
@@ -194,7 +194,7 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 		} 
 		else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
 			//register all signals as floats for now
-			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, minimum, maximum, 0, 0, 0);
+			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, &minimum, &maximum, 0, 0, 0);
 			mdev_register_output(x->device, x->sendsig);
 			
 			//output numOutputs
