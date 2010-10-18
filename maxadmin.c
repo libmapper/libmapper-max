@@ -52,7 +52,7 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
 void poll(t_maxadmin *x);
 void float_handler(mapper_signal msig, mapper_signal_value_t *v);
-//void int_handler(mapper_signal msig, mapper_signal_value_t *v);
+void int_handler(mapper_signal msig, mapper_signal_value_t *v);
 //void list_handler(mapper_signal msig, mapper_signal_value_t *v);
 void maxadmin_print_properties(t_maxadmin *x);
 void maxadmin_read_definition(t_maxadmin *x);
@@ -136,55 +136,69 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 	t_atom myList[2];
     //need to read attribs: type, units, min/minimum, max/maximum
     //char *type;
-    char *units = 0;
-    float minimum = 0;
-    float maximum = 1;
+    char *sig_name, *sig_units, *sig_type;
+    int sig_min_int = 0;
+    float sig_min_float = 0;
+    int sig_max_int = 1;
+    float sig_max_float = 1;
     long i;
     
     if (argc < 4)
 		return;
     
-    //add to signals dictionary (needs to be UNIQUE)
-    
-    for (i = 0; i < argc; i++) {
-        if ((argv + i)->a_type == A_SYM) {
-			if(strcmp(atom_getsym(argv+i)->s_name, "@units") == 0) {
-				if ((argv + i + 1)->a_type == A_SYM) {
-					units = strdup(atom_getsym(argv+i+1)->s_name);
-					i++;
-				}
-			}
-			else if((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
-				if ((argv + i + 1)->a_type == A_FLOAT) {
-					minimum = atom_getfloat(argv + i + 1);
-					i++;
-				}
-                else if ((argv + i + 1)->a_type == A_LONG) {
-					minimum = (float)atom_getlong(argv + i + 1);
-					i++;
-				}
-			}
-            else if((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
-				if ((argv + i + 1)->a_type == A_FLOAT) {
-					maximum = atom_getfloat(argv + i + 1);
-					i++;
-				}
-                else if ((argv + i + 1)->a_type == A_LONG) {
-					maximum = (float)atom_getlong(argv + i + 1);
-					i++;
-				}
-			}
-        }
-    }
-	
-	if (argv->a_type == A_SYM) {
-        if ((argv + 1)->a_type != A_SYM) {
-            return;
+    //add to signals dictionary? (needs to be UNIQUE)
+    if ((argv->a_type == A_SYM) && ((argv+1)->a_type == A_SYM)) {
+        //get signal name
+        sig_name = strdup(atom_getsym(argv+1)->s_name);
+        
+        //parse signal properties
+        for (i = 2; i < argc; i++) {
+            if ((argv + i)->a_type == A_SYM) {
+                if(strcmp(atom_getsym(argv+i)->s_name, "@units") == 0) {
+                    if ((argv + i + 1)->a_type == A_SYM) {
+                        sig_units = strdup(atom_getsym(argv+i+1)->s_name);
+                        i++;
+                    }
+                }
+                else if(strcmp(atom_getsym(argv+i)->s_name, "@type") == 0) {
+                    if ((argv + i + 1)->a_type == A_SYM) {
+                        sig_type = strdup(atom_getsym(argv+i+1)->s_name);
+                        i++;
+                    }
+                }
+                else if((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
+                    if ((argv + i + 1)->a_type == A_FLOAT) {
+                        sig_min_float = atom_getfloat(argv + i + 1);
+                        sig_min_int = (int)sig_min_float;
+                        i++;
+                    }
+                    else if ((argv + i + 1)->a_type == A_LONG) {
+                        sig_min_int = (int)atom_getlong(argv + i + 1);
+                        sig_min_float = (float)sig_min_int;
+                        i++;
+                    }
+                }
+                else if((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
+                    if ((argv + i + 1)->a_type == A_FLOAT) {
+                        sig_max_float = atom_getfloat(argv + i + 1);
+                        sig_max_int = (int)sig_max_float;
+                        i++;
+                    }
+                    else if ((argv + i + 1)->a_type == A_LONG) {
+                        sig_max_int = (int)atom_getlong(argv + i + 1);
+                        sig_max_float = (float)sig_max_int;
+                        i++;
+                    }
+                }
+            }
         }
 		if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
-			
-			//register all signals as floats for now
-			x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, &minimum, &maximum, 0, float_handler, x);
+			if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
+                x->recvsig = msig_int(1, atom_getsym(argv + 1)->s_name, sig_units, &sig_min_int, &sig_max_int, 0, int_handler, x);
+            }
+			else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
+                x->recvsig = msig_float(1, atom_getsym(argv + 1)->s_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
+            }
 			mdev_register_input(x->device, x->recvsig);
 			
 			//output numInputs
@@ -193,8 +207,12 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 			outlet_list(x->m_outlet3, ps_list, 2, myList);
 		} 
 		else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
-			//register all signals as floats for now
-			x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, units, &minimum, &maximum, 0, 0, 0);
+			if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
+                x->recvsig = msig_int(1, atom_getsym(argv + 1)->s_name, sig_units, &sig_min_int, &sig_max_int, 0, 0, 0);
+            }
+            else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
+                x->sendsig = msig_float(1, atom_getsym(argv + 1)->s_name, sig_units, &sig_min_float, &sig_max_float, 0, 0, 0);
+            }
 			mdev_register_output(x->device, x->sendsig);
 			
 			//output numOutputs
@@ -229,7 +247,7 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
     }
 }
 
-/*void int_handler(mapper_signal msig, mapper_signal_value_t *v)
+void int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_maxadmin *x = msig->user_data;
 	char *path = strdup(msig->props.name);
@@ -238,7 +256,7 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
     atom_setsym(myList, gensym(path));
     atom_setlong(myList + 1, (*v).i32);
     outlet_list(x->m_outlet, ps_list, 2, myList);
-}*/
+}
 
 void float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
@@ -372,17 +390,20 @@ void maxadmin_register_signals(t_maxadmin *x) {
     t_symbol *sym_inputs = gensym("inputs");
     t_symbol *sym_outputs = gensym("outputs");
     t_symbol *sym_name = gensym("name");
+    t_symbol *sym_type = gensym("type");
     t_symbol *sym_units = gensym("units");
     t_symbol *sym_minimum = gensym("minimum");
     t_symbol *sym_maximum = gensym("maximum");
     
-    const char *sig_name, *sig_units;
+    const char *sig_name, *sig_units, *sig_type;
     double sig_min_double = 0;
     float sig_min_float = 0;
     long sig_min_long = 0;
+    int sig_min_int = 0;
     double sig_max_double = 1;
     float sig_max_float = 1;
     long sig_max_long = 1;
+    int sig_max_int = 1;
     
     if (x->d) {
         // Get pointer to dictionary "device"
@@ -396,29 +417,47 @@ void maxadmin_register_signals(t_maxadmin *x) {
                     if (sig_units) {
                         free(&sig_units);
                     }
+                    if (sig_type) {
+                        free(&sig_type);
+                    }
                     sig_min_float = 0;
                     sig_min_long = 0;
+                    sig_min_int = 0;
                     sig_max_float = 1;
                     sig_max_long = 1;
+                    sig_max_int = 1;
                     // each atom object points to a dictionary, need to recover atoms by key
                     temp = atom_getobj(&(signals[i]));
                     if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
                         dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
+                        dictionary_getstring((t_dictionary *)temp, sym_type, &sig_type);
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
+                            sig_min_int = (int)sig_min_double;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
+                            sig_min_int = (int)sig_min_long;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
+                            sig_max_int = (int)sig_max_double;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
+                            sig_min_int = (int)sig_max_long;
                         }
-                        //register all signals as floats for now
-                        x->recvsig = msig_float(1, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
-                        mdev_register_input(x->device, x->recvsig);
+                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
+                            x->recvsig = msig_int(1, sig_name, sig_units, &sig_min_int, &sig_max_int, 0, int_handler, x);
+                            mdev_register_input(x->device, x->recvsig);
+                        }
+                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
+                            x->recvsig = msig_float(1, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
+                            mdev_register_input(x->device, x->recvsig);
+                        }
+                        else {
+                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                        }
                     }
                 }
             }
@@ -427,25 +466,51 @@ void maxadmin_register_signals(t_maxadmin *x) {
                 atomarray_getatoms((t_atomarray *)outputs, &num_signals, &signals);
                 // iterate through array of atoms
                 for (i=0; i<num_signals; i++) {
+                    // initialize variables
+                    if (sig_units) {
+                        free(&sig_units);
+                    }
+                    if (sig_type) {
+                        free(&sig_type);
+                    }
+                    sig_min_float = 0;
+                    sig_min_long = 0;
+                    sig_min_int = 0;
+                    sig_max_float = 1;
+                    sig_max_long = 1;
+                    sig_max_int = 1;
                     // each atom object points to a dictionary, need to recover atoms by key
                     temp = atom_getobj(&(signals[i]));
                     if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
                         dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
+                        dictionary_getstring((t_dictionary *)temp, sym_type, &sig_type);
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
+                            sig_min_int = (int)sig_min_double;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
+                            sig_min_int = (int)sig_min_long;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
+                            sig_max_int = (int)sig_max_double;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
+                            sig_max_int = (int)sig_max_long;
                         }
-                        //register all signals as floats for now
-                        x->recvsig = msig_float(1, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
-                        mdev_register_output(x->device, x->recvsig);
+                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
+                            x->recvsig = msig_int(1, sig_name, sig_units, &sig_min_int, &sig_max_int, 0, 0, 0);
+                            mdev_register_output(x->device, x->recvsig);
+                        }
+                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
+                            x->recvsig = msig_float(1, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, 0, 0);
+                            mdev_register_output(x->device, x->recvsig);
+                        }
+                        else {
+                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                        }
                     }
                 }
             }
