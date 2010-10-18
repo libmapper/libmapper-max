@@ -377,9 +377,11 @@ void maxadmin_register_signals(t_maxadmin *x) {
     t_symbol *sym_maximum = gensym("maximum");
     
     const char *sig_name, *sig_units;
-    double sig_min_float = 0;
+    double sig_min_double = 0;
+    float sig_min_float = 0;
     long sig_min_long = 0;
-    double sig_max_float = 1;
+    double sig_max_double = 1;
+    float sig_max_float = 1;
     long sig_max_long = 1;
     
     if (x->d) {
@@ -402,16 +404,20 @@ void maxadmin_register_signals(t_maxadmin *x) {
                     temp = atom_getobj(&(signals[i]));
                     if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
                         dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_float) == MAX_ERR_NONE) {}
-                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
-                            sig_min_float = (double)sig_min_long;
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
+                            sig_min_float = (float)sig_min_double;
                         }
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_float) == MAX_ERR_NONE) {}
+                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
+                            sig_min_float = (float)sig_min_long;
+                        }
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
+                            sig_max_float = (float)sig_max_double;
+                        }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
-                            sig_max_float = (double)sig_max_long;
+                            sig_max_float = (float)sig_max_long;
                         }
                         //register all signals as floats for now
-                        x->recvsig = msig_float(1, sig_name, sig_units, sig_min_float, sig_max_float, 0, float_handler, x);
+                        x->recvsig = msig_float(1, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
                         mdev_register_input(x->device, x->recvsig);
                     }
                 }
@@ -425,16 +431,20 @@ void maxadmin_register_signals(t_maxadmin *x) {
                     temp = atom_getobj(&(signals[i]));
                     if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
                         dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_float) == MAX_ERR_NONE) {}
-                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
-                            sig_min_float = (double)sig_min_long;
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
+                            sig_min_float = (float)sig_min_double;
                         }
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_float) == MAX_ERR_NONE) {}
+                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
+                            sig_min_float = (float)sig_min_long;
+                        }
+                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
+                            sig_max_float = (float)sig_max_double;
+                        }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
-                            sig_max_float = (double)sig_max_long;
+                            sig_max_float = (float)sig_max_long;
                         }
                         //register all signals as floats for now
-                        x->recvsig = msig_float(1, sig_name, sig_units, sig_min_float, sig_max_float, 0, float_handler, x);
+                        x->recvsig = msig_float(1, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
                         mdev_register_output(x->device, x->recvsig);
                     }
                 }
