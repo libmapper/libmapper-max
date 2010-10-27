@@ -424,15 +424,10 @@ void maxadmin_register_signals(t_maxadmin *x) {
     t_symbol *sym_length = gensym("length");
     
     const char *sig_name, *sig_units, *sig_type;
-    double sig_min_double = 0;
-    float sig_min_float = 0;
-    long sig_min_long = 0;
-    int sig_min_int = 0;
-    double sig_max_double = 1;
-    float sig_max_float = 1;
-    long sig_max_long = 1;
-    int sig_max_int = 1;
-    long sig_length;
+    double sig_min_double, sig_max_double;
+    float sig_min_float, sig_max_float, *sig_min_float_ptr = 0, *sig_max_float_ptr = 0;
+    long sig_min_long, sig_max_long, sig_length;
+    int sig_min_int, sig_max_int, *sig_min_int_ptr = 0, *sig_max_int_ptr = 0;
     
     if (x->d) {
         // Get pointer to dictionary "device"
@@ -449,13 +444,10 @@ void maxadmin_register_signals(t_maxadmin *x) {
                     if (sig_type) {
                         free(&sig_type);
                     }
-                    sig_min_float = 0;
-                    sig_min_long = 0;
-                    sig_min_int = 0;
-                    sig_max_float = 1;
-                    sig_max_long = 1;
-                    sig_max_int = 1;
+                    sig_min_int_ptr = sig_max_int_ptr = 0;
+                    sig_min_float_ptr = sig_max_float_ptr = 0;
                     sig_length = 1;
+                    
                     // each atom object points to a dictionary, need to recover atoms by key
                     temp = atom_getobj(&(signals[i]));
                     if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
@@ -464,26 +456,34 @@ void maxadmin_register_signals(t_maxadmin *x) {
                         dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length);
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
+                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_double;
+                            sig_min_int_ptr = &sig_min_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
+                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_long;
+                            sig_min_int_ptr = &sig_min_int;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
+                            sig_max_float_ptr = &sig_max_float;
                             sig_max_int = (int)sig_max_double;
+                            sig_max_int_ptr = &sig_max_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
+                            sig_max_float_ptr = &sig_max_float;
                             sig_min_int = (int)sig_max_long;
+                            sig_max_int_ptr = &sig_max_int;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                            x->recvsig = msig_int((int)sig_length, sig_name, sig_units, &sig_min_int, &sig_max_int, 0, int_handler, x);
+                            x->recvsig = msig_int((int)sig_length, sig_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, int_handler, x);
                             mdev_register_input(x->device, x->recvsig);
                         }
                         else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                            x->recvsig = msig_float((int)sig_length, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, float_handler, x);
+                            x->recvsig = msig_float((int)sig_length, sig_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, float_handler, x);
                             mdev_register_input(x->device, x->recvsig);
                         }
                         else {
@@ -504,13 +504,10 @@ void maxadmin_register_signals(t_maxadmin *x) {
                     if (sig_type) {
                         free(&sig_type);
                     }
-                    sig_min_float = 0;
-                    sig_min_long = 0;
-                    sig_min_int = 0;
-                    sig_max_float = 1;
-                    sig_max_long = 1;
-                    sig_max_int = 1;
+                    sig_min_int_ptr = sig_max_int_ptr = 0;
+                    sig_min_float_ptr = sig_max_float_ptr = 0;
                     sig_length = 1;
+                    
                     // each atom object points to a dictionary, need to recover atoms by key
                     temp = atom_getobj(&(signals[i]));
                     if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
@@ -519,26 +516,34 @@ void maxadmin_register_signals(t_maxadmin *x) {
                         dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length);
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
+                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_double;
+                            sig_min_int_ptr = &sig_min_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
+                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_long;
+                            sig_min_int_ptr = &sig_min_int;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
+                            sig_max_float_ptr = &sig_max_float;
                             sig_max_int = (int)sig_max_double;
+                            sig_max_int_ptr = &sig_max_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
+                            sig_max_float_ptr = &sig_max_float;
                             sig_max_int = (int)sig_max_long;
+                            sig_max_int_ptr = &sig_max_int;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                            x->recvsig = msig_int((int)sig_length, sig_name, sig_units, &sig_min_int, &sig_max_int, 0, 0, 0);
+                            x->recvsig = msig_int((int)sig_length, sig_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, 0, 0);
                             mdev_register_output(x->device, x->recvsig);
                         }
                         else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                            x->recvsig = msig_float((int)sig_length, sig_name, sig_units, &sig_min_float, &sig_max_float, 0, 0, 0);
+                            x->recvsig = msig_float((int)sig_length, sig_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, 0, 0);
                             mdev_register_output(x->device, x->recvsig);
                         }
                         else {
