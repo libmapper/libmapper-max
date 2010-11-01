@@ -377,16 +377,13 @@ void maxadmin_read_definition (t_maxadmin *x)
     t_symbol *sym_device = gensym("device");
     t_symbol *sym_name = gensym("name");
     const char *my_name;
-    
-    //t_max_err dictionary_read (char ∗ filename, short path, t_dictionary ∗∗ d)
-    post("got definition: %s", x->definition);
     short path;
     long filetype = 'JSON', outtype;
     
     //add ".json" to end of string if missing (or pick new filetype!)
     
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
-        post("located file");
+        post("located file %s\n", x->definition);
         if (dictionary_read(x->definition, path, &(x->d)) == 0) {
             //check that first key is "device"
             if (dictionary_entryisdictionary(x->d, sym_device)) {
@@ -409,7 +406,6 @@ void maxadmin_read_definition (t_maxadmin *x)
 }
 
 void maxadmin_register_signals(t_maxadmin *x) {
-    post("registering signals!");
     t_atom *signals;
     long num_signals, i;
     t_object *device, *inputs, *outputs, *temp;
