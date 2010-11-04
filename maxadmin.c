@@ -319,7 +319,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 {
 	t_maxadmin *x;
     long i;
-    char *alias;
+    char *alias = 0;
     
     x = object_alloc(maxadmin_class);
 
@@ -350,7 +350,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
     
     if (alias) {
         free(x->name);
-        x->name = alias;
+        x->name = strdup(alias);
     }
     if (*x->name == '/')
         *x->name++;
@@ -376,7 +376,7 @@ void maxadmin_read_definition (t_maxadmin *x)
     t_object *info;
     t_symbol *sym_device = gensym("device");
     t_symbol *sym_name = gensym("name");
-    const char *my_name;
+    const char *my_name = 0;
     short path;
     long filetype = 'JSON', outtype;
     
