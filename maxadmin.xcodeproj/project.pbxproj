@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		707C3F62126A79B40088B8DD /* monitor.c in Sources */ = {isa = PBXBuildFile; fileRef = 707C3F61126A79B40088B8DD /* monitor.c */; };
+		708B1943129058C300F6802B /* table.c in Sources */ = {isa = PBXBuildFile; fileRef = 708B1942129058C300F6802B /* table.c */; };
 		709F055A1222E110000230B8 /* liblo.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 709F05591222E110000230B8 /* liblo.dylib */; };
 		70DBCB3D122318A2003B0196 /* admin.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB32122318A2003B0196 /* admin.c */; };
 		70DBCB3E122318A2003B0196 /* db.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB33122318A2003B0196 /* db.c */; };
@@ -29,6 +31,8 @@
 
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		707C3F61126A79B40088B8DD /* monitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = monitor.c; path = ../libmapper/src/monitor.c; sourceTree = SOURCE_ROOT; };
+		708B1942129058C300F6802B /* table.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = table.c; path = ../libmapper/src/table.c; sourceTree = SOURCE_ROOT; };
 		709F05591222E110000230B8 /* liblo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblo.dylib; path = usr/local/lib/liblo.dylib; sourceTree = SDKROOT; };
 		70DBCB32122318A2003B0196 /* admin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = admin.c; path = ../libmapper/src/admin.c; sourceTree = SOURCE_ROOT; };
 		70DBCB33122318A2003B0196 /* db.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = db.c; path = ../libmapper/src/db.c; sourceTree = SOURCE_ROOT; };
@@ -118,9 +122,11 @@
 				70DBCB34122318A2003B0196 /* device.c */,
 				70DBCB35122318A2003B0196 /* expression.c */,
 				70DBCB37122318A2003B0196 /* mapping.c */,
+				707C3F61126A79B40088B8DD /* monitor.c */,
 				70DBCB3A122318A2003B0196 /* params.c */,
 				70DBCB3B122318A2003B0196 /* router.c */,
 				70DBCB3C122318A2003B0196 /* signal.c */,
+				708B1942129058C300F6802B /* table.c */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -218,6 +224,8 @@
 				70DBCB45122318A2003B0196 /* params.c in Sources */,
 				70DBCB46122318A2003B0196 /* router.c in Sources */,
 				70DBCB47122318A2003B0196 /* signal.c in Sources */,
+				707C3F62126A79B40088B8DD /* monitor.c in Sources */,
+				708B1943129058C300F6802B /* table.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
