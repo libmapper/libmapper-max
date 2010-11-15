@@ -1,6 +1,6 @@
 /**
 	@file
-	maxadmin - max object interface with libmapper
+	mapper - max object interface with libmapper
     http://www.idmil.org/software/mappingtools
 	joseph malloch
 */
@@ -23,7 +23,7 @@
 #define MAX_FILENAME_CHARS 512
 
 ////////////////////////// object struct
-typedef struct _maxadmin 
+typedef struct _mapper 
 {
 	t_object ob;			// the object itself (must be first)
     void *m_outlet;
@@ -37,53 +37,52 @@ typedef struct _maxadmin
     mapper_signal sendsig;
     mapper_signal recvsig;
     int ready;
-} t_maxadmin;
+} t_mapper;
 
 t_symbol *ps_list;
 
 int port = 9000;
 
 ///////////////////////// function prototypes
-void *maxadmin_new(t_symbol *s, long argc, t_atom *argv);
-void maxadmin_free(t_maxadmin *x);
-void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s);
-void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv);
-void maxadmin_add_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
-void maxadmin_remove_signal(t_maxadmin *x, t_symbol *msg, long argc, t_atom *argv);
-void poll(t_maxadmin *x);
+void *mapper_new(t_symbol *s, long argc, t_atom *argv);
+void mapper_free(t_mapper *x);
+void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
+void mapper_anything(t_mapper *x, t_symbol *s, long argc, t_atom *argv);
+void mapper_add_signal(t_mapper *x, t_symbol *msg, long argc, t_atom *argv);
+void mapper_remove_signal(t_mapper *x, t_symbol *msg, long argc, t_atom *argv);
+void poll(t_mapper *x);
 void float_handler(mapper_signal msig, mapper_signal_value_t *v);
 void int_handler(mapper_signal msig, mapper_signal_value_t *v);
-//void list_handler(mapper_signal msig, mapper_signal_value_t *v);
-void maxadmin_print_properties(t_maxadmin *x);
-void maxadmin_read_definition(t_maxadmin *x);
-void maxadmin_register_signals(t_maxadmin *x);
+void mapper_print_properties(t_mapper *x);
+void mapper_read_definition(t_mapper *x);
+void mapper_register_signals(t_mapper *x);
 
 //////////////////////// global class pointer variable
-void *maxadmin_class;
+void *mapper_class;
 
 
 int main(void)
 {	
 	t_class *c;
 	
-	c = class_new("maxadmin", (method)maxadmin_new, (method)maxadmin_free, (long)sizeof(t_maxadmin), 
-				  0L /* leave NULL!! */, A_GIMME, 0);
+	c = class_new("mapper", (method)mapper_new, (method)mapper_free, 
+                  (long)sizeof(t_mapper), 0L, A_GIMME, 0);
 	
 	/* you CAN'T call this from the patcher */
-    class_addmethod(c, (method)maxadmin_assist,			"assist",   A_CANT,     0);
-    class_addmethod(c, (method)maxadmin_add_signal,     "add",      A_GIMME,    0);
-    class_addmethod(c, (method)maxadmin_remove_signal,  "remove",   A_GIMME,    0);
-    class_addmethod(c, (method)maxadmin_anything,       "anything", A_GIMME,    0);
+    class_addmethod(c, (method)mapper_assist,         "assist",   A_CANT,     0);
+    class_addmethod(c, (method)mapper_add_signal,     "add",      A_GIMME,    0);
+    class_addmethod(c, (method)mapper_remove_signal,  "remove",   A_GIMME,    0);
+    class_addmethod(c, (method)mapper_anything,       "anything", A_GIMME,    0);
 	
 	class_register(CLASS_BOX, c); /* CLASS_NOBOX */
-	maxadmin_class = c;
+	mapper_class = c;
 	
 	ps_list = gensym("list");
 	
 	return 0;
 }
 
-void maxadmin_print_properties(t_maxadmin *x)
+void mapper_print_properties(t_mapper *x)
 {
 	if (x->device) {
 		//get device properties
@@ -92,7 +91,7 @@ void maxadmin_print_properties(t_maxadmin *x)
 	}
 }
 
-void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s)
+void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 {
 	if (m == ASSIST_INLET) { // inlet
 		sprintf(s, "OSC input");
@@ -110,7 +109,7 @@ void maxadmin_assist(t_maxadmin *x, void *b, long m, long a, char *s)
 	}
 }
 
-void maxadmin_free(t_maxadmin *x)
+void mapper_free(t_mapper *x)
 {
     clock_unset(x->m_clock);	// Remove clock routine from the scheduler
 	clock_free(x->m_clock);		// Frees memeory used by clock
@@ -119,19 +118,15 @@ void maxadmin_free(t_maxadmin *x)
     
     if (x->device) {
         if (x->device->routers) {
-            post("Removing router.. ");
-            //fflush(stdout);
+            post("Removing router...");
             mdev_remove_router(x->device, x->device->routers);
-            post("ok\n");
         }
-        post("Freeing device.. ");
-        //fflush(stdout);
+        post("Freeing device %s...", mapper_admin_name(x->device->admin));
         mdev_free(x->device);
-        post("ok\n");
     }
 }
 
-void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
+void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
 {
 	t_atom myList[2];
     //need to read attribs: type, units, min/minimum, max/maximum
@@ -250,12 +245,12 @@ void maxadmin_add_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 	}
 }
 
-void maxadmin_remove_signal(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
+void mapper_remove_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
 {
-	;
+	// not yet supported by libmapper
 }
 
-void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
+void mapper_anything(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
 {
 	if (argc) {
         //find signal
@@ -276,7 +271,7 @@ void maxadmin_anything(t_maxadmin *x, t_symbol *s, long argc, t_atom *argv)
 
 void int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
-    t_maxadmin *x = msig->user_data;
+    t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
 	
     t_atom myList[2];
@@ -287,7 +282,7 @@ void int_handler(mapper_signal msig, mapper_signal_value_t *v)
 
 void float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
-    t_maxadmin *x = msig->user_data;
+    t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
 	
     t_atom myList[2];
@@ -296,12 +291,8 @@ void float_handler(mapper_signal msig, mapper_signal_value_t *v)
     outlet_list(x->m_outlet, ps_list, 2, myList);
 }
 
-//void list_handler(mapper_signal msig, mapper_signal_value_t *v)
-//{
-//}
-
 /*! Creation of a local sender. */
-int setup_device(t_maxadmin *x)
+int setup_device(t_mapper *x)
 {
     post("using name: %s", x->name);
     
@@ -310,25 +301,25 @@ int setup_device(t_maxadmin *x)
     if (!x->device)
         return 1;
     else
-        maxadmin_print_properties(x);
+        mapper_print_properties(x);
     
     return 0;
 }
 
-void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
+void *mapper_new(t_symbol *s, long argc, t_atom *argv)
 {
-	t_maxadmin *x;
+	t_mapper *x;
     long i;
     char *alias = 0;
     
-    x = object_alloc(maxadmin_class);
+    x = object_alloc(mapper_class);
 
     //intin(x,1);
     x->m_outlet3 = outlet_new((t_object *)x,0);
     x->m_outlet2 = outlet_new((t_object *)x,0);
     x->m_outlet = listout((t_object *)x);
     
-    x->name = strdup("Max5");
+    x->name = strdup("maxmsp");
         
     for (i = 0; i < argc; i++) {
         if ((argv + i)->a_type == A_SYM) {
@@ -341,7 +332,7 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
 			else if ((strcmp(atom_getsym(argv+i)->s_name, "@def") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@definition") == 0)) {
 				if ((argv + i + 1)->a_type == A_SYM) {
 					x->definition = strdup(atom_getsym(argv+i+1)->s_name);
-                    maxadmin_read_definition(x);
+                    mapper_read_definition(x);
 					i++;
 				}
 			}
@@ -362,13 +353,13 @@ void *maxadmin_new(t_symbol *s, long argc, t_atom *argv)
         x->ready = 0;
         x->m_clock = clock_new(x, (method)poll);	// Create the timing clock
         clock_delay(x->m_clock, INTERVAL);  // Set clock to go off after delay
-        maxadmin_register_signals(x);
+        mapper_register_signals(x);
     }
     
 	return (x);
 }
 
-void maxadmin_read_definition (t_maxadmin *x)
+void mapper_read_definition (t_mapper *x)
 {
     if (x->d) {
         object_free(x->d);
@@ -405,7 +396,7 @@ void maxadmin_read_definition (t_maxadmin *x)
     }
 }
 
-void maxadmin_register_signals(t_maxadmin *x) {
+void mapper_register_signals(t_mapper *x) {
     t_atom *signals;
     long num_signals, i;
     t_object *device, *inputs, *outputs, *temp;
@@ -552,7 +543,7 @@ void maxadmin_register_signals(t_maxadmin *x) {
     }
 }
 
-void poll(t_maxadmin *x)
+void poll(t_mapper *x)
 {
 	t_atom myList[2];
 	char *message;
