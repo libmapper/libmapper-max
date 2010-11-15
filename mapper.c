@@ -1,6 +1,6 @@
 //
 // mapper.c
-// a maxmsp external encapsulating the functionality of libmapper
+// a maxmsp/puredata external encapsulating the functionality of libmapper
 // http://www.idmil.org/software/mappingtools
 // Joseph Malloch, IDMIL 2010
 // LGPL
@@ -25,6 +25,8 @@
 #define INTERVAL 1
 #define MAX_PATH_CHARS 2048
 #define MAX_FILENAME_CHARS 512
+
+#define MAXMSP 1            // 1 for MaxMSP, 0 for puredata
 
 // *********************************************************
 // -(object struct)-----------------------------------------
@@ -54,13 +56,13 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
 void mapper_anything(t_mapper *x, t_symbol *s, long argc, t_atom *argv);
 void mapper_add_signal(t_mapper *x, t_symbol *msg, long argc, t_atom *argv);
 void mapper_remove_signal(t_mapper *x, t_symbol *msg, long argc, t_atom *argv);
-void poll(t_mapper *x);
-void float_handler(mapper_signal msig, mapper_signal_value_t *v);
-void int_handler(mapper_signal msig, mapper_signal_value_t *v);
+void mapper_poll(t_mapper *x);
+void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v);
+void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
-int setup_device(t_mapper *x);
+int mapper_setup_device(t_mapper *x);
 
 // *********************************************************
 // -(global class pointer variable)-------------------------
@@ -125,12 +127,12 @@ void *mapper_new(t_symbol *s, long argc, t_atom *argv)
         if (*x->name == '/')
             *x->name++;
         
-        if (setup_device(x)) {
+        if (mapper_setup_device(x)) {
             post("Error initializing device.\n");
         }
         else {
             x->ready = 0;
-            x->clock = clock_new(x, (method)poll);	// Create the timing clock
+            x->clock = clock_new(x, (method)mapper_poll);	// Create the timing clock
             clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
             mapper_register_signals(x);
         }
@@ -138,33 +140,8 @@ void *mapper_new(t_symbol *s, long argc, t_atom *argv)
 	return (x);
 }
 
-void mapper_print_properties(t_mapper *x)
-{
-	if (x->device) {
-		//get device properties
-		//output them
-		//outlet_list(x->outlet3, ps_list, 2, myList);
-	}
-}
-
-void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
-{
-	if (m == ASSIST_INLET) { // inlet
-		sprintf(s, "OSC input");
-	} 
-	else {	// outlet
-        if (a == 0) {
-            sprintf(s, "Mapped OSC data");
-        }
-        else if (a == 1) {
-            sprintf(s, "State queries");
-        }
-        else {
-            sprintf(s, "Device information");
-        }
-	}
-}
-
+// *********************************************************
+// -(free)--------------------------------------------------
 void mapper_free(t_mapper *x)
 {
     clock_unset(x->clock);	// Remove clock routine from the scheduler
@@ -182,11 +159,64 @@ void mapper_free(t_mapper *x)
     }
 }
 
+// *********************************************************
+// -(create new device)-------------------------------------
+int mapper_setup_device(t_mapper *x)
+{
+    post("using name: %s", x->name);
+    
+    x->device = mdev_new(x->name, port, 0);
+    
+    if (!x->device)
+        return 1;
+    else
+        mapper_print_properties(x);
+    
+    return 0;
+}
+
+// *********************************************************
+// -(print properties)--------------------------------------
+void mapper_print_properties(t_mapper *x)
+{
+    t_atom myList[2];
+	char *message;
+    
+	if (x->device) {
+		//output name
+        message = strdup(mapper_admin_name(x->device->admin));
+        atom_setsym(myList, gensym("name"));
+        atom_setsym(myList + 1, gensym(message));
+        outlet_list(x->outlet3, ps_list, 2, myList);
+        
+        //output IP
+        message = strdup(inet_ntoa(x->device->admin->interface_ip));
+        atom_setsym(myList, gensym("IP"));
+        atom_setsym(myList + 1, gensym(message));
+        outlet_list(x->outlet3, ps_list, 2, myList);
+        
+        //output port
+        atom_setsym(myList, gensym("port"));
+        atom_setlong(myList + 1, x->device->admin->port.value);
+        outlet_list(x->outlet3, ps_list, 2, myList);
+        
+        //output numInputs
+        atom_setsym(myList, gensym("numInputs"));
+        atom_setlong(myList + 1, mdev_num_inputs(x->device));
+        outlet_list(x->outlet3, ps_list, 2, myList);
+        
+        //output numOutputs
+        atom_setsym(myList, gensym("numOutputs"));
+        atom_setlong(myList + 1, mdev_num_outputs(x->device));
+        outlet_list(x->outlet3, ps_list, 2, myList);
+	}
+}
+
+// *********************************************************
+// -(add signal)--------------------------------------------
 void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
 {
 	t_atom myList[2];
-    //need to read attribs: type, units, min/minimum, max/maximum
-    //char *type;
     char *sig_name, *sig_units = 0, *sig_type = 0;
     int sig_min_int, sig_max_int, sig_length = 1;
     int *sig_min_int_ptr = 0, *sig_max_int_ptr = 0;
@@ -197,7 +227,6 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
     if (argc < 4)
 		return;
     
-    //add to signals dictionary? (needs to be UNIQUE)
     if ((argv->a_type == A_SYM) && ((argv+1)->a_type == A_SYM)) {
         //get signal name
         sig_name = strdup(atom_getsym(argv+1)->s_name);
@@ -217,7 +246,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
                         i++;
                     }
                 }
-                else if ((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
+                else if ((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) || 
+                         (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_min_float = atom_getfloat(argv + i + 1);
                         sig_min_float_ptr = &sig_min_float;
@@ -233,7 +263,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
                         i++;
                     }
                 }
-                else if ((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
+                else if ((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) || 
+                         (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_max_float = atom_getfloat(argv + i + 1);
                         sig_max_float_ptr = &sig_max_float;
@@ -260,15 +291,19 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
         if (sig_type && *sig_type) {
             if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
                 if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                    x->signal = msig_int(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, int_handler, x);
+                    x->signal = msig_int(sig_length, atom_getsym(argv + 1)->s_name, 
+                                         sig_units, sig_min_int_ptr, sig_max_int_ptr, 
+                                         0, mapper_int_handler, x);
                     mdev_register_input(x->device, x->signal);
                 }
                 else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                    x->signal = msig_float(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, float_handler, x);
+                    x->signal = msig_float(sig_length, atom_getsym(argv + 1)->s_name, 
+                                           sig_units, sig_min_float_ptr, sig_max_float_ptr, 
+                                           0, mapper_float_handler, x);
                     mdev_register_input(x->device, x->signal);
                 }
                 else {
-                    post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                    post("Skipping registration of signal %s (unknown type).", sig_name);
                 }
                 
                 //output numInputs
@@ -278,15 +313,19 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                    x->signal = msig_int(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, 0, 0);
+                    x->signal = msig_int(sig_length, atom_getsym(argv + 1)->s_name, 
+                                         sig_units, sig_min_int_ptr, sig_max_int_ptr, 
+                                         0, 0, 0);
                     mdev_register_output(x->device, x->signal);
                 }
                 else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                    x->signal = msig_float(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, 0, 0);
+                    x->signal = msig_float(sig_length, atom_getsym(argv + 1)->s_name, 
+                                           sig_units, sig_min_float_ptr, sig_max_float_ptr, 
+                                           0, 0, 0);
                     mdev_register_output(x->device, x->signal);
                 }
                 else {
-                    post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                    post("Skipping registration of signal %s (unknown type).", sig_name);
                 }
                 
                 //output numOutputs
@@ -296,7 +335,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
             }
         }
         else {
-            post("Skipping registration of signal %s (undeclared type).\n", sig_name);
+            post("Skipping registration of signal %s (undeclared type).", sig_name);
         }
 	}
 }
@@ -325,7 +364,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, long argc, t_atom *argv)
     }
 }
 
-void int_handler(mapper_signal msig, mapper_signal_value_t *v)
+void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
@@ -336,7 +375,7 @@ void int_handler(mapper_signal msig, mapper_signal_value_t *v)
     outlet_list(x->outlet1, ps_list, 2, myList);
 }
 
-void float_handler(mapper_signal msig, mapper_signal_value_t *v)
+void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
@@ -345,21 +384,6 @@ void float_handler(mapper_signal msig, mapper_signal_value_t *v)
     atom_setsym(myList, gensym(path));
     atom_setfloat(myList + 1, (*v).f);
     outlet_list(x->outlet1, ps_list, 2, myList);
-}
-
-/*! Creation of a local sender. */
-int setup_device(t_mapper *x)
-{
-    post("using name: %s", x->name);
-    
-    x->device = mdev_new(x->name, port, 0);
-
-    if (!x->device)
-        return 1;
-    else
-        mapper_print_properties(x);
-    
-    return 0;
 }
 
 void mapper_read_definition (t_mapper *x)
@@ -469,11 +493,13 @@ void mapper_register_signals(t_mapper *x) {
                             sig_max_int_ptr = &sig_max_int;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                            x->signal = msig_int((int)sig_length, sig_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, int_handler, x);
+                            x->signal = msig_int((int)sig_length, sig_name, sig_units, sig_min_int_ptr, 
+                                                 sig_max_int_ptr, 0, mapper_int_handler, x);
                             mdev_register_input(x->device, x->signal);
                         }
                         else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                            x->signal = msig_float((int)sig_length, sig_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, float_handler, x);
+                            x->signal = msig_float((int)sig_length, sig_name, sig_units, sig_min_float_ptr, 
+                                                   sig_max_float_ptr, 0, mapper_float_handler, x);
                             mdev_register_input(x->device, x->signal);
                         }
                         else {
@@ -546,7 +572,7 @@ void mapper_register_signals(t_mapper *x) {
     }
 }
 
-void poll(t_mapper *x)
+void mapper_poll(t_mapper *x)
 {
 	t_atom myList[2];
 	char *message;
@@ -588,4 +614,24 @@ void poll(t_mapper *x)
         }
     }
 	clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+}
+
+// *********************************************************
+// -(assist)------------------------------------------------
+void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
+{
+	if (m == ASSIST_INLET) { // inlet
+		sprintf(s, "OSC input");
+	} 
+	else {	// outlet
+        if (a == 0) {
+            sprintf(s, "Mapped OSC data");
+        }
+        else if (a == 1) {
+            sprintf(s, "State queries");
+        }
+        else {
+            sprintf(s, "Device information");
+        }
+	}
 }
