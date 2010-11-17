@@ -510,49 +510,85 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
 }
 
+// *********************************************************
+// -(remove signal)-----------------------------------------
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
 	// not yet supported by libmapper
 }
 
+// *********************************************************
+// -(anything)----------------------------------------------
 void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
+    int i;
 	if (argc) {
         //find signal
         mapper_signal msig;
         if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1)
             return;
-        
-        //check if message payload is correct type
-        if (argv->a_type == A_FLOAT) {  //&& msig->props.type == 'f') {
-            //get payload
-            float payload = atom_getfloat(argv);
-            
-            //update signal
-            msig_update_scalar(msig, (mval) payload);
+        int length = (msig->props.length < argc) ? (msig->props.length) : (argc);
+        mval payload[length];
+        if (msig->props.type == 'i') {
+            for (i = 0; i < length; i++) {
+                if ((argv + i)->a_type == A_FLOAT)
+                    payload[i] = (mval)(int)atom_getfloat(argv + i);
+#ifdef MAXMSP
+                else if ((argv + i)->a_type == A_LONG)
+                    payload[i] = (mval)(int)atom_getlong(argv + i);
+#endif
+                
+            }
         }
+        else if (msig->props.type == 'f') {
+            for (i = 0; i < length; i++) {
+                if ((argv + i)->a_type == A_FLOAT)
+                    payload[i] = (mval)atom_getfloat(argv + i);
+#ifdef MAXMSP
+                else if ((argv + i)->a_type == A_LONG)
+                    payload[i] = (mval)(float)atom_getlong(argv + i);
+#endif
+                
+            }
+        }
+        //update signal
+        msig_update_scalar(msig, payload[0]);
     }
 }
 
+// *********************************************************
+// -(int handler)-------------------------------------------
 void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
 	
     t_atom myList[2];
+#ifdef MAXMSP
     atom_setsym(myList, gensym(path));
     atom_setlong(myList + 1, (*v).i32);
+#else
+    SETSYMBOL(myList, gensym(path));
+    SETFLOAT(myList + 1, (float)(*v).i32);
+#endif
     outlet_list(x->outlet1, ps_list, 2, myList);
 }
 
+// *********************************************************
+// -(float handler)-----------------------------------------
 void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
 	
     t_atom myList[2];
+#ifdef MAXMSP
     atom_setsym(myList, gensym(path));
     atom_setfloat(myList + 1, (*v).f);
+#else
+    SETSYMBOL(myList, gensym(path));
+    SETFLOAT(myList + 1, (*v).f);
+#endif
     outlet_list(x->outlet1, ps_list, 2, myList);
 }
 
