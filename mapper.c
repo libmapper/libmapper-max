@@ -164,7 +164,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                          (strcmp((argv+i)->a_w.w_symbol->s_name, "@definition") == 0)) {
                     if ((argv + i + 1)->a_type == A_SYMBOL) {
                         x->definition = strdup((argv+i+1)->a_w.w_symbol->s_name);
-                        mapper_read_definition(x);
+                        //mapper_read_definition(x);
                         i++;
                     }
                 }
@@ -592,7 +592,8 @@ void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
     outlet_list(x->outlet1, ps_list, 2, myList);
 }
 
-/*! Creation of a local sender. */
+// *********************************************************
+// -(set up new device)-------------------------------------
 int mapper_setup_device(t_mapper *x)
 {
     post("using name: %s", x->name);
@@ -607,6 +608,8 @@ int mapper_setup_device(t_mapper *x)
     return 0;
 }
 
+// *********************************************************
+// -(read device definition - maxmsp only)------------------
 void mapper_read_definition (t_mapper *x)
 {
     if (x->d) {
@@ -644,6 +647,8 @@ void mapper_read_definition (t_mapper *x)
     }
 }
 
+// *********************************************************
+// -(register signals from dictionary - maxmsp only)--------
 void mapper_register_signals(t_mapper *x) {
     t_atom *signals;
     long num_signals, i;
@@ -791,6 +796,8 @@ void mapper_register_signals(t_mapper *x) {
     }
 }
 
+// *********************************************************
+// -(poll libmapper)----------------------------------------
 void mapper_poll(t_mapper *x)
 {    
     mdev_poll(x->device, 0);
