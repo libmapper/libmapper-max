@@ -19,8 +19,8 @@
 #else
     #include "m_pd.h"
 #endif
-#include "src/mapper_internal.h"
-#include "include/mapper/mapper.h"
+#include "../libmapper/src/mapper_internal.h"
+#include "../libmapper/include/mapper/mapper.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -163,7 +163,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                 else if ((strcmp((argv+i)->a_w.w_symbol->s_name, "@def") == 0) || 
                          (strcmp((argv+i)->a_w.w_symbol->s_name, "@definition") == 0)) {
                     if ((argv + i + 1)->a_type == A_SYMBOL) {
-                        x->definition = strdup((argv+i+1)->a_w.w_symbol->s_name);
+                        //x->definition = strdup((argv+i+1)->a_w.w_symbol->s_name);
                         //mapper_read_definition(x);
                         i++;
                     }
@@ -199,7 +199,9 @@ void mapper_free(t_mapper *x)
     clock_unset(x->clock);	// Remove clock routine from the scheduler
     clock_free(x->clock);		// Frees memeory used by clock
     
+#ifdef MAXMSP
     object_free(x->d);          // Frees memory used by dictionary
+#endif
     
     if (x->device) {
         if (x->device->routers) {
@@ -244,34 +246,38 @@ void mapper_print_properties(t_mapper *x)
         //output port
 #ifdef MAXMSP
         atom_setsym(myList, gensym("port"));
+        atom_setlong(myList + 1, x->device->admin->port.value);
 #else
         SETSYMBOL(myList, gensym("port"));
+        SETFLOAT(myList + 1, (float)x->device->admin->port.value);
 #endif
-        atom_setlong(myList + 1, x->device->admin->port.value);
         outlet_list(x->outlet3, ps_list, 2, myList);
         
         //output numInputs
 #ifdef MAXMSP
         atom_setsym(myList, gensym("numInputs"));
+        atom_setlong(myList + 1, mdev_num_inputs(x->device));
 #else
         SETSYMBOL(myList, gensym("numInputs"));
+        SETFLOAT(myList + 1, (float)mdev_num_inputs(x->device));
 #endif
-        atom_setlong(myList + 1, mdev_num_inputs(x->device));
         outlet_list(x->outlet3, ps_list, 2, myList);
         
         //output numOutputs
 #ifdef MAXMSP
         atom_setsym(myList, gensym("numOutputs"));
+        atom_setlong(myList + 1, mdev_num_outputs(x->device));
 #else
         SETSYMBOL(myList, gensym("numOutputs"));
+        SETFLOAT(myList + 1, (float)mdev_num_outputs(x->device));
 #endif
-        atom_setlong(myList + 1, mdev_num_outputs(x->device));
         outlet_list(x->outlet3, ps_list, 2, myList);
     }
 }
 
 // *********************************************************
 // -(inlet/outlet assist - maxmsp only)---------------------
+#ifdef MAXMSP
 void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 {
 	if (m == ASSIST_INLET) { // inlet
@@ -289,6 +295,7 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
         }
 	}
 }
+#endif
 
 // *********************************************************
 // -(add signal)--------------------------------------------
@@ -610,6 +617,7 @@ int mapper_setup_device(t_mapper *x)
 
 // *********************************************************
 // -(read device definition - maxmsp only)------------------
+#ifdef MAXMSP
 void mapper_read_definition (t_mapper *x)
 {
     if (x->d) {
@@ -646,9 +654,11 @@ void mapper_read_definition (t_mapper *x)
         post("Could not locate file %s", x->definition);
     }
 }
+#endif
 
 // *********************************************************
 // -(register signals from dictionary - maxmsp only)--------
+#ifdef MAXMSP
 void mapper_register_signals(t_mapper *x) {
     t_atom *signals;
     long num_signals, i;
@@ -795,6 +805,7 @@ void mapper_register_signals(t_mapper *x) {
         }
     }
 }
+#endif
 
 // *********************************************************
 // -(poll libmapper)----------------------------------------
