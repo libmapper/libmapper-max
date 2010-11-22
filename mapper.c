@@ -184,7 +184,11 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         }
         else {
             x->ready = 0;
+#ifdef MAXMSP
             x->clock = clock_new(x, (method)mapper_poll);	// Create the timing clock
+#else
+            x->clock = clock_new(x, (t_method)mapper_poll);
+#endif
             clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
             mapper_register_signals(x);
         }
@@ -534,32 +538,45 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         mapper_signal msig;
         if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1)
             return;
-        int length = (msig->props.length < argc) ? (msig->props.length) : (argc);
-        mval payload[length];
         if (msig->props.type == 'i') {
-            for (i = 0; i < length; i++) {
+            int payload[msig->props.length];
+            for (i = 0; i < argc; i++) {
                 if ((argv + i)->a_type == A_FLOAT)
-                    payload[i] = (mval)(int)atom_getfloat(argv + i);
+                    payload[i] = (int)atom_getfloat(argv + i);
 #ifdef MAXMSP
                 else if ((argv + i)->a_type == A_LONG)
-                    payload[i] = (mval)(int)atom_getlong(argv + i);
+                    payload[i] = (int)atom_getlong(argv + i);
 #endif
                 
             }
+            // zero-pad if necessary???
+            for (; i < msig->props.length; i++) {
+                payload[i] = 0;
+            }
+            //update signal
+            msig_update(msig, MSIGVALP(payload));
         }
         else if (msig->props.type == 'f') {
-            for (i = 0; i < length; i++) {
+            float payload[msig->props.length];
+            for (i = 0; i < argc; i++) {
                 if ((argv + i)->a_type == A_FLOAT)
-                    payload[i] = (mval)atom_getfloat(argv + i);
+                    payload[i] = atom_getfloat(argv + i);
 #ifdef MAXMSP
                 else if ((argv + i)->a_type == A_LONG)
-                    payload[i] = (mval)(float)atom_getlong(argv + i);
+                    payload[i] = (float)atom_getlong(argv + i);
 #endif
                 
             }
+            // zero-pad if necessary???
+            for (; i < msig->props.length; i++) {
+                payload[i] = 0.;
+            }
+            //update signal
+            msig_update(msig, MSIGVALP(payload));
         }
-        //update signal
-        msig_update_scalar(msig, payload[0]);
+        else {
+            return;
+        }
     }
 }
 
@@ -569,14 +586,19 @@ void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
+    int i, length = msig->props.length;
 	
     t_atom myList[2];
 #ifdef MAXMSP
     atom_setsym(myList, gensym(path));
-    atom_setlong(myList + 1, (*v).i32);
+    for (i = 0; i < length; i++) {
+        atom_setlong(myList + i + 1, (*v).i32);
+    }
 #else
     SETSYMBOL(myList, gensym(path));
-    SETFLOAT(myList + 1, (float)(*v).i32);
+    for (i = 0; i < length; i++) {
+        SETFLOAT(myList + i + 1, (float)(*v).i32);
+    }
 #endif
     outlet_list(x->outlet1, ps_list, 2, myList);
 }
@@ -587,14 +609,19 @@ void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
     t_mapper *x = msig->user_data;
 	char *path = strdup(msig->props.name);
+    int i, length = msig->props.length;
 	
     t_atom myList[2];
 #ifdef MAXMSP
     atom_setsym(myList, gensym(path));
-    atom_setfloat(myList + 1, (*v).f);
+    for (i = 0; i < length; i++) {
+        atom_setfloat(myList + i + 1, (*v).f);
+    }
 #else
     SETSYMBOL(myList, gensym(path));
-    SETFLOAT(myList + 1, (*v).f);
+    for (i = 0; i < length; i++) {
+        SETFLOAT(myList + 1, (*v).f);
+    }
 #endif
     outlet_list(x->outlet1, ps_list, 2, myList);
 }
