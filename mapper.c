@@ -47,6 +47,7 @@ typedef struct _mapper
     mapper_device device;
     mapper_signal signal;
     int ready;
+    int learn_mode;
 #ifdef MAXMSP
     char *definition;
     t_dictionary *d;
@@ -69,6 +70,7 @@ void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
+void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 int mapper_setup_device(t_mapper *x);
 #ifdef MAXMSP
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
@@ -90,6 +92,7 @@ void *mapper_class;
         class_addmethod(c, (method)mapper_add_signal,     "add",      A_GIMME,    0);
         class_addmethod(c, (method)mapper_remove_signal,  "remove",   A_GIMME,    0);
         class_addmethod(c, (method)mapper_anything,       "anything", A_GIMME,    0);
+        class_addmethod(c, (method)mapper_learn,          "learn",    A_LONG,     0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
         ps_list = gensym("list");
@@ -104,6 +107,7 @@ void *mapper_class;
         class_addmethod(c,  (t_method)mapper_add_signal,    gensym("add"),      A_GIMME, 0);
         class_addmethod(c,  (t_method)mapper_remove_signal, gensym("remove"),   A_GIMME, 0);
         class_addanything(c, (t_method)mapper_anything);
+        class_addmethod(c, (t_method)mapper_learn, gensym("learn"), A_FLOAT, 0);
         mapper_class = c;
         ps_list = gensym("list");
         return 0;
@@ -184,6 +188,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         }
         else {
             x->ready = 0;
+            x->learn_mode = 0;
 #ifdef MAXMSP
             x->clock = clock_new(x, (method)mapper_poll);	// Create the timing clock
 #else
@@ -308,7 +313,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 	t_atom myList[2];
     //need to read attribs: type, units, min/minimum, max/maximum
     //char *type;
-    char *sig_name, *sig_units = 0, *sig_type = 0;
+    char *sig_name, *sig_units = 0, sig_type = 0;
     int sig_min_int, sig_max_int, sig_length = 1;
     int *sig_min_int_ptr = 0, *sig_max_int_ptr = 0;
     float sig_min_float, sig_max_float;
@@ -334,7 +339,15 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 else if (strcmp(atom_getsym(argv+i)->s_name, "@type") == 0) {
                     if ((argv + i + 1)->a_type == A_SYM) {
-                        sig_type = strdup(atom_getsym(argv+i+1)->s_name);
+                        char *temp = atom_getsym(argv + i + 1)->s_name;
+                        if ((strcmp(temp, "int") == 0) || (strcmp(temp, "i") == 0))
+                            sig_type = 'i';
+                        else if ((strcmp(temp, "float") == 0) || (strcmp(temp, "f") == 0))
+                            sig_type = 'f';
+                        else {
+                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            return;
+                        }
                         i++;
                     }
                 }
@@ -378,19 +391,12 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
             }
         }
-        if (sig_type && *sig_type) {
+        if (sig_type) {
             if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
-                if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                    x->signal = msig_int(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, mapper_int_handler, x);
-                    mdev_register_input(x->device, x->signal);
-                }
-                else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                    x->signal = msig_float(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, mapper_float_handler, x);
-                    mdev_register_input(x->device, x->signal);
-                }
-                else {
-                    post("Skipping registration of signal %s (unknown type).\n", sig_name);
-                }
+                mdev_add_input(x->device, sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_type, 
+                               sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                               sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                               0, mapper_int_handler, x);
                 
                 //output numInputs
                 atom_setsym(myList, gensym("numInputs"));
@@ -398,17 +404,10 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 outlet_list(x->outlet3, ps_list, 2, myList);
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
-                if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                    x->signal = msig_int(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, 0, 0);
-                    mdev_register_output(x->device, x->signal);
-                }
-                else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                    x->signal = msig_float(sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, 0, 0);
-                    mdev_register_output(x->device, x->signal);
-                }
-                else {
-                    post("Skipping registration of signal %s (unknown type).\n", sig_name);
-                }
+                mdev_add_output(x->device, sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_type, 
+                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                0, 0, 0);
                 
                 //output numOutputs
                 atom_setsym(myList, gensym("numOutputs"));
@@ -537,6 +536,9 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         //find signal
         mapper_signal msig;
         if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1)
+            if (x->learn_mode) {
+                // register as new signal
+            }
             return;
         if (msig->props.type == 'i') {
             int payload[msig->props.length];
@@ -701,6 +703,7 @@ void mapper_register_signals(t_mapper *x) {
     t_symbol *sym_length = gensym("length");
     
     const char *sig_name, *sig_units, *sig_type;
+    char sig_type_char = 0;
     double sig_min_double, sig_max_double;
     float sig_min_float, sig_max_float, *sig_min_float_ptr = 0, *sig_max_float_ptr = 0;
     long sig_min_long, sig_max_long, sig_length;
@@ -755,17 +758,19 @@ void mapper_register_signals(t_mapper *x) {
                             sig_min_int = (int)sig_max_long;
                             sig_max_int_ptr = &sig_max_int;
                         }
-                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                            x->signal = msig_int((int)sig_length, sig_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, mapper_int_handler, x);
-                            mdev_register_input(x->device, x->signal);
-                        }
-                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                            x->signal = msig_float((int)sig_length, sig_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, mapper_float_handler, x);
-                            mdev_register_input(x->device, x->signal);
-                        }
+                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
+                            sig_type_char = 'i';
+                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
+                            sig_type_char = 'f';
                         else {
                             post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            continue;
                         }
+
+                        mdev_add_input(x->device, (int)sig_length, sig_name, sig_units, sig_type_char, 
+                                       sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
+                                       sig_type_char == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                       0, mapper_int_handler, x);
                     }
                 }
             }
@@ -815,17 +820,19 @@ void mapper_register_signals(t_mapper *x) {
                             sig_max_int = (int)sig_max_long;
                             sig_max_int_ptr = &sig_max_int;
                         }
-                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                            x->signal = msig_int((int)sig_length, sig_name, sig_units, sig_min_int_ptr, sig_max_int_ptr, 0, 0, 0);
-                            mdev_register_output(x->device, x->signal);
-                        }
-                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                            x->signal = msig_float((int)sig_length, sig_name, sig_units, sig_min_float_ptr, sig_max_float_ptr, 0, 0, 0);
-                            mdev_register_output(x->device, x->signal);
-                        }
+                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
+                            sig_type_char = 'i';
+                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
+                            sig_type_char = 'f';
                         else {
                             post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            continue;
                         }
+
+                        mdev_add_output(x->device, (int)sig_length, sig_name, sig_units, sig_type_char, 
+                                        sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
+                                        sig_type_char == 'f' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                        0, 0, 0);
                     }
                 }
             }
@@ -847,4 +854,10 @@ void mapper_poll(t_mapper *x)
         }
     }
 	clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+}
+    
+// *********************************************************
+// -(toggle learning mode)----------------------------------
+void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
+{
 }
