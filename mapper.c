@@ -568,7 +568,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 payload[i] = 0;
             }
             //update signal
-            msig_update(msig, MSIGVALP(payload));
+            msig_update(msig, payload);
         }
         else if (msig->props.type == 'f') {
             float payload[msig->props.length];
@@ -586,7 +586,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 payload[i] = 0.;
             }
             //update signal
-            msig_update(msig, MSIGVALP(payload));
+            msig_update(msig, payload);
         }
         else {
             return;
