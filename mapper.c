@@ -393,7 +393,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         if (sig_type) {
             if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
-                mdev_add_input(x->device, sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_type, 
+                mdev_add_input(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units,
                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                0, mapper_int_handler, x);
@@ -406,8 +406,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 mdev_add_output(x->device, sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_type, 
                                 sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                                0, 0, 0);
+                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 0);
                 
                 //output numOutputs
                 atom_setsym(myList, gensym("numOutputs"));
@@ -779,7 +778,7 @@ void mapper_register_signals(t_mapper *x) {
                             continue;
                         }
 
-                        mdev_add_input(x->device, (int)sig_length, sig_name, sig_units, sig_type_char, 
+                        mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units,
                                        sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
                                        sig_type_char == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                        0, mapper_int_handler, x);
