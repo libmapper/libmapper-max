@@ -92,7 +92,7 @@ void *mapper_class;
         class_addmethod(c, (method)mapper_add_signal,     "add",      A_GIMME,    0);
         class_addmethod(c, (method)mapper_remove_signal,  "remove",   A_GIMME,    0);
         class_addmethod(c, (method)mapper_anything,       "anything", A_GIMME,    0);
-        class_addmethod(c, (method)mapper_learn,          "learn",    A_LONG,     0);
+        class_addmethod(c, (method)mapper_learn,          "learn",    A_GIMME,    0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
         ps_list = gensym("list");
@@ -226,61 +226,61 @@ void mapper_free(t_mapper *x)
 // -(print properties)--------------------------------------
 void mapper_print_properties(t_mapper *x)
 {
-    t_atom myList[2];
+    t_atom my_list[2];
 	char *message;
     
     if (x->ready) {        
         //output name
         message = strdup(mapper_admin_name(x->device->admin));
 #ifdef MAXMSP
-        atom_setsym(myList, gensym("name"));
-        atom_setsym(myList + 1, gensym(message));
+        atom_setsym(my_list, gensym("name"));
+        atom_setsym(my_list + 1, gensym(message));
 #else
-        SETSYMBOL(myList, gensym("name"));
-        SETSYMBOL(myList + 1, gensym(message));
+        SETSYMBOL(my_list, gensym("name"));
+        SETSYMBOL(my_list + 1, gensym(message));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, myList);
+        outlet_list(x->outlet3, ps_list, 2, my_list);
         
         //output IP
         message = strdup(inet_ntoa(x->device->admin->interface_ip));
 #ifdef MAXMSP
-        atom_setsym(myList, gensym("IP"));
-        atom_setsym(myList + 1, gensym(message));
+        atom_setsym(my_list, gensym("IP"));
+        atom_setsym(my_list + 1, gensym(message));
 #else
-        SETSYMBOL(myList, gensym("IP"));
-        SETSYMBOL(myList + 1, gensym(message));
+        SETSYMBOL(my_list, gensym("IP"));
+        SETSYMBOL(my_list + 1, gensym(message));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, myList);
+        outlet_list(x->outlet3, ps_list, 2, my_list);
         
         //output port
 #ifdef MAXMSP
-        atom_setsym(myList, gensym("port"));
-        atom_setlong(myList + 1, x->device->admin->port.value);
+        atom_setsym(my_list, gensym("port"));
+        atom_setlong(my_list + 1, x->device->admin->port.value);
 #else
-        SETSYMBOL(myList, gensym("port"));
-        SETFLOAT(myList + 1, (float)x->device->admin->port.value);
+        SETSYMBOL(my_list, gensym("port"));
+        SETFLOAT(my_list + 1, (float)x->device->admin->port.value);
 #endif
-        outlet_list(x->outlet3, ps_list, 2, myList);
+        outlet_list(x->outlet3, ps_list, 2, my_list);
         
         //output numInputs
 #ifdef MAXMSP
-        atom_setsym(myList, gensym("numInputs"));
-        atom_setlong(myList + 1, mdev_num_inputs(x->device));
+        atom_setsym(my_list, gensym("numInputs"));
+        atom_setlong(my_list + 1, mdev_num_inputs(x->device));
 #else
-        SETSYMBOL(myList, gensym("numInputs"));
-        SETFLOAT(myList + 1, (float)mdev_num_inputs(x->device));
+        SETSYMBOL(my_list, gensym("numInputs"));
+        SETFLOAT(my_list + 1, (float)mdev_num_inputs(x->device));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, myList);
+        outlet_list(x->outlet3, ps_list, 2, my_list);
         
         //output numOutputs
 #ifdef MAXMSP
-        atom_setsym(myList, gensym("numOutputs"));
-        atom_setlong(myList + 1, mdev_num_outputs(x->device));
+        atom_setsym(my_list, gensym("numOutputs"));
+        atom_setlong(my_list + 1, mdev_num_outputs(x->device));
 #else
-        SETSYMBOL(myList, gensym("numOutputs"));
-        SETFLOAT(myList + 1, (float)mdev_num_outputs(x->device));
+        SETSYMBOL(my_list, gensym("numOutputs"));
+        SETFLOAT(my_list + 1, (float)mdev_num_outputs(x->device));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, myList);
+        outlet_list(x->outlet3, ps_list, 2, my_list);
     }
 }
 
@@ -310,7 +310,7 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 // -(add signal)--------------------------------------------
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-	t_atom myList[2];
+	t_atom my_list[2];
     //need to read attribs: type, units, min/minimum, max/maximum
     //char *type;
     char *sig_name, *sig_units = 0, sig_type = 0;
@@ -351,7 +351,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
-                else if ((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
+                else if ((strcmp(atom_getsym(argv+i)->s_name, "@min") == 0) ||
+                         (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_min_float = atom_getfloat(argv + i + 1);
                         sig_min_float_ptr = &sig_min_float;
@@ -367,7 +368,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
-                else if ((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) || (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
+                else if ((strcmp(atom_getsym(argv+i)->s_name, "@max") == 0) ||
+                         (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_max_float = atom_getfloat(argv + i + 1);
                         sig_max_float_ptr = &sig_max_float;
@@ -396,22 +398,22 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 mdev_add_input(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units,
                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                               mapper_int_handler, x);
+                               sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
                 //output numInputs
-                atom_setsym(myList, gensym("numInputs"));
-                atom_setlong(myList + 1, mdev_num_inputs(x->device));
-                outlet_list(x->outlet3, ps_list, 2, myList);
+                atom_setsym(my_list, gensym("numInputs"));
+                atom_setlong(my_list + 1, mdev_num_inputs(x->device));
+                outlet_list(x->outlet3, ps_list, 2, my_list);
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
-                mdev_add_output(x->device, sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_type, 
+                mdev_add_output(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units, 
                                 sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                 sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
                 
                 //output numOutputs
-                atom_setsym(myList, gensym("numOutputs"));
-                atom_setlong(myList + 1, mdev_num_outputs(x->device));
-                outlet_list(x->outlet3, ps_list, 2, myList);
+                atom_setsym(my_list, gensym("numOutputs"));
+                atom_setlong(my_list + 1, mdev_num_outputs(x->device));
+                outlet_list(x->outlet3, ps_list, 2, my_list);
             }
         }
         else {
@@ -434,7 +436,15 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 else if (strcmp((argv+i)->a_w.w_symbol->s_name, "@type") == 0) {
                     if ((argv + i + 1)->a_type == A_SYMBOL) {
-                        sig_type = strdup((argv+i+1)->a_w.w_symbol->s_name);
+                        char *temp = strdup((argv+i+1)->a_w.w_symbol->s_name);
+                        if ((strcmp(temp, "int") == 0) || (strcmp(temp, "i") == 0))
+                            sig_type = 'i';
+                        else if ((strcmp(temp, "float") == 0) || (strcmp(temp, "f") == 0))
+                            sig_type = 'f';
+                        else {
+                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            return;
+                        }
                         i++;
                     }
                 }
@@ -468,48 +478,25 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         if (sig_type && *sig_type) {
             if (strcmp((argv)->a_w.w_symbol->s_name, "input") == 0) {
-                if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                    /*x->signal = msig_int(sig_length, (argv + 1)->a_w.w_symbol->s_name, 
-                     sig_units, sig_min_int_ptr, sig_max_int_ptr, 
-                     0, int_handler, x);
-                     mdev_register_input(x->device, x->signal);*/
-                }
-                else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                    /*x->signal = msig_float(sig_length, (argv + 1)->a_w.w_symbol->s_name, 
-                     sig_units, sig_min_float_ptr, sig_max_float_ptr, 
-                     0, float_handler, x);
-                     mdev_register_input(x->device, x->signal);*/
-                }
-                else {
-                    post("Skipping registration of signal %s (unknown type).", sig_name);
-                }
+                    mdev_add_input(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
+                                   sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                   sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                   sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
                 //output numInputs
-                SETSYMBOL(myList, gensym("numInputs"));
-                SETFLOAT(myList + 1, mdev_num_inputs(x->device));
-                outlet_anything(x->outlet3, ps_list, 2, myList);
+                SETSYMBOL(my_list, gensym("numInputs"));
+                SETFLOAT(my_list + 1, mdev_num_inputs(x->device));
+                outlet_anything(x->outlet3, ps_list, 2, my_list);
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
-                if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0)) {
-                    /*x->signal = msig_int(sig_length, (argv + 1)->a_w.w_symbol->s_name, 
-                     sig_units, sig_min_int_ptr, sig_max_int_ptr, 
-                     0, 0, 0);
-                     mdev_register_output(x->device, x->signal);*/
-                }
-                else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0)) {
-                    /*x->signal = msig_float(sig_length, (argv + 1)->a_w.w_symbol->s_name, 
-                     sig_units, sig_min_float_ptr, sig_max_float_ptr, 
-                     0, 0, 0);
-                     mdev_register_output(x->device, x->signal);*/
-                }
-                else {
-                    post("Skipping registration of signal %s (unknown type).", sig_name);
-                }
-                
+                mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
+                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
+                                
                 //output numOutputs
-                SETSYMBOL(myList, gensym("numOutputs"));
-                SETFLOAT(myList + 1, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet3, ps_list, 2, myList);
+                SETSYMBOL(my_list, gensym("numOutputs"));
+                SETFLOAT(my_list + 1, mdev_num_outputs(x->device));
+                outlet_anything(x->outlet3, ps_list, 2, my_list);
             }
         }
         else {
@@ -531,6 +518,8 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
     int i;
+    t_atom my_list[2];
+    
 	if (argc) {
         //find signal
         mapper_signal msig;
@@ -538,13 +527,25 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             if (x->learn_mode) {
                 // register as new signal
                 if (argv->a_type == A_FLOAT) {
-                    msig = mdev_add_output(x->device, argc, s->s_name, 0, 'f', 0, 0, 0, mapper_float_handler, x);
+                    msig = mdev_add_output(x->device, s->s_name, argc, 'f', 0, 0, 0);
                 }
 #ifdef MAXMSP
                 else if (argv->a_type == A_LONG) {
-                    msig = mdev_add_output(x->device, argc, s->s_name, 0, 'i', 0, 0, 0, mapper_int_handler, x);
+                    msig = mdev_add_output(x->device, s->s_name, argc, 'i', 0, 0, 0);
                 }
 #endif
+                else {
+                    return;
+                }
+                //output updated numOutputs
+#ifdef MAXMSP
+                atom_setsym(my_list, gensym("numOutputs"));
+                atom_setlong(my_list + 1, mdev_num_outputs(x->device));
+#else
+                SETSYMBOL(my_list, gensym("numOutputs"));
+                SETFLOAT(my_list + 1, mdev_num_outputs(x->device));
+#endif
+                outlet_anything(x->outlet3, ps_list, 2, my_list);
             }
             else {
                 return;
@@ -601,19 +602,19 @@ void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 	char *path = strdup(msig->props.name);
     int i, length = msig->props.length;
 	
-    t_atom myList[length];
+    t_atom my_list[length];
 #ifdef MAXMSP
-    atom_setsym(myList, gensym(path));
+    atom_setsym(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        atom_setlong(myList + i + 1, (*v).i32);
+        atom_setlong(my_list + i + 1, (long)(v+i)->i32);
     }
 #else
-    SETSYMBOL(myList, gensym(path));
+    SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(myList + i + 1, (float)(*v).i32);
+        SETFLOAT(my_list + i + 1, (float)(v+i)->i32);
     }
 #endif
-    outlet_list(x->outlet1, ps_list, 2, myList);
+    outlet_list(x->outlet1, ps_list, 2, my_list);
 }
 
 // *********************************************************
@@ -624,19 +625,19 @@ void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
 	char *path = strdup(msig->props.name);
     int i, length = msig->props.length;
 	
-    t_atom myList[length];
+    t_atom my_list[length];
 #ifdef MAXMSP
-    atom_setsym(myList, gensym(path));
+    atom_setsym(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        atom_setfloat(myList + i + 1, (*v).f);
+        atom_setfloat(my_list + i + 1, (v+i)->f);
     }
 #else
-    SETSYMBOL(myList, gensym(path));
+    SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(myList + 1, (*v).f);
+        SETFLOAT(my_list + 1, (v+i)->f);
     }
 #endif
-    outlet_list(x->outlet1, ps_list, 2, myList);
+    outlet_list(x->outlet1, ps_list, 2, my_list);
 }
 
 // *********************************************************
@@ -781,7 +782,7 @@ void mapper_register_signals(t_mapper *x) {
                         mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units,
                                        sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
                                        sig_type_char == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                                       0, mapper_int_handler, x);
+                                       sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
                     }
                 }
             }
@@ -840,10 +841,9 @@ void mapper_register_signals(t_mapper *x) {
                             continue;
                         }
 
-                        mdev_add_output(x->device, (int)sig_length, sig_name, sig_units, sig_type_char, 
+                        mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 
                                         sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                                        sig_type_char == 'f' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                                        0, 0, 0);
+                                        sig_type_char == 'f' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
                     }
                 }
             }
@@ -871,14 +871,24 @@ void mapper_poll(t_mapper *x)
 // -(toggle learning mode)----------------------------------
 void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-    if (argc == 1) {
+    int mode;
+    
+    if (argc > 0) {
         if (argv->a_type == A_FLOAT) {
-            x->learn_mode = (int)atom_getfloat(argv);
+            mode = (int)atom_getfloat(argv);
         }
 #ifdef MAXMSP
         else if (argv->a_type == A_LONG) {
-            x->learn_mode = (int)atom_getlong(argv);
+            mode = (int)atom_getlong(argv);
         }
 #endif
+        
+        if (mode != x->learn_mode) {
+            x->learn_mode = mode;
+            if (mode == 0)
+                post("Learning mode off.\n");
+            else
+                post("Learning mode on.\n");
+        }
     }
 }
