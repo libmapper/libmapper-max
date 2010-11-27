@@ -396,7 +396,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 mdev_add_input(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units,
                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                               0, mapper_int_handler, x);
+                               mapper_int_handler, x);
                 
                 //output numInputs
                 atom_setsym(myList, gensym("numInputs"));
@@ -406,7 +406,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 mdev_add_output(x->device, sig_length, atom_getsym(argv + 1)->s_name, sig_units, sig_type, 
                                 sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
-                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 0);
+                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
                 
                 //output numOutputs
                 atom_setsym(myList, gensym("numOutputs"));
