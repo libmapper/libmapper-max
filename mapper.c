@@ -535,11 +535,23 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 	if (argc) {
         //find signal
         mapper_signal msig;
-        if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1)
+        if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1) {
             if (x->learn_mode) {
                 // register as new signal
+                if (argv->a_type == A_FLOAT) {
+                    msig = mdev_add_output(x->device, argc, s->s_name, 0, 'f', 0, 0, 0, mapper_float_handler, x);
+                }
+#ifdef MAXMSP
+                else if (argv->a_type == A_LONG) {
+                    msig = mdev_add_output(x->device, argc, s->s_name, 0, 'i', 0, 0, 0, mapper_int_handler, x);
+                }
+#endif
             }
-            return;
+            else {
+                return;
+            }
+
+        }
         if (msig->props.type == 'i') {
             int payload[msig->props.length];
             for (i = 0; i < argc; i++) {
@@ -590,7 +602,7 @@ void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 	char *path = strdup(msig->props.name);
     int i, length = msig->props.length;
 	
-    t_atom myList[2];
+    t_atom myList[length];
 #ifdef MAXMSP
     atom_setsym(myList, gensym(path));
     for (i = 0; i < length; i++) {
@@ -613,7 +625,7 @@ void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
 	char *path = strdup(msig->props.name);
     int i, length = msig->props.length;
 	
-    t_atom myList[2];
+    t_atom myList[length];
 #ifdef MAXMSP
     atom_setsym(myList, gensym(path));
     for (i = 0; i < length; i++) {
@@ -860,4 +872,14 @@ void mapper_poll(t_mapper *x)
 // -(toggle learning mode)----------------------------------
 void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
+    if (argc == 1) {
+        if (argv->a_type == A_FLOAT) {
+            x->learn_mode = (int)atom_getfloat(argv);
+        }
+#ifdef MAXMSP
+        else if (argv->a_type == A_LONG) {
+            x->learn_mode = (int)atom_getlong(argv);
+        }
+#endif
+    }
 }
