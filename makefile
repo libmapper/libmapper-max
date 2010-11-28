@@ -65,11 +65,18 @@ LINUXCFLAGS = -DPD -O2 -funroll-loops -fomit-frame-pointer -fPIC \
     -Wall -W -Wshadow -Wstrict-prototypes \
     -Wno-unused -Wno-parentheses -Wno-switch $(CFLAGS)
 
-LINUXINCLUDE =  -I/Applications/pd/src
+# Override this for m_pd.h location
+PDINCLUDE = -I$(HOME)/.local/include
+
+LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper-0)
+LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper-0)
+
+LINUXINCLUDE = $(PDINCLUDE) $(LIBMAPPER_CFLAGS)
+LINUXLIBS = $(LIBMAPPER_LIBS)
 
 .c.pd_linux:
 	$(CC) $(LINUXCFLAGS) $(LINUXINCLUDE) -o $*.o -c $*.c
-	$(CC) -export_dynamic -shared -o $*.pd_linux $*.o -lc -lm
+	$(CC) -shared -o $*.pd_linux $*.o $(LINUXLIBS)
 	strip --strip-unneeded $*.pd_linux
 	rm -f $*.o
 

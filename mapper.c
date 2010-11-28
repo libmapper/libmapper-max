@@ -19,8 +19,7 @@
 #else
     #include "m_pd.h"
 #endif
-#include "../libmapper/src/mapper_internal.h"
-#include "../libmapper/include/mapper/mapper.h"
+#include <mapper/mapper.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -195,7 +194,9 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             x->clock = clock_new(x, (t_method)mapper_poll);
 #endif
             clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+            #ifdef MAXMSP
             mapper_register_signals(x);
+            #endif
         }
     }
 	return (x);
@@ -213,11 +214,7 @@ void mapper_free(t_mapper *x)
 #endif
     
     if (x->device) {
-        if (x->device->routers) {
-            post("Removing router...");
-            mdev_remove_router(x->device, x->device->routers);
-        }
-        post("Freeing device %s...", mapper_admin_name(x->device->admin));
+        post("Freeing device %s...", mdev_name(x->device));
         mdev_free(x->device);
     }
 }
@@ -231,7 +228,7 @@ void mapper_print_properties(t_mapper *x)
     
     if (x->ready) {        
         //output name
-        message = strdup(mapper_admin_name(x->device->admin));
+        message = strdup(mdev_name(x->device));
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("name"));
         atom_setsym(my_list + 1, gensym(message));
@@ -242,7 +239,8 @@ void mapper_print_properties(t_mapper *x)
         outlet_list(x->outlet3, ps_list, 2, my_list);
         
         //output IP
-        message = strdup(inet_ntoa(x->device->admin->interface_ip));
+        struct in_addr *ip = mdev_ip4(x->device);
+        message = strdup(inet_ntoa(*ip));
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("IP"));
         atom_setsym(my_list + 1, gensym(message));
@@ -255,10 +253,10 @@ void mapper_print_properties(t_mapper *x)
         //output port
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("port"));
-        atom_setlong(my_list + 1, x->device->admin->port.value);
+        atom_setlong(my_list + 1, mdev_port(x->device));
 #else
         SETSYMBOL(my_list, gensym("port"));
-        SETFLOAT(my_list + 1, (float)x->device->admin->port.value);
+        SETFLOAT(my_list + 1, (float)mdev_port(x->device));
 #endif
         outlet_list(x->outlet3, ps_list, 2, my_list);
         
@@ -523,7 +521,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 	if (argc) {
         //find signal
         mapper_signal msig;
-        if (mdev_find_output_by_name(x->device, s->s_name, &msig) == -1) {
+        if (!(msig=mdev_get_output_by_name(x->device, s->s_name, 0))) {
             if (x->learn_mode) {
                 // register as new signal
                 if (argv->a_type == A_FLOAT) {
@@ -552,8 +550,9 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 
         }
-        if (msig->props.type == 'i') {
-            int payload[msig->props.length];
+        mapper_db_signal props = msig_properties(msig);
+        if (props->type == 'i') {
+            int payload[props->length];
             for (i = 0; i < argc; i++) {
                 if ((argv + i)->a_type == A_FLOAT)
                     payload[i] = (int)atom_getfloat(argv + i);
@@ -564,14 +563,14 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 
             }
             // zero-pad if necessary???
-            for (; i < msig->props.length; i++) {
+            for (; i < props->length; i++) {
                 payload[i] = 0;
             }
             //update signal
             msig_update(msig, payload);
         }
-        else if (msig->props.type == 'f') {
-            float payload[msig->props.length];
+        else if (props->type == 'f') {
+            float payload[props->length];
             for (i = 0; i < argc; i++) {
                 if ((argv + i)->a_type == A_FLOAT)
                     payload[i] = atom_getfloat(argv + i);
@@ -582,7 +581,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 
             }
             // zero-pad if necessary???
-            for (; i < msig->props.length; i++) {
+            for (; i < props->length; i++) {
                 payload[i] = 0.;
             }
             //update signal
@@ -598,9 +597,10 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 // -(int handler)-------------------------------------------
 void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
-    t_mapper *x = msig->user_data;
-	char *path = strdup(msig->props.name);
-    int i, length = msig->props.length;
+    mapper_db_signal props = msig_properties(msig);
+    t_mapper *x = props->user_data;
+	char *path = strdup(props->name);
+    int i, length = props->length;
 	
     t_atom my_list[length];
 #ifdef MAXMSP
@@ -621,9 +621,10 @@ void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 // -(float handler)-----------------------------------------
 void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
 {
-    t_mapper *x = msig->user_data;
-	char *path = strdup(msig->props.name);
-    int i, length = msig->props.length;
+    mapper_db_signal props = msig_properties(msig);
+    t_mapper *x = props->user_data;
+	char *path = strdup(props->name);
+    int i, length = props->length;
 	
     t_atom my_list[length];
 #ifdef MAXMSP
