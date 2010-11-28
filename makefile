@@ -89,7 +89,7 @@ DARWINCFLAGS = -DPD -O2 -Wall -W -Wshadow -Wstrict-prototypes \
 	rm -f $*.o
 
 .c.d_fat:
-	$(CC) -arch i386 -arch ppc $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -o $*.o -c $*.c
+	$(CC) -arch i386 -arch ppc $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -I ./../libmapper/src -I ./../libmapper/include -o $*.o -c $*.c
 	$(CC) -arch i386 -arch ppc -bundle -undefined suppress -flat_namespace \
 	    -o $*.pd_darwin $*.o 
 	rm -f $*.o

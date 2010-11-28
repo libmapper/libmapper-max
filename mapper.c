@@ -6,7 +6,7 @@
 // LGPL
 //
 
-#define MAXMSP
+//#define MAXMSP
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "lo/lo.h"
+#include <lo/lo.h>
 
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -476,7 +476,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
             }
         }
-        if (sig_type && *sig_type) {
+        if (sig_type) {
             if (strcmp((argv)->a_w.w_symbol->s_name, "input") == 0) {
                     mdev_add_input(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
                                    sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
@@ -871,7 +871,7 @@ void mapper_poll(t_mapper *x)
 // -(toggle learning mode)----------------------------------
 void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int mode;
+    int mode = x->learn_mode;
     
     if (argc > 0) {
         if (argv->a_type == A_FLOAT) {
