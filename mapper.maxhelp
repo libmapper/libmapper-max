@@ -1,9 +1,9 @@
 {
 	"patcher" : 	{
 		"fileversion" : 1,
-		"rect" : [ 32.0, 215.0, 535.0, 445.0 ],
+		"rect" : [ 283.0, 89.0, 535.0, 445.0 ],
 		"bglocked" : 0,
-		"defrect" : [ 32.0, 215.0, 535.0, 445.0 ],
+		"defrect" : [ 283.0, 89.0, 535.0, 445.0 ],
 		"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -243,15 +243,14 @@
 					}
 ,
 					"patching_rect" : [ 30.0, 360.0, 149.0, 20.0 ],
-					"presentation_rect" : [ 156.0, 362.0, 0.0, 0.0 ],
 					"saved_object_attributes" : 					{
-						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontname" : "Arial",
 						"fontface" : 0,
 						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"default_fontname" : "Arial"
+						"default_fontname" : "Arial",
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0,
+						"globalpatchername" : ""
 					}
 ,
 					"text" : "p network_neighbourhood"
@@ -413,13 +412,13 @@
 ,
 					"patching_rect" : [ 150.0, 300.0, 116.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontname" : "Arial",
 						"fontface" : 0,
 						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"default_fontname" : "Arial"
+						"default_fontname" : "Arial",
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0,
+						"globalpatchername" : ""
 					}
 ,
 					"text" : "p device_definitions"
@@ -436,9 +435,9 @@
 					"numoutlets" : 0,
 					"patcher" : 					{
 						"fileversion" : 1,
-						"rect" : [ 47.0, 142.0, 573.0, 527.0 ],
+						"rect" : [ 70.0, 284.0, 553.0, 438.0 ],
 						"bglocked" : 0,
-						"defrect" : [ 47.0, 142.0, 573.0, 527.0 ],
+						"defrect" : [ 70.0, 284.0, 553.0, 438.0 ],
 						"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -457,13 +456,49 @@
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
+									"id" : "obj-10",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 2,
+									"outlettype" : [ "", "" ],
+									"patching_rect" : [ 30.0, 195.0, 61.0, 20.0 ],
+									"text" : "route /in1"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-8",
+									"maxclass" : "slider",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 30.0, 225.0, 217.0, 35.0 ]
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-6",
+									"maxclass" : "slider",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 30.0, 30.0, 217.0, 35.0 ]
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
 									"frgb" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"id" : "obj-22",
 									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 300.0, 390.0, 211.0, 34.0 ],
+									"patching_rect" : [ 270.0, 360.0, 211.0, 34.0 ],
 									"text" : "The administrative traffic for the mapping network uses multicast UDP."
 								}
 
@@ -478,7 +513,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 120.0, 345.0, 150.0, 89.0 ],
+									"patching_rect" : [ 90.0, 300.0, 150.0, 89.0 ],
 									"text" : "Sends the /link and /connect messages which create a mapping connection between the two instances of the mapper object"
 								}
 
@@ -492,7 +527,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 120.0, 330.0, 161.0, 20.0 ],
+									"patching_rect" : [ 90.0, 285.0, 161.0, 20.0 ],
 									"text" : "---------------------------------->"
 								}
 
@@ -506,64 +541,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 120.0, 54.0, 18.0 ],
+									"patching_rect" : [ 30.0, 75.0, 54.0, 18.0 ],
 									"text" : "/out1 $1"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-17",
-									"maxclass" : "newobj",
-									"numinlets" : 5,
-									"numoutlets" : 4,
-									"outlettype" : [ "int", "", "", "int" ],
-									"patching_rect" : [ 45.0, 90.0, 84.0, 20.0 ],
-									"text" : "counter 0 100"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-16",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 30.0, 72.0, 20.0 ],
-									"text" : "loadmess 1"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-15",
-									"maxclass" : "newobj",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "bang" ],
-									"patching_rect" : [ 45.0, 60.0, 65.0, 20.0 ],
-									"text" : "metro 250"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-13",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 270.0, 118.0, 18.0 ],
-									"text" : "/in1 -10."
 								}
 
 							}
@@ -576,7 +555,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 3,
 									"outlettype" : [ "list", "", "" ],
-									"patching_rect" : [ 45.0, 195.0, 141.0, 20.0 ],
+									"patching_rect" : [ 30.0, 150.0, 141.0, 20.0 ],
 									"text" : "mapper @def tester.json"
 								}
 
@@ -590,7 +569,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 3,
 									"outlettype" : [ "list", "", "" ],
-									"patching_rect" : [ 45.0, 150.0, 141.0, 20.0 ],
+									"patching_rect" : [ 30.0, 105.0, 141.0, 20.0 ],
 									"text" : "mapper @def tester.json"
 								}
 
@@ -604,7 +583,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 285.0, 300.0, 64.0, 20.0 ],
+									"patching_rect" : [ 255.0, 255.0, 64.0, 20.0 ],
 									"text" : "pack s s"
 								}
 
@@ -614,12 +593,13 @@
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
 									"id" : "obj-5",
+									"linecount" : 2,
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 285.0, 330.0, 197.0, 18.0 ],
-									"text" : "/link $1 $2, /connect $1/out1 $2/in1"
+									"patching_rect" : [ 255.0, 285.0, 246.0, 32.0 ],
+									"text" : "/link $1 $2, /connect $1/out1 $2/in1 @mode expression @expression y=127-x"
 								}
 
 							}
@@ -632,7 +612,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 2,
 									"outlettype" : [ "", "" ],
-									"patching_rect" : [ 285.0, 270.0, 64.0, 20.0 ],
+									"patching_rect" : [ 255.0, 225.0, 64.0, 20.0 ],
 									"text" : "buddy"
 								}
 
@@ -646,7 +626,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 285.0, 360.0, 242.0, 20.0 ],
+									"patching_rect" : [ 255.0, 330.0, 242.0, 20.0 ],
 									"text" : "oscmulticast @group 224.0.1.3 @port 7570"
 								}
 
@@ -660,7 +640,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 2,
 									"outlettype" : [ "", "" ],
-									"patching_rect" : [ 330.0, 240.0, 71.0, 20.0 ],
+									"patching_rect" : [ 300.0, 195.0, 71.0, 20.0 ],
 									"text" : "route name"
 								}
 
@@ -674,7 +654,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 2,
 									"outlettype" : [ "", "" ],
-									"patching_rect" : [ 285.0, 195.0, 71.0, 20.0 ],
+									"patching_rect" : [ 255.0, 150.0, 71.0, 20.0 ],
 									"text" : "route name"
 								}
 
@@ -691,9 +671,18 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-13", 1 ],
+									"destination" : [ "obj-8", 0 ],
 									"hidden" : 0,
-									"midpoints" : [ 54.5, 242.0, 153.5, 242.0 ],
+									"midpoints" : [  ],
+									"source" : [ "obj-10", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-10", 0 ],
+									"hidden" : 0,
+									"midpoints" : [  ],
 									"source" : [ "obj-11", 0 ]
 								}
 
@@ -702,35 +691,8 @@
 								"patchline" : 								{
 									"destination" : [ "obj-2", 0 ],
 									"hidden" : 0,
-									"midpoints" : [ 176.5, 227.0, 339.5, 227.0 ],
+									"midpoints" : [ 161.5, 182.0, 309.5, 182.0 ],
 									"source" : [ "obj-11", 2 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-17", 0 ],
-									"hidden" : 0,
-									"midpoints" : [  ],
-									"source" : [ "obj-15", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-15", 0 ],
-									"hidden" : 0,
-									"midpoints" : [  ],
-									"source" : [ "obj-16", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-18", 0 ],
-									"hidden" : 0,
-									"midpoints" : [  ],
-									"source" : [ "obj-17", 0 ]
 								}
 
 							}
@@ -781,6 +743,15 @@
 							}
 , 							{
 								"patchline" : 								{
+									"destination" : [ "obj-18", 0 ],
+									"hidden" : 0,
+									"midpoints" : [  ],
+									"source" : [ "obj-6", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
 									"destination" : [ "obj-5", 0 ],
 									"hidden" : 0,
 									"midpoints" : [  ],
@@ -792,7 +763,7 @@
 								"patchline" : 								{
 									"destination" : [ "obj-1", 0 ],
 									"hidden" : 0,
-									"midpoints" : [ 176.5, 182.0, 294.5, 182.0 ],
+									"midpoints" : [ 161.5, 137.0, 264.5, 137.0 ],
 									"source" : [ "obj-9", 2 ]
 								}
 
@@ -802,13 +773,13 @@
 ,
 					"patching_rect" : [ 150.0, 330.0, 107.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontname" : "Arial",
 						"fontface" : 0,
 						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"default_fontname" : "Arial"
+						"default_fontname" : "Arial",
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0,
+						"globalpatchername" : ""
 					}
 ,
 					"text" : "p simple_example"
@@ -825,9 +796,9 @@
 					"numoutlets" : 0,
 					"patcher" : 					{
 						"fileversion" : 1,
-						"rect" : [ 523.0, 179.0, 519.0, 398.0 ],
+						"rect" : [ 36.0, 219.0, 519.0, 398.0 ],
 						"bglocked" : 0,
-						"defrect" : [ 523.0, 179.0, 519.0, 398.0 ],
+						"defrect" : [ 36.0, 219.0, 519.0, 398.0 ],
 						"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -852,7 +823,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 120.0, 255.0, 165.0, 18.0 ],
-									"presentation_rect" : [ 117.0, 269.0, 0.0, 0.0 ],
 									"text" : "add output /pressure @type f"
 								}
 
@@ -867,7 +837,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 90.0, 225.0, 297.0, 18.0 ],
-									"presentation_rect" : [ 85.0, 228.0, 0.0, 0.0 ],
 									"text" : "add input /rate @type f @units Hz @min 0 @max 100"
 								}
 
@@ -947,13 +916,13 @@
 ,
 					"patching_rect" : [ 30.0, 300.0, 101.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontname" : "Arial",
 						"fontface" : 0,
 						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"default_fontname" : "Arial"
+						"default_fontname" : "Arial",
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0,
+						"globalpatchername" : ""
 					}
 ,
 					"text" : "p adding_signals"
@@ -970,9 +939,9 @@
 					"numoutlets" : 0,
 					"patcher" : 					{
 						"fileversion" : 1,
-						"rect" : [ 644.0, 415.0, 640.0, 480.0 ],
+						"rect" : [ 51.0, 186.0, 412.0, 456.0 ],
 						"bglocked" : 0,
-						"defrect" : [ 644.0, 415.0, 640.0, 480.0 ],
+						"defrect" : [ 51.0, 186.0, 412.0, 456.0 ],
 						"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1039,7 +1008,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "int" ],
 									"patching_rect" : [ 210.0, 120.0, 75.0, 20.0 ],
-									"presentation_rect" : [ 223.0, 121.0, 0.0, 0.0 ],
 									"text" : "random 100"
 								}
 
@@ -1054,7 +1022,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "int" ],
 									"patching_rect" : [ 120.0, 120.0, 75.0, 20.0 ],
-									"presentation_rect" : [ 117.0, 125.0, 0.0, 0.0 ],
 									"text" : "random 100"
 								}
 
@@ -1150,7 +1117,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 195.0, 390.0, 150.0, 34.0 ],
-									"presentation_rect" : [ 252.0, 134.0, 0.0, 0.0 ],
 									"text" : "3) watch the number of reported signals"
 								}
 
@@ -1179,7 +1145,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 75.0, 270.0, 47.0, 18.0 ],
-									"presentation_rect" : [ 87.0, 105.0, 0.0, 0.0 ],
 									"text" : "learn 0"
 								}
 
@@ -1344,13 +1309,13 @@
 ,
 					"patching_rect" : [ 30.0, 330.0, 84.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontname" : "Arial",
 						"fontface" : 0,
 						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"default_fontname" : "Arial"
+						"default_fontname" : "Arial",
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0,
+						"globalpatchername" : ""
 					}
 ,
 					"text" : "p learn_mode"

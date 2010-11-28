@@ -1,2 +1,64 @@
-#N canvas 1003 133 450 300 10;
-#X obj 88 151 mapper @alias foo;
+#N canvas 868 106 418 362 10;
+#X obj 30 108 mapper @alias foo;
+#X text 20 12 mapper;
+#X text 22 27 A pd wrapper for libmapper/Digital Orchestra Tools;
+#X text 20 285 For more information visit;
+#X text 21 300 www.idmil.org/software/libmapper;
+#X obj 30 79 r mapper;
+#N canvas 902 359 450 300 adding_signals 0;
+#X text 19 15 Input and ouput signals can be added to the device by
+sending the message "add input" or "add output" along with a signal
+name and data type. Signal metadata is specified using tagged arguments
+\; only the type tag is required but any others can be added. If min
+and max tags are supplied the system will be able to automatically
+use linear scaling when creating mapping connections.;
+#X msg 29 131 add input /gain @type f @units normalized @min 0 @max
+1;
+#X msg 51 161 add input /rate @type f @units Hz @min 0 @max 100;
+#X msg 80 192 add output /pressure @type f;
+#X obj 29 236 s mapper;
+#X connect 1 0 4 0;
+#X connect 2 0 4 0;
+#X connect 3 0 4 0;
+#X restore 30 153 pd adding_signals;
+#N canvas 866 520 451 421 learn_mode 0;
+#X obj 111 28 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X obj 111 62 metro 250;
+#X obj 25 103 random 100;
+#X obj 111 103 random 100;
+#X obj 197 103 random 100;
+#X obj 25 133 prepend /out1;
+#X obj 111 133 prepend /out2;
+#X obj 197 133 prepend /out3;
+#X obj 29 259 mapper;
+#X obj 69 294 route numOutputs;
+#X floatatom 69 323 5 0 0 0 - - -;
+#X msg 181 170 learn 1;
+#X msg 181 195 learn 0;
+#X text 135 28 1) start sending some signals;
+#X text 235 168 2) turn on learn mode;
+#X text 112 321 3) watch the number of reported signals;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X connect 1 0 3 0;
+#X connect 1 0 4 0;
+#X connect 2 0 5 0;
+#X connect 3 0 6 0;
+#X connect 4 0 7 0;
+#X connect 9 0 10 0;
+#X restore 140 153 pd learn_mode;
+#N canvas 791 406 450 300 simple_example 0;
+#X obj 59 51 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 6300 1;
+#X obj 61 175 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 0 1;
+#X obj 56 76 prepend /out1;
+#X obj 55 106 mapper;
+#X connect 0 0 2 0;
+#X restore 226 153 pd simple_example;
+#X text 20 195 The mapper object forms part of a distributed network
+of devices communicating over the local network. The inputs and outputs
+of each device can be discovered and queried by other participants
+in the network \, and mapping connections can be created \, edited
+\, and destroyed using messages of graphical interfaces.;
