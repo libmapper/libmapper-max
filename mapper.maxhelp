@@ -146,7 +146,7 @@
 							}
 , 							{
 								"box" : 								{
-									"cols" : 1,
+									"cols" : 11,
 									"colwidth" : 90,
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
@@ -157,7 +157,7 @@
 									"numoutlets" : 4,
 									"outlettype" : [ "list", "", "", "" ],
 									"patching_rect" : [ 30.0, 60.0, 1008.0, 132.0 ],
-									"rows" : 1
+									"rows" : 5
 								}
 
 							}
@@ -244,13 +244,13 @@
 ,
 					"patching_rect" : [ 30.0, 360.0, 149.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"fontface" : 0,
-						"fontsize" : 12.0,
-						"globalpatchername" : "",
 						"default_fontface" : 0,
 						"fontname" : "Arial",
 						"default_fontname" : "Arial",
-						"default_fontsize" : 12.0
+						"globalpatchername" : "",
+						"default_fontsize" : 12.0,
+						"fontface" : 0,
+						"fontsize" : 12.0
 					}
 ,
 					"text" : "p network_neighbourhood"
@@ -412,13 +412,13 @@
 ,
 					"patching_rect" : [ 150.0, 300.0, 116.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"fontface" : 0,
-						"fontsize" : 12.0,
-						"globalpatchername" : "",
 						"default_fontface" : 0,
 						"fontname" : "Arial",
 						"default_fontname" : "Arial",
-						"default_fontsize" : 12.0
+						"globalpatchername" : "",
+						"default_fontsize" : 12.0,
+						"fontface" : 0,
+						"fontsize" : 12.0
 					}
 ,
 					"text" : "p device_definitions"
@@ -773,13 +773,13 @@
 ,
 					"patching_rect" : [ 150.0, 330.0, 107.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"fontface" : 0,
-						"fontsize" : 12.0,
-						"globalpatchername" : "",
 						"default_fontface" : 0,
 						"fontname" : "Arial",
 						"default_fontname" : "Arial",
-						"default_fontsize" : 12.0
+						"globalpatchername" : "",
+						"default_fontsize" : 12.0,
+						"fontface" : 0,
+						"fontsize" : 12.0
 					}
 ,
 					"text" : "p simple_example"
@@ -796,9 +796,9 @@
 					"numoutlets" : 0,
 					"patcher" : 					{
 						"fileversion" : 1,
-						"rect" : [ 36.0, 219.0, 519.0, 398.0 ],
+						"rect" : [ 224.0, 558.0, 519.0, 398.0 ],
 						"bglocked" : 0,
-						"defrect" : [ 36.0, 219.0, 519.0, 398.0 ],
+						"defrect" : [ 224.0, 558.0, 519.0, 398.0 ],
 						"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -814,6 +814,21 @@
 						"enablevscroll" : 1,
 						"devicewidth" : 0.0,
 						"boxes" : [ 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
+									"id" : "obj-2",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 150.0, 285.0, 104.0, 18.0 ],
+									"presentation_rect" : [ 166.0, 294.0, 0.0, 0.0 ],
+									"text" : "remove /pressure"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
@@ -889,6 +904,15 @@
 									"destination" : [ "obj-1", 0 ],
 									"hidden" : 0,
 									"midpoints" : [  ],
+									"source" : [ "obj-2", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-1", 0 ],
+									"hidden" : 0,
+									"midpoints" : [  ],
 									"source" : [ "obj-3", 0 ]
 								}
 
@@ -916,13 +940,13 @@
 ,
 					"patching_rect" : [ 30.0, 300.0, 101.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"fontface" : 0,
-						"fontsize" : 12.0,
-						"globalpatchername" : "",
 						"default_fontface" : 0,
 						"fontname" : "Arial",
 						"default_fontname" : "Arial",
-						"default_fontsize" : 12.0
+						"globalpatchername" : "",
+						"default_fontsize" : 12.0,
+						"fontface" : 0,
+						"fontsize" : 12.0
 					}
 ,
 					"text" : "p adding_signals"
@@ -1309,13 +1333,13 @@
 ,
 					"patching_rect" : [ 30.0, 330.0, 84.0, 20.0 ],
 					"saved_object_attributes" : 					{
-						"fontface" : 0,
-						"fontsize" : 12.0,
-						"globalpatchername" : "",
 						"default_fontface" : 0,
 						"fontname" : "Arial",
 						"default_fontname" : "Arial",
-						"default_fontsize" : 12.0
+						"globalpatchername" : "",
+						"default_fontsize" : 12.0,
+						"fontface" : 0,
+						"fontsize" : 12.0
 					}
 ,
 					"text" : "p learn_mode"

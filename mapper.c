@@ -6,7 +6,7 @@
 // LGPL
 //
 
-//#define MAXMSP
+#define MAXMSP
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -70,6 +70,7 @@ void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
 void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 int mapper_setup_device(t_mapper *x);
 #ifdef MAXMSP
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
@@ -92,6 +93,7 @@ void *mapper_class;
         class_addmethod(c, (method)mapper_remove_signal,  "remove",   A_GIMME,    0);
         class_addmethod(c, (method)mapper_anything,       "anything", A_GIMME,    0);
         class_addmethod(c, (method)mapper_learn,          "learn",    A_GIMME,    0);
+        class_addmethod(c, (method)mapper_set,            "set",      A_GIMME,    0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
         ps_list = gensym("list");
@@ -107,6 +109,7 @@ void *mapper_class;
         class_addmethod(c,  (t_method)mapper_remove_signal, gensym("remove"),   A_GIMME, 0);
         class_addanything(c, (t_method)mapper_anything);
         class_addmethod(c, (t_method)mapper_learn, gensym("learn"), A_FLOAT, 0);
+        class_addmethod(c, (t_method)mapper_set, gensym("set"), A_GIMME, 0);
         mapper_class = c;
         ps_list = gensym("list");
         return 0;
@@ -394,7 +397,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (sig_type) {
             if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
                 mdev_add_input(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units,
-                               sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                               sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
@@ -405,7 +408,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 mdev_add_output(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units, 
-                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
                                 sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
                 
                 //output numOutputs
@@ -477,7 +480,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (sig_type) {
             if (strcmp((argv)->a_w.w_symbol->s_name, "input") == 0) {
                     mdev_add_input(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
-                                   sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                   sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
                                    sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
                                    sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
@@ -488,7 +491,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
                 mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
-                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
                                 sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
                                 
                 //output numOutputs
@@ -508,7 +511,56 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 // -(remove signal)-----------------------------------------
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-	// not yet supported by libmapper
+	mapper_signal msig;
+    t_atom my_list[2];
+    char *sig_name = NULL;
+    
+    if (!argc) {
+        return;
+    }
+#ifdef MAXMSP
+    if (argv->a_type == A_SYM) {
+        sig_name = strdup(atom_getsym(argv)->s_name);
+    }
+#else
+    if (argv->a_type == A_SYMBOL) {
+        sig_name = strdup(argv->a_w.w_symbol->s_name);
+    }
+#endif
+    
+    else {
+        return;
+    }
+                
+    if (msig=mdev_get_output_by_name(x->device, sig_name, 0)) {
+        mdev_remove_output(x->device, msig);
+#ifdef MAXMSP
+        atom_setsym(my_list, gensym("numOutputs"));
+        atom_setlong(my_list + 1, (long)mdev_num_outputs(x->device));
+#else
+        SETSYMBOL(my_list, gensym("numOutputs"));
+        SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
+#endif
+        outlet_anything(x->outlet3, ps_list, 2, my_list);
+    }
+    else if (msig=mdev_get_input_by_name(x->device, sig_name, 0)) {
+        mdev_remove_input(x->device, msig);
+#ifdef MAXMSP
+        atom_setsym(my_list, gensym("numInputs"));
+        atom_setlong(my_list + 1, (long)mdev_num_inputs(x->device));
+#else
+        SETSYMBOL(my_list, gensym("numInputs"));
+        SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
+#endif
+        outlet_anything(x->outlet3, ps_list, 2, my_list);
+    }
+}
+    
+// *********************************************************
+// -(set signal value)--------------------------------------
+void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
+{
+    // not yet implemented!
 }
 
 // *********************************************************
