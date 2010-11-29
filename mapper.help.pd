@@ -1,5 +1,4 @@
-#N canvas 868 106 418 362 10;
-#X obj 30 108 mapper @alias foo;
+#N canvas 797 133 418 362 10;
 #X text 20 12 mapper;
 #X text 22 27 A pd wrapper for libmapper/Digital Orchestra Tools;
 #X text 20 285 For more information visit;
@@ -50,7 +49,7 @@ use linear scaling when creating mapping connections.;
 #X restore 140 153 pd learn_mode;
 #N canvas 791 406 450 300 simple_example 0;
 #X obj 59 51 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 6300 1;
+-1 -1 0 1;
 #X obj 61 175 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
 -1 -1 0 1;
 #X obj 56 76 prepend /out1;
@@ -61,4 +60,5 @@ use linear scaling when creating mapping connections.;
 of devices communicating over the local network. The inputs and outputs
 of each device can be discovered and queried by other participants
 in the network \, and mapping connections can be created \, edited
-\, and destroyed using messages of graphical interfaces.;
+\, and destroyed using messages or graphical interfaces.;
+#X obj 30 108 mapper;

@@ -1,9 +1,9 @@
 {
 	"patcher" : 	{
 		"fileversion" : 1,
-		"rect" : [ 283.0, 89.0, 535.0, 445.0 ],
+		"rect" : [ 120.0, 103.0, 535.0, 445.0 ],
 		"bglocked" : 0,
-		"defrect" : [ 283.0, 89.0, 535.0, 445.0 ],
+		"defrect" : [ 120.0, 103.0, 535.0, 445.0 ],
 		"openrect" : [ 0.0, 0.0, 0.0, 0.0 ],
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -146,7 +146,7 @@
 							}
 , 							{
 								"box" : 								{
-									"cols" : 11,
+									"cols" : 1,
 									"colwidth" : 90,
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
@@ -157,7 +157,7 @@
 									"numoutlets" : 4,
 									"outlettype" : [ "list", "", "", "" ],
 									"patching_rect" : [ 30.0, 60.0, 1008.0, 132.0 ],
-									"rows" : 5
+									"rows" : 1
 								}
 
 							}
@@ -246,11 +246,11 @@
 					"saved_object_attributes" : 					{
 						"fontface" : 0,
 						"fontsize" : 12.0,
+						"globalpatchername" : "",
 						"default_fontface" : 0,
-						"default_fontname" : "Arial",
 						"fontname" : "Arial",
-						"default_fontsize" : 12.0,
-						"globalpatchername" : ""
+						"default_fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p network_neighbourhood"
@@ -414,11 +414,11 @@
 					"saved_object_attributes" : 					{
 						"fontface" : 0,
 						"fontsize" : 12.0,
+						"globalpatchername" : "",
 						"default_fontface" : 0,
-						"default_fontname" : "Arial",
 						"fontname" : "Arial",
-						"default_fontsize" : 12.0,
-						"globalpatchername" : ""
+						"default_fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p device_definitions"
@@ -775,11 +775,11 @@
 					"saved_object_attributes" : 					{
 						"fontface" : 0,
 						"fontsize" : 12.0,
+						"globalpatchername" : "",
 						"default_fontface" : 0,
-						"default_fontname" : "Arial",
 						"fontname" : "Arial",
-						"default_fontsize" : 12.0,
-						"globalpatchername" : ""
+						"default_fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p simple_example"
@@ -918,11 +918,11 @@
 					"saved_object_attributes" : 					{
 						"fontface" : 0,
 						"fontsize" : 12.0,
+						"globalpatchername" : "",
 						"default_fontface" : 0,
-						"default_fontname" : "Arial",
 						"fontname" : "Arial",
-						"default_fontsize" : 12.0,
-						"globalpatchername" : ""
+						"default_fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p adding_signals"
@@ -1311,11 +1311,11 @@
 					"saved_object_attributes" : 					{
 						"fontface" : 0,
 						"fontsize" : 12.0,
+						"globalpatchername" : "",
 						"default_fontface" : 0,
-						"default_fontname" : "Arial",
 						"fontname" : "Arial",
-						"default_fontsize" : 12.0,
-						"globalpatchername" : ""
+						"default_fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p learn_mode"
@@ -1333,7 +1333,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 315.0, 90.0, 172.0, 172.0 ],
-					"text" : "The mapper object forms part of a distributed network of devices communicating over the local network. The inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages of graphical interfaces."
+					"text" : "The mapper object forms part of a distributed network of devices communicating over the local network. The inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
 				}
 
 			}
