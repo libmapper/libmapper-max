@@ -244,13 +244,13 @@
 ,
 					"patching_rect" : [ 30.0, 360.0, 149.0, 20.0 ],
 					"saved_object_attributes" : 					{
+						"fontface" : 0,
+						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"fontname" : "Arial",
 						"default_fontname" : "Arial",
 						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontface" : 0,
-						"fontsize" : 12.0
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p network_neighbourhood"
@@ -412,13 +412,13 @@
 ,
 					"patching_rect" : [ 150.0, 300.0, 116.0, 20.0 ],
 					"saved_object_attributes" : 					{
+						"fontface" : 0,
+						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"fontname" : "Arial",
 						"default_fontname" : "Arial",
 						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontface" : 0,
-						"fontsize" : 12.0
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p device_definitions"
@@ -773,13 +773,13 @@
 ,
 					"patching_rect" : [ 150.0, 330.0, 107.0, 20.0 ],
 					"saved_object_attributes" : 					{
+						"fontface" : 0,
+						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"fontname" : "Arial",
 						"default_fontname" : "Arial",
 						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontface" : 0,
-						"fontsize" : 12.0
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p simple_example"
@@ -822,9 +822,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 150.0, 285.0, 104.0, 18.0 ],
-									"presentation_rect" : [ 166.0, 294.0, 0.0, 0.0 ],
-									"text" : "remove /pressure"
+									"patching_rect" : [ 150.0, 285.0, 141.0, 18.0 ],
+									"text" : "remove output /pressure"
 								}
 
 							}
@@ -940,13 +939,13 @@
 ,
 					"patching_rect" : [ 30.0, 300.0, 101.0, 20.0 ],
 					"saved_object_attributes" : 					{
+						"fontface" : 0,
+						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"fontname" : "Arial",
 						"default_fontname" : "Arial",
 						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontface" : 0,
-						"fontsize" : 12.0
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p adding_signals"
@@ -1333,13 +1332,13 @@
 ,
 					"patching_rect" : [ 30.0, 330.0, 84.0, 20.0 ],
 					"saved_object_attributes" : 					{
+						"fontface" : 0,
+						"fontsize" : 12.0,
 						"default_fontface" : 0,
-						"fontname" : "Arial",
 						"default_fontname" : "Arial",
 						"globalpatchername" : "",
-						"default_fontsize" : 12.0,
-						"fontface" : 0,
-						"fontsize" : 12.0
+						"fontname" : "Arial",
+						"default_fontsize" : 12.0
 					}
 ,
 					"text" : "p learn_mode"

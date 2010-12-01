@@ -6,7 +6,7 @@
 // LGPL
 //
 
-//#define MAXMSP
+#define MAXMSP
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -316,9 +316,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     //char *type;
     char *sig_name, *sig_units = 0, sig_type = 0;
     int sig_min_int, sig_max_int, sig_length = 1;
-    int *sig_min_int_ptr = 0, *sig_max_int_ptr = 0;
     float sig_min_float, sig_max_float;
-    float *sig_min_float_ptr = 0, *sig_max_float_ptr = 0;
     long i;
     
     if (argc < 4)
@@ -356,16 +354,12 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                          (strcmp(atom_getsym(argv+i)->s_name, "@minimum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_min_float = atom_getfloat(argv + i + 1);
-                        sig_min_float_ptr = &sig_min_float;
                         sig_min_int = (int)sig_min_float;
-                        sig_min_int_ptr = &sig_min_int;
                         i++;
                     }
                     else if ((argv + i + 1)->a_type == A_LONG) {
                         sig_min_int = (int)atom_getlong(argv + i + 1);
-                        sig_min_int_ptr = &sig_min_int;
                         sig_min_float = (float)sig_min_int;
-                        sig_min_float_ptr = &sig_min_float;
                         i++;
                     }
                 }
@@ -373,16 +367,12 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                          (strcmp(atom_getsym(argv+i)->s_name, "@maximum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_max_float = atom_getfloat(argv + i + 1);
-                        sig_max_float_ptr = &sig_max_float;
                         sig_max_int = (int)sig_max_float;
-                        sig_max_int_ptr = &sig_max_int;
                         i++;
                     }
                     else if ((argv + i + 1)->a_type == A_LONG) {
                         sig_max_int = (int)atom_getlong(argv + i + 1);
-                        sig_max_int_ptr = &sig_max_int;
                         sig_max_float = (float)sig_max_int;
-                        sig_max_float_ptr = &sig_max_float;
                         i++;
                     }
                 }
@@ -397,8 +387,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (sig_type) {
             if (strcmp(atom_getsym(argv)->s_name, "input") == 0) {
                 mdev_add_input(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units,
-                               sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                               sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                               sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
+                               sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float, 
                                sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
                 //output numInputs
@@ -408,8 +398,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 mdev_add_output(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units, 
-                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
+                                sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
+                                sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                 
                 //output numOutputs
                 atom_setsym(my_list, gensym("numOutputs"));
@@ -453,9 +443,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                          (strcmp((argv+i)->a_w.w_symbol->s_name, "@minimum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_min_float = atom_getfloat(argv + i + 1);
-                        sig_min_float_ptr = &sig_min_float;
                         sig_min_int = (int)sig_min_float;
-                        sig_min_int_ptr = &sig_min_int;
                         i++;
                     }
                 }
@@ -463,9 +451,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                          (strcmp((argv+i)->a_w.w_symbol->s_name, "@maximum") == 0)) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         sig_max_float = atom_getfloat(argv + i + 1);
-                        sig_max_float_ptr = &sig_max_float;
                         sig_max_int = (int)sig_max_float;
-                        sig_max_int_ptr = &sig_max_int;
                         i++;
                     }
                 }
@@ -480,8 +466,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (sig_type) {
             if (strcmp((argv)->a_w.w_symbol->s_name, "input") == 0) {
                     mdev_add_input(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
-                                   sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                                   sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                   sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
+                                   sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float, 
                                    sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
                 //output numInputs
@@ -491,8 +477,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
                 mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
-                                sig_type == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                                sig_type == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
+                                sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
+                                sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                                 
                 //output numOutputs
                 SETSYMBOL(my_list, gensym("numOutputs"));
@@ -513,46 +499,51 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
 	mapper_signal msig;
     t_atom my_list[2];
-    char *sig_name = NULL;
+    char *sig_name = NULL, *direction = NULL;
     
-    if (!argc) {
+    if (argc < 2) {
         return;
     }
 #ifdef MAXMSP
-    if (argv->a_type == A_SYM) {
-        sig_name = strdup(atom_getsym(argv)->s_name);
+    if (argv->a_type == A_SYM && (argv+1)->a_type == A_SYM) {
+        direction = strdup(atom_getsym(argv)->s_name);
+        sig_name = strdup(atom_getsym(argv+1)->s_name);
     }
 #else
-    if (argv->a_type == A_SYMBOL) {
-        sig_name = strdup(argv->a_w.w_symbol->s_name);
+    if (argv->a_type == A_SYMBOL && (argv+1)->a_type == A_SYMBOL) {
+        direction = strdup(argv->a_w.w_symbol->s_name)
+        sig_name = strdup((argv+1)->a_w.w_symbol->s_name);
     }
 #endif
-    
     else {
         return;
     }
-                
-    if (msig=mdev_get_output_by_name(x->device, sig_name, 0)) {
-        mdev_remove_output(x->device, msig);
-#ifdef MAXMSP
-        atom_setsym(my_list, gensym("numOutputs"));
-        atom_setlong(my_list + 1, (long)mdev_num_outputs(x->device));
-#else
-        SETSYMBOL(my_list, gensym("numOutputs"));
-        SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
-#endif
-        outlet_anything(x->outlet3, ps_list, 2, my_list);
+    
+    if (strcmp(direction, "output") == 0) {
+        if (msig=mdev_get_output_by_name(x->device, sig_name, 0)) {
+            mdev_remove_output(x->device, msig);
+    #ifdef MAXMSP
+            atom_setsym(my_list, gensym("numOutputs"));
+            atom_setlong(my_list + 1, (long)mdev_num_outputs(x->device));
+    #else
+            SETSYMBOL(my_list, gensym("numOutputs"));
+            SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
+    #endif
+            outlet_anything(x->outlet3, ps_list, 2, my_list);
+        }
     }
-    else if (msig=mdev_get_input_by_name(x->device, sig_name, 0)) {
-        mdev_remove_input(x->device, msig);
-#ifdef MAXMSP
-        atom_setsym(my_list, gensym("numInputs"));
-        atom_setlong(my_list + 1, (long)mdev_num_inputs(x->device));
-#else
-        SETSYMBOL(my_list, gensym("numInputs"));
-        SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
-#endif
-        outlet_anything(x->outlet3, ps_list, 2, my_list);
+    else if (strcmp(direction, "input") == 0) {
+        if (msig=mdev_get_input_by_name(x->device, sig_name, 0)) {
+            mdev_remove_input(x->device, msig);
+    #ifdef MAXMSP
+            atom_setsym(my_list, gensym("numInputs"));
+            atom_setlong(my_list + 1, (long)mdev_num_inputs(x->device));
+    #else
+            SETSYMBOL(my_list, gensym("numInputs"));
+            SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
+    #endif
+            outlet_anything(x->outlet3, ps_list, 2, my_list);
+        }
     }
 }
     
@@ -603,6 +594,10 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
         }
         mapper_db_signal props = msig_properties(msig);
+        if (props->length != argc) {
+            post("Vector length does not match signal definition!\n");
+            return;
+        }
         if (props->type == 'i') {
             int payload[props->length];
             for (i = 0; i < argc; i++) {
@@ -613,10 +608,6 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     payload[i] = (int)atom_getlong(argv + i);
 #endif
                 
-            }
-            // zero-pad if necessary???
-            for (; i < props->length; i++) {
-                payload[i] = 0;
             }
             //update signal
             msig_update(msig, payload);
@@ -631,10 +622,6 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     payload[i] = (float)atom_getlong(argv + i);
 #endif
                 
-            }
-            // zero-pad if necessary???
-            for (; i < props->length; i++) {
-                payload[i] = 0.;
             }
             //update signal
             msig_update(msig, payload);
@@ -772,9 +759,9 @@ void mapper_register_signals(t_mapper *x) {
     const char *sig_name, *sig_units, *sig_type;
     char sig_type_char = 0;
     double sig_min_double, sig_max_double;
-    float sig_min_float, sig_max_float, *sig_min_float_ptr = 0, *sig_max_float_ptr = 0;
+    float sig_min_float, sig_max_float;
     long sig_min_long, sig_max_long, sig_length;
-    int sig_min_int, sig_max_int, *sig_min_int_ptr = 0, *sig_max_int_ptr = 0;
+    int sig_min_int, sig_max_int;
     
     if (x->d) {
         // Get pointer to dictionary "device"
@@ -791,8 +778,6 @@ void mapper_register_signals(t_mapper *x) {
                     if (sig_type) {
                         free(&sig_type);
                     }
-                    sig_min_int_ptr = sig_max_int_ptr = 0;
-                    sig_min_float_ptr = sig_max_float_ptr = 0;
                     sig_length = 1;
                     
                     // each atom object points to a dictionary, need to recover atoms by key
@@ -803,27 +788,19 @@ void mapper_register_signals(t_mapper *x) {
                         dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length);
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
-                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_double;
-                            sig_min_int_ptr = &sig_min_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
-                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_long;
-                            sig_min_int_ptr = &sig_min_int;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
-                            sig_max_float_ptr = &sig_max_float;
                             sig_max_int = (int)sig_max_double;
-                            sig_max_int_ptr = &sig_max_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
-                            sig_max_float_ptr = &sig_max_float;
                             sig_min_int = (int)sig_max_long;
-                            sig_max_int_ptr = &sig_max_int;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
                             sig_type_char = 'i';
@@ -835,8 +812,8 @@ void mapper_register_signals(t_mapper *x) {
                         }
 
                         mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units,
-                                       sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                                       sig_type_char == 'i' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr), 
+                                       sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
+                                       sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float, 
                                        sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
                     }
                 }
@@ -853,8 +830,6 @@ void mapper_register_signals(t_mapper *x) {
                     if (sig_type) {
                         free(&sig_type);
                     }
-                    sig_min_int_ptr = sig_max_int_ptr = 0;
-                    sig_min_float_ptr = sig_max_float_ptr = 0;
                     sig_length = 1;
                     
                     // each atom object points to a dictionary, need to recover atoms by key
@@ -865,27 +840,19 @@ void mapper_register_signals(t_mapper *x) {
                         dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length);
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
-                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_double;
-                            sig_min_int_ptr = &sig_min_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
-                            sig_min_float_ptr = &sig_min_float;
                             sig_min_int = (int)sig_min_long;
-                            sig_min_int_ptr = &sig_min_int;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
-                            sig_max_float_ptr = &sig_max_float;
                             sig_max_int = (int)sig_max_double;
-                            sig_max_int_ptr = &sig_max_int;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
-                            sig_max_float_ptr = &sig_max_float;
                             sig_max_int = (int)sig_max_long;
-                            sig_max_int_ptr = &sig_max_int;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
                             sig_type_char = 'i';
@@ -897,8 +864,8 @@ void mapper_register_signals(t_mapper *x) {
                         }
 
                         mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 
-                                        sig_type_char == 'i' ? MSIGVALP(sig_min_int_ptr) : MSIGVALP(sig_min_float_ptr), 
-                                        sig_type_char == 'f' ? MSIGVALP(sig_max_int_ptr) : MSIGVALP(sig_max_float_ptr));
+                                        sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
+                                        sig_type_char == 'f' ? (void *)&sig_max_int : (void *)&sig_max_float);
                     }
                 }
             }
