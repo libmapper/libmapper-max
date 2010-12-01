@@ -6,7 +6,7 @@
 // LGPL
 //
 
-#define MAXMSP
+//#define MAXMSP
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -64,8 +64,8 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_poll(t_mapper *x);
-void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v);
-void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v);
+void mapper_float_handler(mapper_signal msig, void *v);
+void mapper_int_handler(mapper_signal msig, void *v);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
@@ -647,23 +647,24 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // -(int handler)-------------------------------------------
-void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
+void mapper_int_handler(mapper_signal msig, void *v)
 {
     mapper_db_signal props = msig_properties(msig);
     t_mapper *x = props->user_data;
 	char *path = strdup(props->name);
     int i, length = props->length;
-	
+    int *pi = (int*)v;
+
     t_atom my_list[length];
 #ifdef MAXMSP
     atom_setsym(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        atom_setlong(my_list + i + 1, (long)(v+i)->i32);
+        atom_setlong(my_list + i + 1, (long)*(pi+i));
     }
 #else
     SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(my_list + i + 1, (float)(v+i)->i32);
+        SETFLOAT(my_list + i + 1, (float)*(pi+i));
     }
 #endif
     outlet_list(x->outlet1, ps_list, 2, my_list);
@@ -671,23 +672,24 @@ void mapper_int_handler(mapper_signal msig, mapper_signal_value_t *v)
 
 // *********************************************************
 // -(float handler)-----------------------------------------
-void mapper_float_handler(mapper_signal msig, mapper_signal_value_t *v)
+void mapper_float_handler(mapper_signal msig, void *v)
 {
     mapper_db_signal props = msig_properties(msig);
     t_mapper *x = props->user_data;
 	char *path = strdup(props->name);
     int i, length = props->length;
+    float *pf = (float*)v;
 	
     t_atom my_list[length];
 #ifdef MAXMSP
     atom_setsym(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        atom_setfloat(my_list + i + 1, (v+i)->f);
+        atom_setfloat(my_list + i + 1, *(pf+i));
     }
 #else
     SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(my_list + 1, (v+i)->f);
+        SETFLOAT(my_list + 1, *(pf+i));
     }
 #endif
     outlet_list(x->outlet1, ps_list, 2, my_list);
