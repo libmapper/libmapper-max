@@ -1,6 +1,6 @@
 NAME=mapper
 
-current: d_fat
+current: pd_darwin
 
 # ----------------------- NT -----------------------
 
@@ -82,23 +82,20 @@ LINUXLIBS = $(LIBMAPPER_LIBS)
 
 # ----------------------- Mac OSX -----------------------
 
-d_ppc: $(NAME).d_ppc
-d_fat: $(NAME).d_fat
+pd_darwin: $(NAME).pd_darwin
 
-.SUFFIXES: .d_ppc .d_fat
+.SUFFIXES: .pd_darwin
 
 DARWINCFLAGS = -DPD -O2 -Wall -W -Wshadow -Wstrict-prototypes \
     -Wno-unused -Wno-parentheses -Wno-switch $(OPT_CFLAGS)
 
-.c.d_ppc:
-	$(CC) $(DARWINCFLAGS) $(LINUXINCLUDE) -o $*.o -c $*.c
-	$(CC) -bundle -undefined suppress -flat_namespace -o $*.pd_darwin $*.o 
-	rm -f $*.o
+LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper-0)
+LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper-0)
 
-.c.d_fat:
-	$(CC) -arch i386 -arch ppc $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -I ./../libmapper/src -I ./../libmapper/include -o $*.o -c $*.c
-	$(CC) -arch i386 -arch ppc -bundle -undefined suppress -flat_namespace \
-	    -o $*.pd_darwin $*.o 
+.c.pd_darwin:
+	$(CC) -arch i386 $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -o $*.o -c $*.c $(LIBMAPPER_CFLAGS)
+	$(CC) -arch i386 -bundle -undefined suppress -flat_namespace \
+	    -o $*.pd_darwin $*.o $(LIBMAPPER_LIBS)
 	rm -f $*.o
 
 # ----------------------------------------------------------
