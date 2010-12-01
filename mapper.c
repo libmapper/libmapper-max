@@ -242,7 +242,7 @@ void mapper_print_properties(t_mapper *x)
         outlet_list(x->outlet3, ps_list, 2, my_list);
         
         //output IP
-        struct in_addr *ip = mdev_ip4(x->device);
+        const struct in_addr *ip = mdev_ip4(x->device);
         message = strdup(inet_ntoa(*ip));
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("IP"));
