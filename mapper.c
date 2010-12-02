@@ -511,7 +511,7 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     }
 #else
     if (argv->a_type == A_SYMBOL && (argv+1)->a_type == A_SYMBOL) {
-        direction = strdup(argv->a_w.w_symbol->s_name)
+        direction = strdup(argv->a_w.w_symbol->s_name);
         sig_name = strdup((argv+1)->a_w.w_symbol->s_name);
     }
 #endif
