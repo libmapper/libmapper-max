@@ -1,12 +1,16 @@
 //
 // mapper.c
-// a maxmsp external encapsulating the functionality of libmapper
-// http://www.idmil.org/software/mappingtools
+// a maxmsp and puredata external encapsulating the functionality of libmapper
+// http://www.idmil.org/software/libmapper
 // Joseph Malloch, IDMIL 2010
-// LGPL
 //
+// This software was written in the Input Devices and Music Interaction
+// Laboratory at McGill University in Montreal, and is copyright those
+// found in the AUTHORS file.  It is licensed under the GNU Lesser Public
+// General License version 2.1 or later.  Please see COPYING for details.
+// 
 
-#define MAXMSP
+#define MAXMSP // comment for pd, uncomment for maxmsp
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -30,8 +34,7 @@
 #include <arpa/inet.h>
 
 #define INTERVAL 1
-#define MAX_PATH_CHARS 2048
-#define MAX_FILENAME_CHARS 512
+#define MAX_LIST 256
 
 // *********************************************************
 // -(object struct)-----------------------------------------
@@ -47,6 +50,7 @@ typedef struct _mapper
     mapper_signal signal;
     int ready;
     int learn_mode;
+	t_atom buffer[MAX_LIST];
 #ifdef MAXMSP
     char *definition;
     t_dictionary *d;
@@ -126,7 +130,6 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
     
 #ifdef MAXMSP
     if (x = object_alloc(mapper_class)) {
-        x->outlet3 = outlet_new((t_object *)x,0);
         x->outlet2 = outlet_new((t_object *)x,0);
         x->outlet1 = listout((t_object *)x);
         
@@ -152,7 +155,6 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         }
 #else
     if (x = (t_mapper *) pd_new(mapper_class) ) {
-        x->outlet3 = outlet_new(&x->ob, 0);
         x->outlet2 = outlet_new(&x->ob, 0);
         x->outlet1 = outlet_new(&x->ob, 0);
         
@@ -239,7 +241,7 @@ void mapper_print_properties(t_mapper *x)
         SETSYMBOL(my_list, gensym("name"));
         SETSYMBOL(my_list + 1, gensym(message));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, my_list);
+        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output IP
         const struct in_addr *ip = mdev_ip4(x->device);
@@ -251,7 +253,7 @@ void mapper_print_properties(t_mapper *x)
         SETSYMBOL(my_list, gensym("IP"));
         SETSYMBOL(my_list + 1, gensym(message));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, my_list);
+        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output port
 #ifdef MAXMSP
@@ -261,7 +263,7 @@ void mapper_print_properties(t_mapper *x)
         SETSYMBOL(my_list, gensym("port"));
         SETFLOAT(my_list + 1, (float)mdev_port(x->device));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, my_list);
+        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output numInputs
 #ifdef MAXMSP
@@ -271,7 +273,7 @@ void mapper_print_properties(t_mapper *x)
         SETSYMBOL(my_list, gensym("numInputs"));
         SETFLOAT(my_list + 1, (float)mdev_num_inputs(x->device));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, my_list);
+        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output numOutputs
 #ifdef MAXMSP
@@ -281,7 +283,7 @@ void mapper_print_properties(t_mapper *x)
         SETSYMBOL(my_list, gensym("numOutputs"));
         SETFLOAT(my_list + 1, (float)mdev_num_outputs(x->device));
 #endif
-        outlet_list(x->outlet3, ps_list, 2, my_list);
+        outlet_list(x->outlet2, ps_list, 2, my_list);
     }
 }
 
@@ -394,7 +396,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 //output numInputs
                 atom_setsym(my_list, gensym("numInputs"));
                 atom_setlong(my_list + 1, mdev_num_inputs(x->device));
-                outlet_list(x->outlet3, ps_list, 2, my_list);
+                outlet_list(x->outlet2, ps_list, 2, my_list);
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 mdev_add_output(x->device, atom_getsym(argv + 1)->s_name, sig_length, sig_type, sig_units, 
@@ -404,7 +406,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 //output numOutputs
                 atom_setsym(my_list, gensym("numOutputs"));
                 atom_setlong(my_list + 1, mdev_num_outputs(x->device));
-                outlet_list(x->outlet3, ps_list, 2, my_list);
+                outlet_list(x->outlet2, ps_list, 2, my_list);
             }
         }
         else {
@@ -473,7 +475,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 //output numInputs
                 SETSYMBOL(my_list, gensym("numInputs"));
                 SETFLOAT(my_list + 1, mdev_num_inputs(x->device));
-                outlet_anything(x->outlet3, ps_list, 2, my_list);
+                outlet_anything(x->outlet2, ps_list, 2, my_list);
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
                 mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
@@ -483,7 +485,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 //output numOutputs
                 SETSYMBOL(my_list, gensym("numOutputs"));
                 SETFLOAT(my_list + 1, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet3, ps_list, 2, my_list);
+                outlet_anything(x->outlet2, ps_list, 2, my_list);
             }
         }
         else {
@@ -529,7 +531,7 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             SETSYMBOL(my_list, gensym("numOutputs"));
             SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
     #endif
-            outlet_anything(x->outlet3, ps_list, 2, my_list);
+            outlet_anything(x->outlet2, ps_list, 2, my_list);
         }
     }
     else if (strcmp(direction, "input") == 0) {
@@ -542,7 +544,7 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             SETSYMBOL(my_list, gensym("numInputs"));
             SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
     #endif
-            outlet_anything(x->outlet3, ps_list, 2, my_list);
+            outlet_anything(x->outlet2, ps_list, 2, my_list);
         }
     }
 }
@@ -586,7 +588,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 SETSYMBOL(my_list, gensym("numOutputs"));
                 SETFLOAT(my_list + 1, mdev_num_outputs(x->device));
 #endif
-                outlet_anything(x->outlet3, ps_list, 2, my_list);
+                outlet_anything(x->outlet2, ps_list, 2, my_list);
             }
             else {
                 return;
@@ -641,20 +643,24 @@ void mapper_int_handler(mapper_signal msig, void *v)
 	char *path = strdup(props->name);
     int i, length = props->length;
     int *pi = (int*)v;
+	
+	if (length > (MAX_LIST-1)) {
+		post("Maximum list length is %i!\n", MAX_LIST-1);
+		length = MAX_LIST-1;
+	}
 
-    t_atom my_list[length];
 #ifdef MAXMSP
-    atom_setsym(my_list, gensym(path));
+    atom_setsym(x->buffer, gensym(path));
     for (i = 0; i < length; i++) {
-        atom_setlong(my_list + i + 1, (long)*(pi+i));
+        atom_setlong(x->buffer + i + 1, (long)*(pi+i));
     }
 #else
     SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(my_list + i + 1, (float)*(pi+i));
+        SETFLOAT(x->buffer + i + 1, (float)*(pi+i));
     }
 #endif
-    outlet_list(x->outlet1, ps_list, 2, my_list);
+    outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 }
 
 // *********************************************************
@@ -667,19 +673,23 @@ void mapper_float_handler(mapper_signal msig, void *v)
     int i, length = props->length;
     float *pf = (float*)v;
 	
-    t_atom my_list[length];
+	if (length > (MAX_LIST-1)) {
+		post("Maximum list length is %i!\n", MAX_LIST-1);
+		length = MAX_LIST-1;
+	}
+	
 #ifdef MAXMSP
-    atom_setsym(my_list, gensym(path));
+    atom_setsym(x->buffer, gensym(path));
     for (i = 0; i < length; i++) {
-        atom_setfloat(my_list + i + 1, *(pf+i));
+        atom_setfloat(x->buffer + i + 1, *(pf+i));
     }
 #else
     SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(my_list + i + 1, *(pf+i));
+        SETFLOAT(x->buffer + i + 1, *(pf+i));
     }
 #endif
-    outlet_list(x->outlet1, ps_list, 2, my_list);
+    outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 }
 
 // *********************************************************
