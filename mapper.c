@@ -10,7 +10,9 @@
 // General License version 2.1 or later.  Please see COPYING for details.
 // 
 
-#define MAXMSP // comment for pd, uncomment for maxmsp
+#ifndef PD
+#define MAXMSP
+#endif
 
 // *********************************************************
 // -(Includes)----------------------------------------------
