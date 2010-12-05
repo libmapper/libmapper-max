@@ -676,7 +676,7 @@ void mapper_float_handler(mapper_signal msig, void *v)
 #else
     SETSYMBOL(my_list, gensym(path));
     for (i = 0; i < length; i++) {
-        SETFLOAT(my_list + 1, *(pf+i));
+        SETFLOAT(my_list + i + 1, *(pf+i));
     }
 #endif
     outlet_list(x->outlet1, ps_list, 2, my_list);
