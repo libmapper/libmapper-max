@@ -642,7 +642,6 @@ void mapper_int_handler(mapper_signal msig, void *v)
 {
     mapper_db_signal props = msig_properties(msig);
     t_mapper *x = props->user_data;
-	char *path = strdup(props->name);
     int i, length = props->length;
     int *pi = (int*)v;
 	
@@ -652,12 +651,12 @@ void mapper_int_handler(mapper_signal msig, void *v)
 	}
 
 #ifdef MAXMSP
-    atom_setsym(x->buffer, gensym(path));
+    atom_setsym(x->buffer, gensym((char *)props->name));
     for (i = 0; i < length; i++) {
         atom_setlong(x->buffer + i + 1, (long)*(pi+i));
     }
 #else
-    SETSYMBOL(my_list, gensym(path));
+    SETSYMBOL(my_list, gensym(props->name));
     for (i = 0; i < length; i++) {
         SETFLOAT(x->buffer + i + 1, (float)*(pi+i));
     }
@@ -671,7 +670,6 @@ void mapper_float_handler(mapper_signal msig, void *v)
 {
     mapper_db_signal props = msig_properties(msig);
     t_mapper *x = props->user_data;
-	char *path = strdup(props->name);
     int i, length = props->length;
     float *pf = (float*)v;
 	
@@ -681,12 +679,12 @@ void mapper_float_handler(mapper_signal msig, void *v)
 	}
 	
 #ifdef MAXMSP
-    atom_setsym(x->buffer, gensym(path));
+    atom_setsym(x->buffer, gensym((char *)props->name));
     for (i = 0; i < length; i++) {
         atom_setfloat(x->buffer + i + 1, *(pf+i));
     }
 #else
-    SETSYMBOL(my_list, gensym(path));
+    SETSYMBOL(my_list, gensym(props->name));
     for (i = 0; i < length; i++) {
         SETFLOAT(x->buffer + i + 1, *(pf+i));
     }
