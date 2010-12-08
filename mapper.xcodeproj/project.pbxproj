@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		707C3F62126A79B40088B8DD /* monitor.c in Sources */ = {isa = PBXBuildFile; fileRef = 707C3F61126A79B40088B8DD /* monitor.c */; };
 		708B1943129058C300F6802B /* table.c in Sources */ = {isa = PBXBuildFile; fileRef = 708B1942129058C300F6802B /* table.c */; };
-		709F055A1222E110000230B8 /* liblo.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 709F05591222E110000230B8 /* liblo.dylib */; };
 		70BB8A181290DB270055E71D /* mapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 70BB8A171290DB270055E71D /* mapper.c */; };
 		70DBCB3D122318A2003B0196 /* admin.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB32122318A2003B0196 /* admin.c */; };
 		70DBCB3E122318A2003B0196 /* db.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB33122318A2003B0196 /* db.c */; };
@@ -25,7 +24,6 @@
 		70DBCB6C122319BF003B0196 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = 70DBCB5712231939003B0196 /* config.h */; };
 		70DBCB6E122319BF003B0196 /* mapper_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 70DBCB5912231939003B0196 /* mapper_internal.h */; };
 		70DBCB70122319BF003B0196 /* types_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 70DBCB5B12231939003B0196 /* types_internal.h */; };
-		70EC55C91222DF7400EE4B15 /* MaxAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70EC55C81222DF7400EE4B15 /* MaxAPI.framework */; };
 		8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8D5B49A704867FD3000E48DA /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +31,6 @@
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		707C3F61126A79B40088B8DD /* monitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = monitor.c; path = ../libmapper/src/monitor.c; sourceTree = SOURCE_ROOT; };
 		708B1942129058C300F6802B /* table.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = table.c; path = ../libmapper/src/table.c; sourceTree = SOURCE_ROOT; };
-		709F05591222E110000230B8 /* liblo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblo.dylib; path = usr/local/lib/liblo.dylib; sourceTree = SDKROOT; };
 		70BB8A171290DB270055E71D /* mapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mapper.c; sourceTree = "<group>"; };
 		70DBCB32122318A2003B0196 /* admin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = admin.c; path = ../libmapper/src/admin.c; sourceTree = SOURCE_ROOT; };
 		70DBCB33122318A2003B0196 /* db.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = db.c; path = ../libmapper/src/db.c; sourceTree = SOURCE_ROOT; };
@@ -49,7 +46,6 @@
 		70DBCB5E1223195A003B0196 /* mapper_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mapper_db.h; path = ../libmapper/include/mapper/mapper_db.h; sourceTree = SOURCE_ROOT; };
 		70DBCB5F1223195A003B0196 /* mapper_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mapper_types.h; path = ../libmapper/include/mapper/mapper_types.h; sourceTree = SOURCE_ROOT; };
 		70DBCB601223195A003B0196 /* mapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mapper.h; path = ../libmapper/include/mapper/mapper.h; sourceTree = SOURCE_ROOT; };
-		70EC55C81222DF7400EE4B15 /* MaxAPI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MaxAPI.framework; path = "/Library/Application Support/c74support/max-includes/MaxAPI.framework"; sourceTree = "<absolute>"; };
 		8D576316048677EA00EA77CD /* mapper.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mapper.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D576317048677EA00EA77CD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -59,8 +55,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				70EC55C91222DF7400EE4B15 /* MaxAPI.framework in Frameworks */,
-				709F055A1222E110000230B8 /* liblo.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,8 +75,6 @@
 		089C1671FE841209C02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				70EC55C81222DF7400EE4B15 /* MaxAPI.framework */,
-				709F05591222E110000230B8 /* liblo.dylib */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -250,7 +242,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		1DEB911B08733D790010E9CD /* Development */ = {
+		1DEB911B08733D790010E9CD /* maxmsp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -264,24 +256,29 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREFIX_HEADER = "/Applications/MaxSDK-5.1.1/c74support/max-includes/macho-prefix.pch";
 				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GENERATE_PKGINFO_FILE = YES;
 				HEADER_SEARCH_PATHS = (
-					/opt/local/include,
 					"\"$(SRCROOT)/../libmapper\"/**",
 					/Developer/Headers/FlatCarbon,
 					"\"/Library/Application Support/c74support/max-includes\"",
+					"\"$(SRCROOT)/../liblo-0.26\"",
 				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-lmx";
+				OTHER_LDFLAGS = (
+					"-framework",
+					MaxAPI,
+					/usr/local/lib/liblo.a,
+					"-lmx",
+				);
 				PREBINDING = YES;
 				PRODUCT_NAME = mapper;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.4u.sdk";
+				SDKROOT = macosx10.5;
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -290,26 +287,37 @@
 				);
 				WRAPPER_EXTENSION = mxo;
 			};
-			name = Development;
+			name = maxmsp;
 		};
-		1DEB911C08733D790010E9CD /* Deployment */ = {
+		1DEB911C08733D790010E9CD /* puredata */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(LOCAL_LIBRARY_DIR)/Application Support/c74support/max-includes\"",
-				);
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				EXECUTABLE_EXTENSION = pd_darwin;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_MODEL_TUNING = G5;
+				GCC_VERSION = 4.0;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/../liblo-0.26\"",
+					"\"$(SRCROOT)/../libmapper\"/**",
+				);
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				PRODUCT_NAME = maxadmin;
-				WRAPPER_EXTENSION = bundle;
+				INSTALL_PATH = "";
+				MACH_O_TYPE = mh_dylib;
+				OTHER_LDFLAGS = (
+					/usr/local/lib/liblo.a,
+					"-undefined",
+					dynamic_lookup,
+				);
+				PRODUCT_NAME = mapper;
+				SDKROOT = macosx10.5;
+				SKIP_INSTALL = NO;
+				WRAPPER_EXTENSION = "";
 			};
-			name = Deployment;
+			name = puredata;
 		};
-		1DEB911F08733D790010E9CD /* Development */ = {
+		1DEB911F08733D790010E9CD /* maxmsp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH)";
@@ -323,9 +331,9 @@
 				PREBINDING = YES;
 				SDKROOT = "";
 			};
-			name = Development;
+			name = maxmsp;
 		};
-		1DEB912008733D790010E9CD /* Deployment */ = {
+		1DEB912008733D790010E9CD /* puredata */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH)";
@@ -335,7 +343,7 @@
 				PREBINDING = YES;
 				SDKROOT = "";
 			};
-			name = Deployment;
+			name = puredata;
 		};
 /* End XCBuildConfiguration section */
 
@@ -343,20 +351,20 @@
 		1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "mapper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1DEB911B08733D790010E9CD /* Development */,
-				1DEB911C08733D790010E9CD /* Deployment */,
+				1DEB911B08733D790010E9CD /* maxmsp */,
+				1DEB911C08733D790010E9CD /* puredata */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = maxmsp;
 		};
 		1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "mapper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1DEB911F08733D790010E9CD /* Development */,
-				1DEB912008733D790010E9CD /* Deployment */,
+				1DEB911F08733D790010E9CD /* maxmsp */,
+				1DEB912008733D790010E9CD /* puredata */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Development;
+			defaultConfigurationName = maxmsp;
 		};
 /* End XCConfigurationList section */
 	};

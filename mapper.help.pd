@@ -1,10 +1,10 @@
-#N canvas 797 133 418 362 10;
+#N canvas 203 159 418 362 10;
 #X text 20 12 mapper;
 #X text 22 27 A pd wrapper for libmapper/Digital Orchestra Tools;
 #X text 20 285 For more information visit;
 #X text 21 300 www.idmil.org/software/libmapper;
 #X obj 30 79 r mapper;
-#N canvas 902 359 450 300 adding_signals 0;
+#N canvas 283 300 450 300 adding_signals 0;
 #X text 19 15 Input and ouput signals can be added to the device by
 sending the message "add input" or "add output" along with a signal
 name and data type. Signal metadata is specified using tagged arguments
@@ -49,18 +49,44 @@ use linear scaling when creating mapping connections.;
 #X connect 4 0 7 0;
 #X connect 9 0 10 0;
 #X restore 140 153 pd learn_mode;
-#N canvas 791 406 450 300 simple_example 0;
-#X obj 59 51 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 0 1;
-#X obj 61 175 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 0 1;
-#X obj 56 76 prepend /out1;
-#X obj 55 106 mapper;
+#N canvas 313 531 760 406 simple_example 0;
+#X obj 53 40 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 4700 1;
+#X obj 53 186 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 4800 1;
+#X obj 50 65 prepend /out1;
+#X obj 377 170 buddy;
+#X obj 377 287 oscmulticast @group 224.0.1.3 @port 7570;
+#X msg 377 240 /link \$1 \$2 \, /connect \$1/out1 \$2/in1 @mode expression
+@expression 127-x;
+#X obj 377 213 pack symbol symbol;
+#X obj 482 187 tosymbol;
+#X text 375 328 The administrative traffic for the mapping network
+uses multicast UDP.;
+#X text 19 251 Sends the /link and /connect messages which create a
+mapping connection between the two instances of the mapper object;
+#X text 154 239 ---------------------------------->;
+#X obj 50 159 route /in1;
+#X obj 377 108 route name;
+#X obj 404 138 route name;
+#X obj 50 133 mapper;
+#X obj 50 91 mapper;
+#X text 272 49 need to add signals before mapping!;
 #X connect 0 0 2 0;
+#X connect 2 0 15 0;
+#X connect 3 0 6 0;
+#X connect 3 1 7 0;
+#X connect 6 0 5 0;
+#X connect 7 0 6 1;
+#X connect 11 0 1 0;
+#X connect 12 0 3 0;
+#X connect 13 0 3 1;
+#X connect 14 0 11 0;
 #X restore 226 153 pd simple_example;
 #X text 20 195 The mapper object forms part of a distributed network
 of devices communicating over the local network. The inputs and outputs
 of each device can be discovered and queried by other participants
 in the network \, and mapping connections can be created \, edited
 \, and destroyed using messages or graphical interfaces.;
-#X obj 30 108 mapper;
+#X obj 30 108 mapper @alias my_device;
+#X connect 4 0 9 0;
