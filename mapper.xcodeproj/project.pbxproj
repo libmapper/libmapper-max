@@ -46,7 +46,7 @@
 		70DBCB5E1223195A003B0196 /* mapper_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mapper_db.h; path = ../libmapper/include/mapper/mapper_db.h; sourceTree = SOURCE_ROOT; };
 		70DBCB5F1223195A003B0196 /* mapper_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mapper_types.h; path = ../libmapper/include/mapper/mapper_types.h; sourceTree = SOURCE_ROOT; };
 		70DBCB601223195A003B0196 /* mapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mapper.h; path = ../libmapper/include/mapper/mapper.h; sourceTree = SOURCE_ROOT; };
-		8D576316048677EA00EA77CD /* mapper.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mapper.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D576316048677EA00EA77CD /* mapper. */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mapper.; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D576317048677EA00EA77CD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -101,7 +101,7 @@
 		19C28FB6FE9D52B211CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D576316048677EA00EA77CD /* mapper.mxo */,
+				8D576316048677EA00EA77CD /* mapper. */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -171,7 +171,7 @@
 			name = mapper;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = maxadmin;
-			productReference = 8D576316048677EA00EA77CD /* mapper.mxo */;
+			productReference = 8D576316048677EA00EA77CD /* mapper. */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */

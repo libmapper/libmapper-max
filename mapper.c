@@ -114,8 +114,8 @@ void *mapper_class;
         class_addmethod(c,  (t_method)mapper_add_signal,    gensym("add"),      A_GIMME, 0);
         class_addmethod(c,  (t_method)mapper_remove_signal, gensym("remove"),   A_GIMME, 0);
         class_addanything(c, (t_method)mapper_anything);
-        class_addmethod(c, (t_method)mapper_learn, gensym("learn"), A_FLOAT, 0);
-        class_addmethod(c, (t_method)mapper_set, gensym("set"), A_GIMME, 0);
+        class_addmethod(c,	(t_method)mapper_learn,			gensym("learn"),	A_GIMME, 0);
+        class_addmethod(c,	(t_method)mapper_set,			gensym("set"),		A_GIMME, 0);
         mapper_class = c;
         ps_list = gensym("list");
         return 0;
@@ -132,7 +132,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
     
 #ifdef MAXMSP
     if (x = object_alloc(mapper_class)) {
-        x->outlet2 = outlet_new((t_object *)x,0);
+        x->outlet2 = listout((t_object *)x,0);
         x->outlet1 = listout((t_object *)x);
         
         x->name = strdup("maxmsp");
@@ -157,8 +157,8 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         }
 #else
     if (x = (t_mapper *) pd_new(mapper_class) ) {
-        x->outlet2 = outlet_new(&x->ob, 0);
-        x->outlet1 = outlet_new(&x->ob, 0);
+		x->outlet1 = outlet_new(&x->ob, gensym("list"));
+        x->outlet2 = outlet_new(&x->ob, gensym("list"));
         
         x->name = strdup("puredata");
         
@@ -190,7 +190,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             *x->name++;
         
         if (mapper_setup_device(x)) {
-            post("Error initializing device.\n");
+            post("Error initializing device.");
         }
         else {
             x->ready = 0;
@@ -239,11 +239,11 @@ void mapper_print_properties(t_mapper *x)
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("name"));
         atom_setsym(my_list + 1, gensym(message));
+		outlet_list(x->outlet2, ps_list, 2, my_list);
 #else
-        SETSYMBOL(my_list, gensym("name"));
-        SETSYMBOL(my_list + 1, gensym(message));
+        SETSYMBOL(my_list, gensym(message));
+		outlet_anything(x->outlet2, gensym("name"), 1, my_list);
 #endif
-        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output IP
         const struct in_addr *ip = mdev_ip4(x->device);
@@ -251,41 +251,41 @@ void mapper_print_properties(t_mapper *x)
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("IP"));
         atom_setsym(my_list + 1, gensym(message));
+		outlet_list(x->outlet2, ps_list, 2, my_list);
 #else
-        SETSYMBOL(my_list, gensym("IP"));
-        SETSYMBOL(my_list + 1, gensym(message));
+        SETSYMBOL(my_list, gensym(message));
+		outlet_anything(x->outlet2, gensym("IP"), 1, my_list);
 #endif
-        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output port
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("port"));
         atom_setlong(my_list + 1, mdev_port(x->device));
+		outlet_list(x->outlet2, ps_list, 2, my_list);
 #else
-        SETSYMBOL(my_list, gensym("port"));
-        SETFLOAT(my_list + 1, (float)mdev_port(x->device));
+        SETFLOAT(my_list, (float)mdev_port(x->device));
+		outlet_anything(x->outlet2, gensym("port"), 1, my_list);
 #endif
-        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output numInputs
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("numInputs"));
         atom_setlong(my_list + 1, mdev_num_inputs(x->device));
+		outlet_list(x->outlet2, ps_list, 2, my_list);
 #else
-        SETSYMBOL(my_list, gensym("numInputs"));
-        SETFLOAT(my_list + 1, (float)mdev_num_inputs(x->device));
+        SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
+		outlet_anything(x->outlet2, gensym("numInputs"), 1, my_list);
 #endif
-        outlet_list(x->outlet2, ps_list, 2, my_list);
         
         //output numOutputs
 #ifdef MAXMSP
         atom_setsym(my_list, gensym("numOutputs"));
         atom_setlong(my_list + 1, mdev_num_outputs(x->device));
+		outlet_list(x->outlet2, ps_list, 2, my_list);
 #else
-        SETSYMBOL(my_list, gensym("numOutputs"));
-        SETFLOAT(my_list + 1, (float)mdev_num_outputs(x->device));
+        SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
+		outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
 #endif
-        outlet_list(x->outlet2, ps_list, 2, my_list);
     }
 }
 
@@ -348,7 +348,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         else if ((strcmp(temp, "float") == 0) || (strcmp(temp, "f") == 0))
                             sig_type = 'f';
                         else {
-                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            post("Skipping registration of signal %s (unknown type).", sig_name);
                             return;
                         }
                         i++;
@@ -412,7 +412,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         else {
-            post("Skipping registration of signal %s (undeclared type).\n", sig_name);
+            post("Skipping registration of signal %s (undeclared type).", sig_name);
         }
 	}
 #else
@@ -437,7 +437,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         else if ((strcmp(temp, "float") == 0) || (strcmp(temp, "f") == 0))
                             sig_type = 'f';
                         else {
-                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            post("Skipping registration of signal %s (unknown type).", sig_name);
                             return;
                         }
                         i++;
@@ -475,9 +475,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                                    sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
                 
                 //output numInputs
-                SETSYMBOL(my_list, gensym("numInputs"));
-                SETFLOAT(my_list + 1, mdev_num_inputs(x->device));
-                outlet_anything(x->outlet2, ps_list, 2, my_list);
+                SETFLOAT(my_list, mdev_num_inputs(x->device));
+                outlet_anything(x->outlet2, gensym("numInputs"), 1, my_list);
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
                 mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, sig_type, sig_units, 
@@ -485,9 +484,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                                 sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                                 
                 //output numOutputs
-                SETSYMBOL(my_list, gensym("numOutputs"));
-                SETFLOAT(my_list + 1, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet2, ps_list, 2, my_list);
+                SETFLOAT(my_list, mdev_num_outputs(x->device));
+                outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
             }
         }
         else {
@@ -529,11 +527,11 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     #ifdef MAXMSP
             atom_setsym(my_list, gensym("numOutputs"));
             atom_setlong(my_list + 1, (long)mdev_num_outputs(x->device));
+			outlet_anything(x->outlet2, ps_list, 2, my_list);
     #else
-            SETSYMBOL(my_list, gensym("numOutputs"));
             SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
+			outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
     #endif
-            outlet_anything(x->outlet2, ps_list, 2, my_list);
         }
     }
     else if (strcmp(direction, "input") == 0) {
@@ -542,11 +540,11 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     #ifdef MAXMSP
             atom_setsym(my_list, gensym("numInputs"));
             atom_setlong(my_list + 1, (long)mdev_num_inputs(x->device));
+			outlet_anything(x->outlet2, ps_list, 2, my_list);
     #else
-            SETSYMBOL(my_list, gensym("numInputs"));
             SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
+			outlet_anything(x->outlet2, gensym("numInputs"), 1, my_list);
     #endif
-            outlet_anything(x->outlet2, ps_list, 2, my_list);
         }
     }
 }
@@ -590,11 +588,11 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #ifdef MAXMSP
                 atom_setsym(my_list, gensym("numOutputs"));
                 atom_setlong(my_list + 1, mdev_num_outputs(x->device));
+				outlet_anything(x->outlet2, ps_list, 2, my_list);
 #else
-                SETSYMBOL(my_list, gensym("numOutputs"));
-                SETFLOAT(my_list + 1, mdev_num_outputs(x->device));
+                SETFLOAT(my_list, mdev_num_outputs(x->device));
+				outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
 #endif
-                outlet_anything(x->outlet2, ps_list, 2, my_list);
             }
             else {
                 return;
@@ -603,7 +601,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         mapper_db_signal props = msig_properties(msig);
         if (props->length != argc) {
-            post("Vector length does not match signal definition!\n");
+            post("Vector length does not match signal definition!");
             return;
         }
         if (props->type == 'i') {
@@ -650,7 +648,7 @@ void mapper_int_handler(mapper_signal msig, void *v)
     int *pi = (int*)v;
 	
 	if (length > (MAX_LIST-1)) {
-		post("Maximum list length is %i!\n", MAX_LIST-1);
+		post("Maximum list length is %i!", MAX_LIST-1);
 		length = MAX_LIST-1;
 	}
 
@@ -659,13 +657,13 @@ void mapper_int_handler(mapper_signal msig, void *v)
     for (i = 0; i < length; i++) {
         atom_setlong(x->buffer + i + 1, (long)*(pi+i));
     }
+	outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 #else
-    SETSYMBOL(x->buffer, gensym(props->name));
     for (i = 0; i < length; i++) {
-        SETFLOAT(x->buffer + i + 1, (float)*(pi+i));
+        SETFLOAT(x->buffer + i, (float)*(pi+i));
     }
+	outlet_list(x->outlet1, gensym((char *)props->name), length, x->buffer);
 #endif
-    outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 }
 
 // *********************************************************
@@ -678,7 +676,7 @@ void mapper_float_handler(mapper_signal msig, void *v)
     float *pf = (float*)v;
 	
 	if (length > (MAX_LIST-1)) {
-		post("Maximum list length is %i!\n", MAX_LIST-1);
+		post("Maximum list length is %i!", MAX_LIST-1);
 		length = MAX_LIST-1;
 	}
 	
@@ -687,13 +685,13 @@ void mapper_float_handler(mapper_signal msig, void *v)
     for (i = 0; i < length; i++) {
         atom_setfloat(x->buffer + i + 1, *(pf+i));
     }
+	outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 #else
-    SETSYMBOL(x->buffer, gensym(props->name));
     for (i = 0; i < length; i++) {
-        SETFLOAT(x->buffer + i + 1, *(pf+i));
+        SETFLOAT(x->buffer + i, *(pf+i));
     }
+	outlet_list(x->outlet1, gensym((char *)props->name), length, x->buffer);
 #endif
-    outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 }
 
 // *********************************************************
@@ -730,7 +728,7 @@ void mapper_read_definition (t_mapper *x)
     //add ".json" to end of string if missing (or pick new filetype!)
     
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
-        post("located file %s\n", x->definition);
+        post("located file %s", x->definition);
         if (dictionary_read(x->definition, path, &(x->d)) == 0) {
             //check that first key is "device"
             if (dictionary_entryisdictionary(x->d, sym_device)) {
@@ -821,7 +819,7 @@ void mapper_register_signals(t_mapper *x) {
                         else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
                             sig_type_char = 'f';
                         else {
-                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            post("Skipping registration of signal %s (unknown type).", sig_name);
                             continue;
                         }
 
@@ -873,7 +871,7 @@ void mapper_register_signals(t_mapper *x) {
                         else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
                             sig_type_char = 'f';
                         else {
-                            post("Skipping registration of signal %s (unknown type).\n", sig_name);
+                            post("Skipping registration of signal %s (unknown type).", sig_name);
                             continue;
                         }
 
@@ -922,9 +920,9 @@ void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (mode != x->learn_mode) {
             x->learn_mode = mode;
             if (mode == 0)
-                post("Learning mode off.\n");
+                post("Learning mode off.");
             else
-                post("Learning mode on.\n");
+                post("Learning mode on.");
         }
     }
 }
