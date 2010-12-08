@@ -1,4 +1,4 @@
-#N canvas 203 159 418 362 10;
+#N canvas 94 106 418 362 10;
 #X text 20 12 mapper;
 #X text 22 27 A pd wrapper for libmapper/Digital Orchestra Tools;
 #X text 20 285 For more information visit;
@@ -22,8 +22,8 @@ use linear scaling when creating mapping connections.;
 #X connect 3 0 4 0;
 #X connect 5 0 4 0;
 #X restore 30 153 pd adding_signals;
-#N canvas 866 520 451 421 learn_mode 0;
-#X obj 111 28 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+#N canvas 93 171 451 421 learn_mode 0;
+#X obj 111 28 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
 1;
 #X obj 111 62 metro 250;
 #X obj 25 103 random 100;
@@ -55,39 +55,60 @@ use linear scaling when creating mapping connections.;
 #X connect 11 0 8 0;
 #X connect 12 0 8 0;
 #X restore 140 153 pd learn_mode;
-#N canvas 313 531 760 406 simple_example 0;
-#X obj 53 40 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+#N canvas 87 223 760 406 simple_example 0;
+#X obj 82 28 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
 -1 -1 0 1;
-#X obj 53 186 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+#X obj 82 169 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
 -1 -1 0 1;
-#X obj 50 65 prepend /out1;
-#X obj 377 170 buddy;
-#X obj 377 287 oscmulticast @group 224.0.1.3 @port 7570;
-#X msg 377 240 /link \$1 \$2 \, /connect \$1/out1 \$2/in1 @mode expression
+#X obj 79 53 prepend /out1;
+#X obj 334 158 buddy;
+#X obj 334 275 oscmulticast @group 224.0.1.3 @port 7570;
+#X msg 334 228 /link \$1 \$2 \, /connect \$1/out1 \$2/in1 @mode expression
 @expression 127-x;
-#X obj 377 213 pack symbol symbol;
-#X obj 482 187 tosymbol;
-#X text 375 328 The administrative traffic for the mapping network
+#X obj 334 201 pack symbol symbol;
+#X obj 439 175 tosymbol;
+#X text 332 316 The administrative traffic for the mapping network
 uses multicast UDP.;
-#X text 19 251 Sends the /link and /connect messages which create a
-mapping connection between the two instances of the mapper object;
-#X text 154 239 ---------------------------------->;
-#X obj 50 159 route /in1;
-#X obj 377 108 route name;
-#X obj 404 138 route name;
-#X obj 50 133 mapper;
-#X obj 50 91 mapper;
-#X text 272 49 need to add signals before mapping!;
+#X text -24 239 Sends the /link and /connect messages which create
+a mapping connection between the two instances of the mapper object
+;
+#X text 111 227 ---------------------------------->;
+#X obj 79 142 route /in1;
+#X obj 334 96 route name;
+#X obj 361 133 route name;
+#X obj 79 79 mapper;
+#N canvas 0 22 450 300 add_signal 0;
+#X obj 70 60 loadbang;
+#X msg 70 87 add output /out1 @type f @length 1;
+#X obj 70 113 outlet;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X restore -12 53 pd add_signal;
+#N canvas 0 22 450 300 add_signal 0;
+#X obj 70 60 loadbang;
+#X obj 70 113 outlet;
+#X msg 70 87 add input /in1 @type f @length 1;
 #X connect 0 0 2 0;
-#X connect 2 0 15 0;
+#X connect 2 0 1 0;
+#X restore -12 90 pd add_signal;
+#X obj 228 328 print;
+#X obj 79 116 mapper;
+#X connect 0 0 2 0;
+#X connect 2 0 14 0;
 #X connect 3 0 6 0;
 #X connect 3 1 7 0;
+#X connect 5 0 4 0;
 #X connect 6 0 5 0;
 #X connect 7 0 6 1;
 #X connect 11 0 1 0;
 #X connect 12 0 3 0;
 #X connect 13 0 3 1;
-#X connect 14 0 11 0;
+#X connect 14 1 12 0;
+#X connect 15 0 14 0;
+#X connect 16 0 18 0;
+#X connect 18 0 11 0;
+#X connect 18 1 13 0;
+#X connect 18 1 17 0;
 #X restore 226 153 pd simple_example;
 #X text 20 195 The mapper object forms part of a distributed network
 of devices communicating over the local network. The inputs and outputs
