@@ -132,7 +132,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
     
 #ifdef MAXMSP
     if (x = object_alloc(mapper_class)) {
-        x->outlet2 = listout((t_object *)x,0);
+        x->outlet2 = listout((t_object *)x);
         x->outlet1 = listout((t_object *)x);
         
         x->name = strdup("maxmsp");
@@ -662,7 +662,7 @@ void mapper_int_handler(mapper_signal msig, void *v)
     for (i = 0; i < length; i++) {
         SETFLOAT(x->buffer + i, (float)*(pi+i));
     }
-	outlet_list(x->outlet1, gensym((char *)props->name), length, x->buffer);
+	outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
 #endif
 }
 
@@ -690,7 +690,7 @@ void mapper_float_handler(mapper_signal msig, void *v)
     for (i = 0; i < length; i++) {
         SETFLOAT(x->buffer + i, *(pf+i));
     }
-	outlet_list(x->outlet1, gensym((char *)props->name), length, x->buffer);
+	outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
 #endif
 }
 
