@@ -128,7 +128,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
 {
 	t_mapper *x = NULL;
     long i;
-    int learn;
+    int learn = 0;
     char *alias = NULL;
     
 #ifdef MAXMSP
