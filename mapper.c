@@ -128,6 +128,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
 {
 	t_mapper *x = NULL;
     long i;
+    int learn;
     char *alias = NULL;
     
 #ifdef MAXMSP
@@ -151,6 +152,12 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                         x->definition = strdup(atom_getsym(argv+i+1)->s_name);
                         mapper_read_definition(x);
                         i++;
+                    }
+                }
+                else if (strcmp(atom_getsym(argv+i)->s_name, "@learn") == 0) {
+                    if ((argv + i + 1)->a_type == A_LONG) {
+                        learn = (int)atom_getlong(argv+i+1);
+                        learn = (learn > 1) ? 0 : 1;
                     }
                 }
             }
@@ -178,6 +185,12 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
+                else if (strcmp((argv+i)->a_w.w_symbol->s_name, "@learn") == 0) {
+                    if ((argv + i + 1)->a_type == A_FLOAT) {
+                        learn = (int)atom_getfloat(argv+i+1);
+                        learn = (learn > 1) ? 0 : 1;
+                    }
+                }
             }
         }
 #endif
@@ -194,7 +207,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         }
         else {
             x->ready = 0;
-            x->learn_mode = 0;
+            x->learn_mode = learn;
 #ifdef MAXMSP
             x->clock = clock_new(x, (method)mapper_poll);	// Create the timing clock
 #else
