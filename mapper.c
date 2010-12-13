@@ -10,9 +10,9 @@
 // General License version 2.1 or later.  Please see COPYING for details.
 // 
 
-//#ifndef PD
-//#define MAXMSP
-//#endif
+#ifndef PD
+#define MAXMSP
+#endif
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -45,7 +45,6 @@ typedef struct _mapper
 	t_object ob;
     void *outlet1;
     void *outlet2;
-    void *outlet3;
     void *clock;          // pointer to clock object
 	char *name;
     mapper_device device;
@@ -243,61 +242,60 @@ void mapper_free(t_mapper *x)
 // -(print properties)--------------------------------------
 void mapper_print_properties(t_mapper *x)
 {
-    t_atom my_list[2];
 	char *message;
     
     if (x->ready) {        
         //output name
         message = strdup(mdev_name(x->device));
 #ifdef MAXMSP
-        atom_setsym(my_list, gensym("name"));
-        atom_setsym(my_list + 1, gensym(message));
-		outlet_list(x->outlet2, ps_list, 2, my_list);
+        atom_setsym(x->buffer, gensym("name"));
+        atom_setsym(x->buffer + 1, gensym(message));
+		outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
-        SETSYMBOL(my_list, gensym(message));
-		outlet_anything(x->outlet2, gensym("name"), 1, my_list);
+        SETSYMBOL(x->buffer, gensym(message));
+		outlet_anything(x->outlet2, gensym("name"), 1, x->buffer);
 #endif
         
         //output IP
         const struct in_addr *ip = mdev_ip4(x->device);
         message = strdup(inet_ntoa(*ip));
 #ifdef MAXMSP
-        atom_setsym(my_list, gensym("IP"));
-        atom_setsym(my_list + 1, gensym(message));
-		outlet_list(x->outlet2, ps_list, 2, my_list);
+        atom_setsym(x->buffer, gensym("IP"));
+        atom_setsym(x->buffer + 1, gensym(message));
+		outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
-        SETSYMBOL(my_list, gensym(message));
-		outlet_anything(x->outlet2, gensym("IP"), 1, my_list);
+        SETSYMBOL(x->buffer, gensym(message));
+		outlet_anything(x->outlet2, gensym("IP"), 1, x->buffer);
 #endif
         
         //output port
 #ifdef MAXMSP
-        atom_setsym(my_list, gensym("port"));
-        atom_setlong(my_list + 1, mdev_port(x->device));
-		outlet_list(x->outlet2, ps_list, 2, my_list);
+        atom_setsym(x->buffer, gensym("port"));
+        atom_setlong(x->buffer + 1, mdev_port(x->device));
+		outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
-        SETFLOAT(my_list, (float)mdev_port(x->device));
-		outlet_anything(x->outlet2, gensym("port"), 1, my_list);
+        SETFLOAT(x->buffer, (float)mdev_port(x->device));
+		outlet_anything(x->outlet2, gensym("port"), 1, x->buffer);
 #endif
         
         //output numInputs
 #ifdef MAXMSP
-        atom_setsym(my_list, gensym("numInputs"));
-        atom_setlong(my_list + 1, mdev_num_inputs(x->device));
-		outlet_list(x->outlet2, ps_list, 2, my_list);
+        atom_setsym(x->buffer, gensym("numInputs"));
+        atom_setlong(x->buffer + 1, mdev_num_inputs(x->device));
+		outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
-        SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
-		outlet_anything(x->outlet2, gensym("numInputs"), 1, my_list);
+        SETFLOAT(x->buffer, (float)mdev_num_inputs(x->device));
+		outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
 #endif
         
         //output numOutputs
 #ifdef MAXMSP
-        atom_setsym(my_list, gensym("numOutputs"));
-        atom_setlong(my_list + 1, mdev_num_outputs(x->device));
-		outlet_list(x->outlet2, ps_list, 2, my_list);
+        atom_setsym(x->buffer, gensym("numOutputs"));
+        atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
+		outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
-        SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
-		outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
+        SETFLOAT(x->buffer, (float)mdev_num_outputs(x->device));
+		outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
 #endif
     }
 }
@@ -328,9 +326,8 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 // -(add signal)--------------------------------------------
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-	t_atom my_list[2];
     //need to read attribs: type, units, min/minimum, max/maximum
-    //char *type;
+	//also need to read arbitrary attributes
     char *sig_name, *sig_units = 0, sig_type = 0;
     int sig_min_int, sig_max_int, sig_length = 1;
     float sig_min_float, sig_max_float;
@@ -420,9 +417,9 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 
                 //output numInputs
-                atom_setsym(my_list, gensym("numInputs"));
-                atom_setlong(my_list + 1, mdev_num_inputs(x->device));
-                outlet_list(x->outlet2, ps_list, 2, my_list);
+                atom_setsym(x->buffer, gensym("numInputs"));
+                atom_setlong(x->buffer + 1, mdev_num_inputs(x->device));
+                outlet_list(x->outlet2, ps_list, 2, x->buffer);
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 temp_sig = mdev_add_output(x->device, atom_getsym(argv + 1)->s_name, sig_length, 
@@ -435,9 +432,9 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 
                 //output numOutputs
-                atom_setsym(my_list, gensym("numOutputs"));
-                atom_setlong(my_list + 1, mdev_num_outputs(x->device));
-                outlet_list(x->outlet2, ps_list, 2, my_list);
+                atom_setsym(x->buffer, gensym("numOutputs"));
+                atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
+                outlet_list(x->outlet2, ps_list, 2, x->buffer);
             }
         }
         else {
@@ -511,8 +508,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 
                 //output numInputs
-                SETFLOAT(my_list, mdev_num_inputs(x->device));
-                outlet_anything(x->outlet2, gensym("numInputs"), 1, my_list);
+                SETFLOAT(x->buffer, mdev_num_inputs(x->device));
+                outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
                 mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, 
@@ -525,8 +522,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                                 
                 //output numOutputs
-                SETFLOAT(my_list, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
+                SETFLOAT(x->buffer, mdev_num_outputs(x->device));
+                outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
             }
         }
         else {
@@ -541,7 +538,6 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
 	mapper_signal msig;
-    t_atom my_list[2];
     char *sig_name = NULL, *direction = NULL;
     
     if (argc < 2) {
@@ -566,12 +562,12 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (msig=mdev_get_output_by_name(x->device, sig_name, 0)) {
             mdev_remove_output(x->device, msig);
     #ifdef MAXMSP
-            atom_setsym(my_list, gensym("numOutputs"));
-            atom_setlong(my_list + 1, (long)mdev_num_outputs(x->device));
-			outlet_anything(x->outlet2, ps_list, 2, my_list);
+            atom_setsym(x->buffer, gensym("numOutputs"));
+            atom_setlong(x->buffer + 1, (long)mdev_num_outputs(x->device));
+			outlet_anything(x->outlet2, ps_list, 2, x->buffer);
     #else
-            SETFLOAT(my_list, (float)mdev_num_outputs(x->device));
-			outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
+            SETFLOAT(x->buffer, (float)mdev_num_outputs(x->device));
+			outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     #endif
         }
     }
@@ -579,12 +575,12 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (msig=mdev_get_input_by_name(x->device, sig_name, 0)) {
             mdev_remove_input(x->device, msig);
     #ifdef MAXMSP
-            atom_setsym(my_list, gensym("numInputs"));
-            atom_setlong(my_list + 1, (long)mdev_num_inputs(x->device));
-			outlet_anything(x->outlet2, ps_list, 2, my_list);
+            atom_setsym(x->buffer, gensym("numInputs"));
+            atom_setlong(x->buffer + 1, (long)mdev_num_inputs(x->device));
+			outlet_anything(x->outlet2, ps_list, 2, x->buffer);
     #else
-            SETFLOAT(my_list, (float)mdev_num_inputs(x->device));
-			outlet_anything(x->outlet2, gensym("numInputs"), 1, my_list);
+            SETFLOAT(x->buffer, (float)mdev_num_inputs(x->device));
+			outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     #endif
         }
     }
@@ -606,7 +602,6 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
     int i;
-    t_atom my_list[2];
     
 	if (argc) {
         //find signal
@@ -627,12 +622,12 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 //output updated numOutputs
 #ifdef MAXMSP
-                atom_setsym(my_list, gensym("numOutputs"));
-                atom_setlong(my_list + 1, mdev_num_outputs(x->device));
-				outlet_anything(x->outlet2, ps_list, 2, my_list);
+                atom_setsym(x->buffer, gensym("numOutputs"));
+                atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
+				outlet_anything(x->outlet2, ps_list, 2, x->buffer);
 #else
-                SETFLOAT(my_list, mdev_num_outputs(x->device));
-				outlet_anything(x->outlet2, gensym("numOutputs"), 1, my_list);
+                SETFLOAT(x->buffer, mdev_num_outputs(x->device));
+				outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
 #endif
             }
             else {
