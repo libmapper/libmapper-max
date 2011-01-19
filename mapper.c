@@ -409,32 +409,36 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 temp_sig = mdev_add_input(x->device, atom_getsym(argv + 1)->s_name, sig_length, 
                                           sig_type, sig_units, 0, 0,
                                           sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
-                if (range_known[0]) {
-                    msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
-                }
-                if (range_known[1]) {
-                    msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                }
+                if (temp_sig) {
+                    if (range_known[0]) {
+                        msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                    }
+                    if (range_known[1]) {
+                        msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
                 
-                //output numInputs
-                atom_setsym(x->buffer, gensym("numInputs"));
-                atom_setlong(x->buffer + 1, mdev_num_inputs(x->device));
-                outlet_list(x->outlet2, ps_list, 2, x->buffer);
+                    //output numInputs
+                    atom_setsym(x->buffer, gensym("numInputs"));
+                    atom_setlong(x->buffer + 1, mdev_num_inputs(x->device));
+                    outlet_list(x->outlet2, ps_list, 2, x->buffer);
+                }
             } 
             else if (strcmp(atom_getsym(argv)->s_name, "output") == 0) {
                 temp_sig = mdev_add_output(x->device, atom_getsym(argv + 1)->s_name, sig_length, 
                                            sig_type, sig_units, 0, 0);
-                if (range_known[0]) {
-                    msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                if (temp_sig) {
+                    if (range_known[0]) {
+                        msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                    }
+                    if (range_known[1]) {
+                        msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                    
+                    //output numOutputs
+                    atom_setsym(x->buffer, gensym("numOutputs"));
+                    atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
+                    outlet_list(x->outlet2, ps_list, 2, x->buffer);
                 }
-                if (range_known[1]) {
-                    msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                }
-                
-                //output numOutputs
-                atom_setsym(x->buffer, gensym("numOutputs"));
-                atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
-                outlet_list(x->outlet2, ps_list, 2, x->buffer);
             }
         }
         else {
@@ -497,33 +501,37 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         if (sig_type) {
             if (strcmp((argv)->a_w.w_symbol->s_name, "input") == 0) {
-                    temp_sig = mdev_add_input(x->device, (argv + 1)->a_w.w_symbol->s_name, 
-                                              sig_length, sig_type, sig_units, 0, 0, 
-                                              sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
-                if (range_known[0]) {
-                    msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                temp_sig = mdev_add_input(x->device, (argv + 1)->a_w.w_symbol->s_name, 
+                                          sig_length, sig_type, sig_units, 0, 0, 
+                                          sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
+                if (temp_sig) {
+                    if (range_known[0]) {
+                        msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                    }
+                    if (range_known[1]) {
+                        msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                    
+                    //output numInputs
+                    SETFLOAT(x->buffer, mdev_num_inputs(x->device));
+                    outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
                 }
-                if (range_known[1]) {
-                    msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                }
-                
-                //output numInputs
-                SETFLOAT(x->buffer, mdev_num_inputs(x->device));
-                outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
             } 
             else if (strcmp((argv)->a_w.w_symbol->s_name, "output") == 0) {
-                mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, sig_length, 
-                                sig_type, sig_units, 0, 0);
-                if (range_known[0]) {
-                    msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                temp_sig = mdev_add_output(x->device, (argv + 1)->a_w.w_symbol->s_name, 
+                                           sig_length, sig_type, sig_units, 0, 0);
+                if (temp_sig) {
+                    if (range_known[0]) {
+                        msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                    }
+                    if (range_known[1]) {
+                        msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                                    
+                    //output numOutputs
+                    SETFLOAT(x->buffer, mdev_num_outputs(x->device));
+                    outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
                 }
-                if (range_known[1]) {
-                    msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                }
-                                
-                //output numOutputs
-                SETFLOAT(x->buffer, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
             }
         }
         else {
