@@ -819,6 +819,9 @@ void mapper_register_signals(t_mapper *x) {
     long sig_min_long, sig_max_long, sig_length;
     int sig_min_int, sig_max_int;
     
+    mapper_signal temp_sig;
+    short range_known[2];
+    
     if (x->d) {
         // Get pointer to dictionary "device"
         if (dictionary_getdictionary(x->d, sym_device, &device) == MAX_ERR_NONE) {
@@ -835,6 +838,8 @@ void mapper_register_signals(t_mapper *x) {
                         free(&sig_type);
                     }
                     sig_length = 1;
+                    range_known[0] = 1;
+                    range_known[1] = 1;
                     
                     // each atom object points to a dictionary, need to recover atoms by key
                     temp = atom_getobj(&(signals[i]));
@@ -845,18 +850,22 @@ void mapper_register_signals(t_mapper *x) {
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
                             sig_min_int = (int)sig_min_double;
+                            range_known[0] = 1;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
                             sig_min_int = (int)sig_min_long;
+                            range_known[0] = 1;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
                             sig_max_int = (int)sig_max_double;
+                            range_known[1] = 1;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
                             sig_max_int = (int)sig_max_long;
+                            range_known[1] = 1;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
                             sig_type_char = 'i';
@@ -867,10 +876,17 @@ void mapper_register_signals(t_mapper *x) {
                             continue;
                         }
 
-                        mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units,
-                                       sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
-                                       sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float, 
-                                       sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
+                        temp_sig = mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0, 
+                                                  sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
+                        
+                        if (temp_sig) {
+                            if (range_known[0]) {
+                                msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                            }
+                            if (range_known[1]) {
+                                msig_set_maximum(temp_sig, sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                            }
+                        }
                     }
                 }
             }
@@ -887,6 +903,8 @@ void mapper_register_signals(t_mapper *x) {
                         free(&sig_type);
                     }
                     sig_length = 1;
+                    range_known[0] = 1;
+                    range_known[1] = 1;
                     
                     // each atom object points to a dictionary, need to recover atoms by key
                     temp = atom_getobj(&(signals[i]));
@@ -897,18 +915,22 @@ void mapper_register_signals(t_mapper *x) {
                         if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_double;
                             sig_min_int = (int)sig_min_double;
+                            range_known[0] = 1;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
                             sig_min_float = (float)sig_min_long;
                             sig_min_int = (int)sig_min_long;
+                            range_known[0] = 1;
                         }
                         if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_double;
                             sig_max_int = (int)sig_max_double;
+                            range_known[1] = 1;
                         }
                         else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
                             sig_max_float = (float)sig_max_long;
                             sig_max_int = (int)sig_max_long;
+                            range_known[1] = 1;
                         }
                         if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
                             sig_type_char = 'i';
@@ -919,9 +941,16 @@ void mapper_register_signals(t_mapper *x) {
                             continue;
                         }
 
-                        mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 
-                                        sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float, 
-                                        sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                        temp_sig = mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0);
+                        
+                        if (temp_sig) {
+                            if (range_known[0]) {
+                                msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                            }
+                            if (range_known[1]) {
+                                msig_set_maximum(temp_sig, sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                            }
+                        }
                     }
                 }
             }
