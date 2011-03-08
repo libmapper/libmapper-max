@@ -48,7 +48,6 @@ typedef struct _mapper
     void *clock;          // pointer to clock object
     char *name;
     mapper_device device;
-    mapper_signal signal;
     int ready;
     int learn_mode;
     t_atom buffer[MAX_LIST];
@@ -184,12 +183,12 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
-                /*else if (strcmp((argv+i)->a_w.w_symbol->s_name, "@learn") == 0) {
+                else if (strcmp((argv+i)->a_w.w_symbol->s_name, "@learn") == 0) {
                     if ((argv + i + 1)->a_type == A_FLOAT) {
                         learn = (int)atom_getfloat(argv+i+1);
                         learn = (learn > 1) ? 0 : 1;
                     }
-                }*/
+                }
             }
         }
 #endif
@@ -249,6 +248,17 @@ void mapper_print_properties(t_mapper *x)
         message = strdup(mdev_name(x->device));
 #ifdef MAXMSP
         atom_setsym(x->buffer, gensym("name"));
+        atom_setsym(x->buffer + 1, gensym(message));
+        outlet_list(x->outlet2, ps_list, 2, x->buffer);
+#else
+        SETSYMBOL(x->buffer, gensym(message));
+        outlet_anything(x->outlet2, gensym("name"), 1, x->buffer);
+#endif
+        
+        //output interface
+        message = strdup(mdev_interface(x->device));
+#ifdef MAXMSP
+        atom_setsym(x->buffer, gensym("interface"));
         atom_setsym(x->buffer + 1, gensym(message));
         outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
