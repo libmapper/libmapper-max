@@ -68,8 +68,8 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_poll(t_mapper *x);
-void mapper_float_handler(mapper_signal msig, int has_value);
-void mapper_int_handler(mapper_signal msig, int has_value);
+void mapper_float_handler(mapper_signal msig, mapper_db_signal props, void *value);
+void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
@@ -737,13 +737,12 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // -(int handler)-------------------------------------------
-void mapper_int_handler(mapper_signal msig, int has_value)
+void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value)
 {
-    if (has_value) {
-        mapper_db_signal props = msig_properties(msig);
+    if (value) {
         t_mapper *x = props->user_data;
         int i, length = props->length;
-        mapper_signal_value_t *value = msig_value(msig);
+        int *v = value;
         
         if (length > (MAX_LIST-1)) {
             post("Maximum list length is %i!", MAX_LIST-1);
@@ -753,12 +752,12 @@ void mapper_int_handler(mapper_signal msig, int has_value)
 #ifdef MAXMSP
         atom_setsym(x->buffer, gensym((char *)props->name));
         for (i = 0; i < length; i++) {
-            atom_setlong(x->buffer + i + 1, (long)(value+i)->i32);
+            atom_setlong(x->buffer + i + 1, (long)v[i]);
         }
         outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 #else
         for (i = 0; i < length; i++) {
-            SETFLOAT(x->buffer + i, (float)*(value+i)->i32);
+            SETFLOAT(x->buffer + i, (float)v[i]);
         }
         outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
 #endif
@@ -767,12 +766,11 @@ void mapper_int_handler(mapper_signal msig, int has_value)
 
 // *********************************************************
 // -(float handler)-----------------------------------------
-void mapper_float_handler(mapper_signal msig, int has_value)
+void mapper_float_handler(mapper_signal msig, mapper_db_signal props, void *value)
 {
-    mapper_db_signal props = msig_properties(msig);
     t_mapper *x = props->user_data;
     int i, length = props->length;
-    mapper_signal_value_t *value = msig_value(msig);
+    float *v = value;
     
     if (length > (MAX_LIST-1)) {
         post("Maximum list length is %i!", MAX_LIST-1);
@@ -782,12 +780,12 @@ void mapper_float_handler(mapper_signal msig, int has_value)
 #ifdef MAXMSP
     atom_setsym(x->buffer, gensym((char *)props->name));
     for (i = 0; i < length; i++) {
-        atom_setfloat(x->buffer + i + 1, (value+i)->f);
+        atom_setfloat(x->buffer + i + 1, v[i]);
     }
     outlet_list(x->outlet1, ps_list, length+1, x->buffer);
 #else
     for (i = 0; i < length; i++) {
-        SETFLOAT(x->buffer + i, *(value+i)->f);
+        SETFLOAT(x->buffer + i, v[i]);
     }
     outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
 #endif
