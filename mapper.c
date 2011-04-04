@@ -749,18 +749,14 @@ void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value)
             length = MAX_LIST-1;
         }
 
+        for (i = 0; i < length; i++) {
 #ifdef MAXMSP
-        atom_setsym(x->buffer, gensym((char *)props->name));
-        for (i = 0; i < length; i++) {
-            atom_setlong(x->buffer + i + 1, (long)v[i]);
-        }
-        outlet_list(x->outlet1, ps_list, length+1, x->buffer);
+            atom_setlong(x->buffer + i, (long)v[i]);
 #else
-        for (i = 0; i < length; i++) {
             SETFLOAT(x->buffer + i, (float)v[i]);
+#endif
         }
         outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
-#endif
     }
 }
 
@@ -768,27 +764,25 @@ void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value)
 // -(float handler)-----------------------------------------
 void mapper_float_handler(mapper_signal msig, mapper_db_signal props, void *value)
 {
-    t_mapper *x = props->user_data;
-    int i, length = props->length;
-    float *v = value;
-    
-    if (length > (MAX_LIST-1)) {
-        post("Maximum list length is %i!", MAX_LIST-1);
-        length = MAX_LIST-1;
+    if (value) {
+        t_mapper *x = props->user_data;
+        int i, length = props->length;
+        float *v = value;
+        
+        if (length > (MAX_LIST-1)) {
+            post("Maximum list length is %i!", MAX_LIST-1);
+            length = MAX_LIST-1;
+        }
+        
+        for (i = 0; i < length; i++) {
+    #ifdef MAXMSP
+            atom_setfloat(x->buffer + i, v[i]);
+    #else
+            SETFLOAT(x->buffer + i, v[i]);
+    #endif
+        }
+        outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
     }
-    
-#ifdef MAXMSP
-    atom_setsym(x->buffer, gensym((char *)props->name));
-    for (i = 0; i < length; i++) {
-        atom_setfloat(x->buffer + i + 1, v[i]);
-    }
-    outlet_list(x->outlet1, ps_list, length+1, x->buffer);
-#else
-    for (i = 0; i < length; i++) {
-        SETFLOAT(x->buffer + i, v[i]);
-    }
-    outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
-#endif
 }
 
 // *********************************************************
