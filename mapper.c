@@ -68,8 +68,8 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_poll(t_mapper *x);
-void mapper_float_handler(mapper_signal msig, mapper_db_signal props, void *value);
-void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value);
+void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
+void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
@@ -737,7 +737,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // -(int handler)-------------------------------------------
-void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value)
+void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value)
 {
     if (value) {
         t_mapper *x = props->user_data;
@@ -762,7 +762,7 @@ void mapper_int_handler(mapper_signal msig, mapper_db_signal props, void *value)
 
 // *********************************************************
 // -(float handler)-----------------------------------------
-void mapper_float_handler(mapper_signal msig, mapper_db_signal props, void *value)
+void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value)
 {
     if (value) {
         t_mapper *x = props->user_data;
