@@ -33,7 +33,6 @@
 #include <lo/lo.h>
 
 #include <unistd.h>
-#include <arpa/inet.h>
 
 #define INTERVAL 1
 #define MAX_LIST 256
