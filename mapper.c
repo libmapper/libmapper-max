@@ -263,7 +263,7 @@ void mapper_print_properties(t_mapper *x)
         outlet_list(x->outlet2, ps_list, 2, x->buffer);
 #else
         SETSYMBOL(x->buffer, gensym(message));
-        outlet_anything(x->outlet2, gensym("name"), 1, x->buffer);
+        outlet_anything(x->outlet2, gensym("interface"), 1, x->buffer);
 #endif
         
         //output IP
