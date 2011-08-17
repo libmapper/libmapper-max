@@ -33,7 +33,6 @@
 #include <lo/lo.h>
 
 #include <unistd.h>
-#include <arpa/inet.h>
 
 #define INTERVAL 1
 #define MAX_LIST 256
@@ -43,6 +42,12 @@
 typedef struct _mapper 
 {
     t_object ob;
+#ifdef WIN32
+#ifdef PD
+    int pad; /* protect the object against observed writing beyond
+                the bounds of t_object on Windows versions of PureData. */
+#endif
+#endif
     void *outlet1;
     void *outlet2;
     void *clock;          // pointer to clock object
