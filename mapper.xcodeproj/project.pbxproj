@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7026199713F176B20017C176 /* connection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7026199613F176B20017C176 /* connection.c */; };
 		707C3F62126A79B40088B8DD /* monitor.c in Sources */ = {isa = PBXBuildFile; fileRef = 707C3F61126A79B40088B8DD /* monitor.c */; };
 		708B1943129058C300F6802B /* table.c in Sources */ = {isa = PBXBuildFile; fileRef = 708B1942129058C300F6802B /* table.c */; };
 		70BB8A181290DB270055E71D /* mapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 70BB8A171290DB270055E71D /* mapper.c */; };
@@ -14,7 +15,6 @@
 		70DBCB3E122318A2003B0196 /* db.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB33122318A2003B0196 /* db.c */; };
 		70DBCB3F122318A2003B0196 /* device.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB34122318A2003B0196 /* device.c */; };
 		70DBCB40122318A2003B0196 /* expression.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB35122318A2003B0196 /* expression.c */; };
-		70DBCB42122318A2003B0196 /* mapping.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB37122318A2003B0196 /* mapping.c */; };
 		70DBCB45122318A2003B0196 /* params.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB3A122318A2003B0196 /* params.c */; };
 		70DBCB46122318A2003B0196 /* router.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB3B122318A2003B0196 /* router.c */; };
 		70DBCB47122318A2003B0196 /* signal.c in Sources */ = {isa = PBXBuildFile; fileRef = 70DBCB3C122318A2003B0196 /* signal.c */; };
@@ -29,6 +29,7 @@
 
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		7026199613F176B20017C176 /* connection.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = connection.c; path = ../libmapper/src/connection.c; sourceTree = SOURCE_ROOT; };
 		707C3F61126A79B40088B8DD /* monitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = monitor.c; path = ../libmapper/src/monitor.c; sourceTree = SOURCE_ROOT; };
 		708B1942129058C300F6802B /* table.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = table.c; path = ../libmapper/src/table.c; sourceTree = SOURCE_ROOT; };
 		70BB8A171290DB270055E71D /* mapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mapper.c; sourceTree = "<group>"; };
@@ -36,7 +37,6 @@
 		70DBCB33122318A2003B0196 /* db.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = db.c; path = ../libmapper/src/db.c; sourceTree = SOURCE_ROOT; };
 		70DBCB34122318A2003B0196 /* device.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = device.c; path = ../libmapper/src/device.c; sourceTree = SOURCE_ROOT; };
 		70DBCB35122318A2003B0196 /* expression.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = expression.c; path = ../libmapper/src/expression.c; sourceTree = SOURCE_ROOT; };
-		70DBCB37122318A2003B0196 /* mapping.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mapping.c; path = ../libmapper/src/mapping.c; sourceTree = SOURCE_ROOT; };
 		70DBCB3A122318A2003B0196 /* params.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = params.c; path = ../libmapper/src/params.c; sourceTree = SOURCE_ROOT; };
 		70DBCB3B122318A2003B0196 /* router.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = router.c; path = ../libmapper/src/router.c; sourceTree = SOURCE_ROOT; };
 		70DBCB3C122318A2003B0196 /* signal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = signal.c; path = ../libmapper/src/signal.c; sourceTree = SOURCE_ROOT; };
@@ -110,10 +110,10 @@
 			isa = PBXGroup;
 			children = (
 				70DBCB32122318A2003B0196 /* admin.c */,
+				7026199613F176B20017C176 /* connection.c */,
 				70DBCB33122318A2003B0196 /* db.c */,
 				70DBCB34122318A2003B0196 /* device.c */,
 				70DBCB35122318A2003B0196 /* expression.c */,
-				70DBCB37122318A2003B0196 /* mapping.c */,
 				707C3F61126A79B40088B8DD /* monitor.c */,
 				70DBCB3A122318A2003B0196 /* params.c */,
 				70DBCB3B122318A2003B0196 /* router.c */,
@@ -218,13 +218,13 @@
 				70DBCB3E122318A2003B0196 /* db.c in Sources */,
 				70DBCB3F122318A2003B0196 /* device.c in Sources */,
 				70DBCB40122318A2003B0196 /* expression.c in Sources */,
-				70DBCB42122318A2003B0196 /* mapping.c in Sources */,
 				70DBCB45122318A2003B0196 /* params.c in Sources */,
 				70DBCB46122318A2003B0196 /* router.c in Sources */,
 				70DBCB47122318A2003B0196 /* signal.c in Sources */,
 				707C3F62126A79B40088B8DD /* monitor.c in Sources */,
 				708B1943129058C300F6802B /* table.c in Sources */,
 				70BB8A181290DB270055E71D /* mapper.c in Sources */,
+				7026199713F176B20017C176 /* connection.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,7 +257,7 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREFIX_HEADER = "/Applications/MaxSDK-5.1.1/c74support/max-includes/macho-prefix.pch";
+				GCC_PREFIX_HEADER = "/Applications/MaxSDK-5.1.7/c74support/max-includes/macho-prefix.pch";
 				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GENERATE_PKGINFO_FILE = YES;
