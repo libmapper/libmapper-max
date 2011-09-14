@@ -75,6 +75,7 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_poll(t_mapper *x);
 void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
 void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
+void mapper_instance_handler(mapper_signal_instance si, mapper_db_signal props, mapper_timetag_t *time, void *value);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
@@ -346,7 +347,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     char *sig_name, *sig_units = 0, sig_type = 0;
     int sig_min_int, sig_max_int, sig_length = 1;
     float sig_min_float, sig_max_float;
-    long i;
+    long i, poly = 0;
     short range_known[2] = {0, 0};
     mapper_signal temp_sig;
     
@@ -417,6 +418,12 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
+                else if (strcmp(atom_getsym(argv+i)->s_name, "@poly") == 0) {
+                    if ((argv + i + 1)->a_type == A_LONG) {
+                        poly = (int)atom_getlong(argv + i + 1);
+                        i++;
+                    }
+                }
             }
         }
         if (sig_type) {
@@ -430,6 +437,9 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     }
                     if (range_known[1]) {
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                    if (poly) {
+                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler, x);
                     }
                 
                     //output numInputs
@@ -447,6 +457,9 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     }
                     if (range_known[1]) {
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                    if (poly) {
+                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler, x);
                     }
                     
                     //output numOutputs
@@ -512,6 +525,12 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
+                else if (strcmp((argv+i)->a_w.w_symbol->s_name, "@poly") == 0) {
+                    if ((argv + i + 1)->a_type == A_FLOAT) {
+                        poly = (int)atom_getfloat(argv + i + 1);
+                        i++;
+                    }
+                }
             }
         }
         if (sig_type) {
@@ -525,6 +544,9 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     }
                     if (range_known[1]) {
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                    if (poly) {
+                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler, x);
                     }
                     
                     //output numInputs
@@ -541,6 +563,9 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     }
                     if (range_known[1]) {
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                    }
+                    if (poly) {
+                        msig_reserve_instances(temp_sig, poly, 0, 0);
                     }
                                     
                     //output numOutputs
@@ -667,7 +692,7 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 // -(anything)----------------------------------------------
 void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i;
+    int i = 0, id = -1;
     
     if (argc) {
         //find signal
@@ -699,40 +724,67 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             else {
                 return;
             }
-
         }
         mapper_db_signal props = msig_properties(msig);
         if (props->length != argc) {
-            post("Vector length does not match signal definition!");
-            return;
+            // Special case: signal value may be preceded by instance number
+            if (argc == props->length + 1) {
+                if ((argv)->a_type == A_FLOAT) {
+                    id = (int)atom_getfloat(argv);
+                    i = 1;
+                }
+#ifdef MAXMSP
+                else if ((argv)->a_type == A_LONG) {
+                    id = (int)atom_getlong(argv);
+                    i = 1;
+                }
+#endif
+                else {
+                    post("Instance ID is not int or float!");
+                    return;
+                }
+            }
+            else {
+                post("Vector length does not match signal definition!");
+                return;
+            }
         }
         if (props->type == 'i') {
             int payload[props->length];
-            for (i = 0; i < argc; i++) {
+            for (; i < argc; i++) {
                 if ((argv + i)->a_type == A_FLOAT)
                     payload[i] = (int)atom_getfloat(argv + i);
 #ifdef MAXMSP
                 else if ((argv + i)->a_type == A_LONG)
                     payload[i] = (int)atom_getlong(argv + i);
 #endif
-                
             }
             //update signal
-            msig_update(msig, payload);
+            if (id == -1) {
+                msig_update(msig, payload);
+            }
+            else {
+                msig_update_instance_by_id(msig, id, payload);
+            }
+
         }
         else if (props->type == 'f') {
             float payload[props->length];
-            for (i = 0; i < argc; i++) {
+            for (; i < argc; i++) {
                 if ((argv + i)->a_type == A_FLOAT)
                     payload[i] = atom_getfloat(argv + i);
 #ifdef MAXMSP
                 else if ((argv + i)->a_type == A_LONG)
                     payload[i] = (float)atom_getlong(argv + i);
 #endif
-                
             }
             //update signal
-            msig_update(msig, payload);
+            if (id == -1) {
+                msig_update(msig, payload);
+            }
+            else {
+                msig_update_instance_by_id(msig, id, payload);
+            }
         }
         else {
             return;
@@ -788,6 +840,13 @@ void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_tim
         }
         outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
     }
+}
+
+// *********************************************************
+// -(instance handler)--------------------------------------
+void mapper_instance_handler(mapper_signal_instance si, mapper_db_signal props, mapper_timetag_t *time, void *value)
+{
+    post("INSTANCE HANDLER!");
 }
 
 // *********************************************************
