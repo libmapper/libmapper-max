@@ -63,6 +63,7 @@ typedef struct _mapper
 } t_mapper;
 
 t_symbol *ps_list;
+t_symbol *ps_mute;
 int port = 9000;
 
 // *********************************************************
@@ -107,6 +108,7 @@ void *mapper_class;
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
         ps_list = gensym("list");
+        ps_mute = gensym("mute");
         return 0;
     }
 #else
@@ -122,6 +124,7 @@ void *mapper_class;
         class_addmethod(c,    (t_method)mapper_set,            gensym("set"),        A_GIMME, 0);
         mapper_class = c;
         ps_list = gensym("list");
+        ps_mute = gensym("mute");
         return 0;
     }
 #endif
@@ -692,7 +695,7 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 // -(anything)----------------------------------------------
 void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i = 0, id = -1;
+    int i = 0, j = 0, id = -1;
     
     if (argc) {
         //find signal
@@ -726,37 +729,55 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         mapper_db_signal props = msig_properties(msig);
-        if (props->length != argc) {
+
+        if (argc == props->length + 1) {
             // Special case: signal value may be preceded by instance number
-            if (argc == props->length + 1) {
-                if ((argv)->a_type == A_FLOAT) {
-                    id = (int)atom_getfloat(argv);
-                    i = 1;
-                }
-#ifdef MAXMSP
-                else if ((argv)->a_type == A_LONG) {
-                    id = (int)atom_getlong(argv);
-                    i = 1;
-                }
-#endif
-                else {
-                    post("Instance ID is not int or float!");
-                    return;
-                }
+            if ((argv)->a_type == A_FLOAT) {
+                id = (int)atom_getfloat(argv);
+                j = 1;
             }
+#ifdef MAXMSP
+            else if ((argv)->a_type == A_LONG) {
+                id = (int)atom_getlong(argv);
+                j = 1;
+            }
+#endif
             else {
-                post("Vector length does not match signal definition!");
+                post("Instance ID is not int or float!");
                 return;
             }
         }
-        if (props->type == 'i') {
-            int payload[props->length];
-            for (; i < argc; i++) {
-                if ((argv + i)->a_type == A_FLOAT)
-                    payload[i] = (int)atom_getfloat(argv + i);
+        if (argc == 2 && (argv + 1)->a_type == A_SYM) {
+            if ((argv)->a_type == A_FLOAT) {
+                id = (int)atom_getfloat(argv);
+            }
 #ifdef MAXMSP
-                else if ((argv + i)->a_type == A_LONG)
-                    payload[i] = (int)atom_getlong(argv + i);
+            else if ((argv)->a_type == A_LONG) {
+                id = (int)atom_getlong(argv);
+            }
+#endif
+#ifdef MAXMSP
+            if (strcmp(atom_getsym(argv + 1)->s_name, "mute") == 0) {
+                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
+                msig_resume_instance(si);
+                msig_update_instance(si, 0);
+            }
+#else
+            if (strcmp((argv+i)->a_w.w_symbol->s_name, "@min") == 0) {
+                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
+                msig_resume_instance(si);
+                msig_update_instance(si, 0);
+            }
+#endif
+        }
+        else if (props->type == 'i') {
+            int payload[props->length];
+            for (i = 0; i < argc; i++) {
+                if ((argv + i + j)->a_type == A_FLOAT)
+                    payload[i] = (int)atom_getfloat(argv + i + j);
+#ifdef MAXMSP
+                else if ((argv + i + j)->a_type == A_LONG)
+                    payload[i] = (int)atom_getlong(argv + i + j);
 #endif
             }
             //update signal
@@ -764,18 +785,19 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 msig_update(msig, payload);
             }
             else {
-                msig_update_instance_by_id(msig, id, payload);
+                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
+                msig_resume_instance(si);
+                msig_update_instance(si, payload);
             }
-
         }
         else if (props->type == 'f') {
             float payload[props->length];
-            for (; i < argc; i++) {
-                if ((argv + i)->a_type == A_FLOAT)
-                    payload[i] = atom_getfloat(argv + i);
+            for (i = 0; i < argc; i++) {
+                if ((argv + i + j)->a_type == A_FLOAT)
+                    payload[i] = atom_getfloat(argv + i + j);
 #ifdef MAXMSP
-                else if ((argv + i)->a_type == A_LONG)
-                    payload[i] = (float)atom_getlong(argv + i);
+                else if ((argv + i + j)->a_type == A_LONG)
+                    payload[i] = (float)atom_getlong(argv + i + j);
 #endif
             }
             //update signal
@@ -783,7 +805,9 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 msig_update(msig, payload);
             }
             else {
-                msig_update_instance_by_id(msig, id, payload);
+                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
+                msig_resume_instance(si);
+                msig_update_instance(si, payload);
             }
         }
         else {
@@ -846,7 +870,53 @@ void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_tim
 // -(instance handler)--------------------------------------
 void mapper_instance_handler(mapper_signal_instance si, mapper_db_signal props, mapper_timetag_t *time, void *value)
 {
-    post("INSTANCE HANDLER!");
+    t_mapper *x = props->user_data;
+    int i = 0, length = props->length;
+    int id = msig_get_instance_id(si);
+
+    if (length > (MAX_LIST-1)) {
+        post("Maximum list length is %i!", MAX_LIST-1);
+        length = MAX_LIST-1;
+    }
+
+    // Write instance ID to output buffer
+#ifdef MAXMSP
+    atom_setlong(x->buffer, (long)id);
+#else
+    SETFLOAT(x->buffer, (float)id);
+#endif
+
+    if (value) {
+        if (props->type == 'f') {
+            float *v = value;
+            for (i = 0; i < length; i++) {
+#ifdef MAXMSP
+                atom_setfloat(x->buffer + i + 1, v[i]);
+#else
+                SETFLOAT(x->buffer + i + 1, v[i]);
+#endif
+            }
+        }
+        else if (props->type == 'i') {
+            int *v = value;
+            for (i = 0; i < length; i++) {
+#ifdef MAXMSP
+                atom_setlong(x->buffer + i + 1, (long)v[i]);
+#else
+                SETFLOAT(x->buffer + i + 1, (float)v[i]);
+#endif
+            }
+        }
+        outlet_anything(x->outlet1, gensym((char *)props->name), length + 1, x->buffer);
+    }
+    else {
+#ifdef MAXMSP
+        atom_setsym(x->buffer + 1, ps_mute);
+#else
+        SETSYMBOL(x->buffer + 1, ps_mute);
+#endif
+        outlet_anything(x->outlet1, gensym((char *)props->name), 2, x->buffer);
+    }
 }
 
 // *********************************************************
