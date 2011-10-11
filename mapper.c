@@ -759,14 +759,14 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #ifdef MAXMSP
             if (strcmp(atom_getsym(argv + 1)->s_name, "mute") == 0) {
                 mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                msig_resume_instance(si);
-                msig_update_instance(si, 0);
+                if (si)
+                    msig_update_instance(si, 0);
             }
 #else
             if (strcmp((argv+i)->a_w.w_symbol->s_name, "@min") == 0) {
                 mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                msig_resume_instance(si);
-                msig_update_instance(si, 0);
+                if (si)
+                    msig_update_instance(si, 0);
             }
 #endif
         }
@@ -786,8 +786,8 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
             else {
                 mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                msig_resume_instance(si);
-                msig_update_instance(si, payload);
+                if (si)
+                    msig_update_instance(si, payload);
             }
         }
         else if (props->type == 'f') {
@@ -806,8 +806,8 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
             else {
                 mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                msig_resume_instance(si);
-                msig_update_instance(si, payload);
+                if (si)
+                    msig_update_instance(si, payload);
             }
         }
         else {
