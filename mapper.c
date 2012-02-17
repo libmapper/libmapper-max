@@ -62,32 +62,32 @@ typedef struct _mapper
 #endif
 } t_mapper;
 
-t_symbol *ps_list;
-int port = 9000;
+static t_symbol *ps_list;
+static int port = 9000;
 
 // *********************************************************
 // -(function prototypes)-----------------------------------
-void *mapper_new(t_symbol *s, int argc, t_atom *argv);
-void mapper_free(t_mapper *x);
-void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-void mapper_poll(t_mapper *x);
-void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
-void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
-void mapper_print_properties(t_mapper *x);
-void mapper_read_definition(t_mapper *x);
-void mapper_register_signals(t_mapper *x);
-void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-int mapper_setup_device(t_mapper *x);
+static void *mapper_new(t_symbol *s, int argc, t_atom *argv);
+static void mapper_free(t_mapper *x);
+static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_poll(t_mapper *x);
+static void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
+static void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
+static void mapper_print_properties(t_mapper *x);
+static void mapper_read_definition(t_mapper *x);
+static void mapper_register_signals(t_mapper *x);
+static void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static int mapper_setup_device(t_mapper *x);
 #ifdef MAXMSP
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
 #endif
 
 // *********************************************************
 // -(global class pointer variable)-------------------------
-void *mapper_class;
+static void *mapper_class;
 
 // *********************************************************
 // -(main)--------------------------------------------------
