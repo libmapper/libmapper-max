@@ -495,12 +495,12 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     }
     if (props->type == 'i') {
         int payload[props->length];
-        for (i = 0; i < argc; i++) {
+        for (i = 1; i < argc; i++) {
             if ((argv + i)->a_type == A_FLOAT)
-                payload[i] = (int)atom_getfloat(argv + i);
+                payload[i-1] = (int)atom_getfloat(argv + i);
 #ifdef MAXMSP
             else if ((argv + i)->a_type == A_LONG)
-                payload[i] = (int)atom_getlong(argv + i);
+                payload[i-1] = (int)atom_getlong(argv + i);
 #endif
         }
         //update signal
