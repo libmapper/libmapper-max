@@ -204,8 +204,11 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
         }
 
-        post("mapper: using interface: %s", iface);
-        post("mapper: using name: %s", x->name);
+        if (iface)
+            post("mapper: trying interface %s", iface);
+        else
+            post("mapper: using default interface.");
+        post("mapper: using name %s", x->name);
         mapper_print_properties(x);
         x->ready = 0;
         x->learn_mode = learn;
