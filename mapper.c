@@ -50,6 +50,7 @@ typedef struct _mapper
     void *outlet2;
     void *clock;          // pointer to clock object
     char *name;
+    mapper_admin admin;
     mapper_device device;
     int ready;
     int learn_mode;
@@ -139,7 +140,6 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
     int learn = 0;
     const char *alias = NULL;
     const char *iface = NULL;
-    mapper_admin admin = 0;
 
 #ifdef MAXMSP
     if (x = object_alloc(mapper_class)) {
@@ -196,20 +196,19 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             else
                 x->name = strdup(alias);
         }
-        if (iface) {
-            admin = mapper_admin_new(iface, 0, 0);
-            if (admin) {
-                post("Error initializing admin.");
-                return 0;
-            }
+        x->admin = mapper_admin_new(iface, 0, 0);
+        if (!x->admin) {
+            post("Error initializing admin.");
+            return 0;
         }
-        x->device = mdev_new(x->name, port, admin);
+        x->device = mdev_new(x->name, port, x->admin);
         if (!x->device) {
             post("Error initializing device.");
             return 0;
         }
 
-        post("using name: %s", x->name);
+        post("mapper: using interface: %s", iface);
+        post("mapper: using name: %s", x->name);
         mapper_print_properties(x);
         x->ready = 0;
         x->learn_mode = learn;
@@ -236,8 +235,10 @@ void mapper_free(t_mapper *x)
 #endif
 
     if (x->device) {
-        post("Freeing device %s...", mdev_name(x->device));
         mdev_free(x->device);
+    }
+    if (x->admin) {
+        mapper_admin_free(x->admin);
     }
 }
 
