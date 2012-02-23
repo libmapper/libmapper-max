@@ -28,6 +28,7 @@
 #include <string.h>
 #include <math.h>
 #include <lo/lo.h>
+#include <arpa/inet.h>
 
 #include <unistd.h>
 
@@ -78,7 +79,6 @@ static void mapper_print_properties(t_mapper *x);
 static void mapper_register_signals(t_mapper *x);
 static void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-static int mapper_setup_device(t_mapper *x);
 #ifdef MAXMSP
     static void mapper_read_definition(t_mapper *x);
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
@@ -86,7 +86,6 @@ static int mapper_setup_device(t_mapper *x);
 
 static const char *maxpd_atom_get_string(t_atom *a);
 static void maxpd_atom_set_string(t_atom *a, const char *string);
-static int maxpd_atom_get_int(t_atom *a);
 static void maxpd_atom_set_int(t_atom *a, int i);
 static double maxpd_atom_get_float(t_atom *a);
 static void maxpd_atom_set_float(t_atom *a, float d);
@@ -138,7 +137,9 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
     t_mapper *x = NULL;
     long i;
     int learn = 0;
-    char *alias = NULL;
+    const char *alias = NULL;
+    const char *iface = NULL;
+    mapper_admin admin = 0;
 
 #ifdef MAXMSP
     if (x = object_alloc(mapper_class)) {
@@ -153,32 +154,38 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
 #endif
 
         for (i = 0; i < argc; i++) {
-            if ((argv + i)->a_type == A_SYM) {
+            if ((argv+i)->a_type == A_SYM) {
                 if(strcmp(maxpd_atom_get_string(argv+i), "@alias") == 0) {
-                    if ((argv + i + 1)->a_type == A_SYM) {
-                        alias = strdup(maxpd_atom_get_string(argv+i+1));
+                    if ((argv+i+1)->a_type == A_SYM) {
+                        alias = maxpd_atom_get_string(argv+i+1);
                         i++;
                     }
                 }
                 else if ((strcmp(maxpd_atom_get_string(argv+i), "@def") == 0) || 
                          (strcmp(maxpd_atom_get_string(argv+i), "@definition") == 0)) {
-                    if ((argv + i + 1)->a_type == A_SYM) {
+                    if ((argv+i+1)->a_type == A_SYM) {
                         x->definition = strdup(maxpd_atom_get_string(argv+i+1));
                         mapper_read_definition(x);
                         i++;
                     }
                 }
                 else if (strcmp(maxpd_atom_get_string(argv+i), "@learn") == 0) {
-                    if ((argv + i + 1)->a_type == A_FLOAT) {
-                        learn = (int)maxpd_atom_get_float(argv+i+1);
-                        learn = (learn > 1) ? 0 : 1;
+                    if ((argv+i+1)->a_type == A_FLOAT) {
+                        learn = (maxpd_atom_get_float(argv+i+1) > 1) ? 0 : 1;
+                        i++;
                     }
 #ifdef MAXMSP
-                    else if ((argv + i + 1)->a_type == A_LONG) {
-                        learn = (int)atom_getlong(argv+i+1);
-                        learn = (learn > 1) ? 0 : 1;
+                    else if ((argv+i+1)->a_type == A_LONG) {
+                        learn = (atom_getlong(argv+i+1) > 1) ? 0 : 1;
+                        i++;
                     }
 #endif
+                }
+                else if (strcmp(maxpd_atom_get_string(argv+i), "@interface") == 0) {
+                    if ((argv+i+1)->a_type == A_SYM) {
+                        iface = maxpd_atom_get_string(argv+i+1);
+                        i++;
+                    }
                 }
             }
         }
@@ -189,22 +196,30 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             else
                 x->name = strdup(alias);
         }
-        if (mapper_setup_device(x)) {
+        if (iface) {
+            admin = mapper_admin_new(iface, 0, 0);
+            if (admin) {
+                post("Error initializing admin.");
+                return 0;
+            }
+        }
+        x->device = mdev_new(x->name, port, admin);
+        if (!x->device) {
             post("Error initializing device.");
+            return 0;
         }
-        else {
-            x->ready = 0;
-            x->learn_mode = learn;
+
+        post("using name: %s", x->name);
+        mapper_print_properties(x);
+        x->ready = 0;
+        x->learn_mode = learn;
 #ifdef MAXMSP
-            x->clock = clock_new(x, (method)mapper_poll);    // Create the timing clock
+        mapper_register_signals(x);
+        x->clock = clock_new(x, (method)mapper_poll);    // Create the timing clock
 #else
-            x->clock = clock_new(x, (t_method)mapper_poll);
+        x->clock = clock_new(x, (t_method)mapper_poll);
 #endif
-            clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
-            #ifdef MAXMSP
-            mapper_register_signals(x);
-            #endif
-        }
+        clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
     }
     return (x);
 }
@@ -311,7 +326,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
                 else if (strcmp(maxpd_atom_get_string(argv+i), "@type") == 0) {
                     if ((argv+i+1)->a_type == A_SYM) {
-                        char *temp = maxpd_atom_get_string(argv+i+1);
+                        const char *temp = maxpd_atom_get_string(argv+i+1);
                         if ((strcmp(temp, "int") == 0) || (strcmp(temp, "i") == 0))
                             sig_type = 'i';
                         else if ((strcmp(temp, "float") == 0) || (strcmp(temp, "f") == 0))
@@ -619,22 +634,6 @@ void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_tim
 }
 
 // *********************************************************
-// -(set up new device)-------------------------------------
-int mapper_setup_device(t_mapper *x)
-{
-    post("using name: %s", x->name);
-    
-    x->device = mdev_new(x->name, port, 0);
-
-    if (!x->device)
-        return 1;
-    else
-        mapper_print_properties(x);
-    
-    return 0;
-}
-
-// *********************************************************
 // -(read device definition - maxmsp only)------------------
 #ifdef MAXMSP
 void mapper_read_definition (t_mapper *x)
@@ -894,18 +893,9 @@ const char *maxpd_atom_get_string(t_atom *a)
 void maxpd_atom_set_string(t_atom *a, const char *string)
 {
 #ifdef MAXMSP
-    atom_setsym(a, gensym(string));
+    atom_setsym(a, gensym((char *)string));
 #else
     SETSYMBOL(a, gensym(string));
-#endif
-}
-
-int maxpd_atom_get_int(t_atom *a)
-{
-#ifdef MAXMSP
-    return (int)atom_getlong(a);
-#else
-    return (int)atom_getfloat(a);
 #endif
 }
     
