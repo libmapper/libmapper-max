@@ -80,8 +80,8 @@ static void mapper_print_properties(t_mapper *x);
 static void mapper_register_signals(t_mapper *x);
 static void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_read_definition(t_mapper *x);
 #ifdef MAXMSP
-    static void mapper_read_definition(t_mapper *x);
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
 #endif
 
@@ -636,9 +636,9 @@ void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_tim
 
 // *********************************************************
 // -(read device definition - maxmsp only)------------------
-#ifdef MAXMSP
 void mapper_read_definition (t_mapper *x)
 {
+#ifdef MAXMSP
     if (x->d) {
         object_free(x->d);
     }
@@ -672,8 +672,8 @@ void mapper_read_definition (t_mapper *x)
     else {
         post("Could not locate file %s", x->definition);
     }
-}
 #endif
+}
 
 // *********************************************************
 // -(register signals from dictionary - maxmsp only)--------
