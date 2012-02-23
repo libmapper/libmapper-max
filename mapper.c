@@ -191,10 +191,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         }
         if (alias) {
             free(x->name);
-            if (*alias == '/')
-                x->name = strdup(alias + 1);
-            else
-                x->name = strdup(alias);
+            x->name = *alias == '/' ? strdup(alias+1) : strdup(alias);
         }
         x->admin = mapper_admin_new(iface, 0, 0);
         if (!x->admin) {
@@ -239,6 +236,9 @@ void mapper_free(t_mapper *x)
     }
     if (x->admin) {
         mapper_admin_free(x->admin);
+    }
+    if (x->name) {
+        free(x->name);
     }
 }
 
@@ -661,7 +661,7 @@ void mapper_read_definition (t_mapper *x)
                 dictionary_getstring((t_dictionary *)info, sym_name, &my_name);
                 if (my_name) {
                     free(x->name);
-                    x->name = strdup(my_name);
+                    x->name = *my_name == '/' ? strdup(my_name+1) : strdup(my_name);
                 }
             }
         }
