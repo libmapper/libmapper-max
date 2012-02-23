@@ -275,7 +275,7 @@
 				OTHER_LDFLAGS = (
 					"-framework",
 					MaxAPI,
-					/usr/local/lib/liblo.a,
+					/usr/local/lib/liblo.dylib,
 					"-lmx",
 				);
 				PREBINDING = YES;
@@ -309,7 +309,7 @@
 				INSTALL_PATH = "";
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = (
-					/usr/local/lib/liblo.a,
+					/usr/local/lib/liblo.dylib,
 					"-undefined",
 					dynamic_lookup,
 				);
