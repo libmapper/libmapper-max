@@ -74,9 +74,13 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 void mapper_poll(t_mapper *x);
-void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
-void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timetag_t *time, void *value);
-void mapper_instance_handler(mapper_signal_instance si, mapper_db_signal props, mapper_timetag_t *time, void *value);
+void mapper_float_handler(mapper_signal msig, mapper_db_signal props,
+                          mapper_timetag_t *time, void *value);
+void mapper_int_handler(mapper_signal msig, mapper_db_signal props,
+                        mapper_timetag_t *time, void *value);
+void mapper_instance_handler(mapper_signal sig, mapper_db_signal props,
+                             mapper_timetag_t *time, void *value, int id,
+                             void *user_data);
 void mapper_print_properties(t_mapper *x);
 void mapper_read_definition(t_mapper *x);
 void mapper_register_signals(t_mapper *x);
@@ -442,7 +446,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                     }
                     if (poly) {
-                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler, x);
+                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler);
                     }
                 
                     //output numInputs
@@ -462,7 +466,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                     }
                     if (poly) {
-                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler, x);
+                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler);
                     }
                     
                     //output numOutputs
@@ -549,7 +553,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                     }
                     if (poly) {
-                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler, x);
+                        msig_reserve_instances(temp_sig, poly, mapper_instance_handler);
                     }
                     
                     //output numInputs
@@ -568,7 +572,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                         msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                     }
                     if (poly) {
-                        msig_reserve_instances(temp_sig, poly, 0, 0);
+                        msig_reserve_instances(temp_sig, poly, 0);
                     }
                                     
                     //output numOutputs
@@ -758,15 +762,11 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
 #ifdef MAXMSP
             if (strcmp(atom_getsym(argv + 1)->s_name, "mute") == 0) {
-                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                if (si)
-                    msig_update_instance(si, 0);
+                msig_update_instance(msig, id, 0);
             }
 #else
-            if (strcmp((argv+i)->a_w.w_symbol->s_name, "@min") == 0) {
-                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                if (si)
-                    msig_update_instance(si, 0);
+            if (strcmp((argv+i)->a_w.w_symbol->s_name, "mute") == 0) {
+                msig_update_instance(msig, id, 0);
             }
 #endif
         }
@@ -785,9 +785,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 msig_update(msig, payload);
             }
             else {
-                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                if (si)
-                    msig_update_instance(si, payload);
+                msig_update_instance(msig, id, payload);
             }
         }
         else if (props->type == 'f') {
@@ -805,9 +803,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 msig_update(msig, payload);
             }
             else {
-                mapper_signal_instance si = msig_get_instance_by_id(msig, id);
-                if (si)
-                    msig_update_instance(si, payload);
+                msig_update_instance(msig, id, payload);
             }
         }
         else {
@@ -868,11 +864,12 @@ void mapper_float_handler(mapper_signal msig, mapper_db_signal props, mapper_tim
 
 // *********************************************************
 // -(instance handler)--------------------------------------
-void mapper_instance_handler(mapper_signal_instance si, mapper_db_signal props, mapper_timetag_t *time, void *value)
+    void mapper_instance_handler(mapper_signal sig, mapper_db_signal props,
+                                 mapper_timetag_t *time, void *value, int id,
+                                 void *user_data)
 {
     t_mapper *x = props->user_data;
     int i = 0, length = props->length;
-    int id = msig_get_instance_id(si);
 
     if (length > (MAX_LIST-1)) {
         post("Maximum list length is %i!", MAX_LIST-1);
