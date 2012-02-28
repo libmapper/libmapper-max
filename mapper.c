@@ -8,7 +8,7 @@
 // Laboratory at McGill University in Montreal, and is copyright those
 // found in the AUTHORS file.  It is licensed under the GNU Lesser Public
 // General License version 2.1 or later.  Please see COPYING for details.
-// 
+//
 
 // *********************************************************
 // -(Includes)----------------------------------------------
@@ -37,7 +37,7 @@
 
 // *********************************************************
 // -(object struct)-----------------------------------------
-typedef struct _mapper 
+typedef struct _mapper
 {
     t_object ob;
 #ifdef WIN32
@@ -99,9 +99,9 @@ static void *mapper_class;
 // -(main)--------------------------------------------------
 #ifdef MAXMSP
     int main(void)
-    {    
+    {
         t_class *c;
-        c = class_new("mapper", (method)mapper_new, (method)mapper_free, 
+        c = class_new("mapper", (method)mapper_new, (method)mapper_free,
                       (long)sizeof(t_mapper), 0L, A_GIMME, 0);
         class_addmethod(c, (method)mapper_assist,         "assist",   A_CANT,     0);
         class_addmethod(c, (method)mapper_add_signal,     "add",      A_GIMME,    0);
@@ -118,7 +118,7 @@ static void *mapper_class;
     int mapper_setup(void)
     {
         t_class *c;
-        c = class_new(gensym("mapper"), (t_newmethod)mapper_new, (t_method)mapper_free, 
+        c = class_new(gensym("mapper"), (t_newmethod)mapper_new, (t_method)mapper_free,
                       (long)sizeof(t_mapper), 0L, A_GIMME, 0);
         class_addmethod(c,   (t_method)mapper_add_signal,    gensym("add"),    A_GIMME, 0);
         class_addmethod(c,   (t_method)mapper_remove_signal, gensym("remove"), A_GIMME, 0);
@@ -161,7 +161,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                         i++;
                     }
                 }
-                else if ((strcmp(maxpd_atom_get_string(argv+i), "@def") == 0) || 
+                else if ((strcmp(maxpd_atom_get_string(argv+i), "@def") == 0) ||
                          (strcmp(maxpd_atom_get_string(argv+i), "@definition") == 0)) {
                     if ((argv+i+1)->a_type == A_SYM) {
                         x->definition = strdup(maxpd_atom_get_string(argv+i+1));
@@ -249,7 +249,7 @@ void mapper_free(t_mapper *x)
 // -(print properties)--------------------------------------
 void mapper_print_properties(t_mapper *x)
 {
-    if (x->ready) {        
+    if (x->ready) {
         //output name
         maxpd_atom_set_string(x->buffer, mdev_name(x->device));
         outlet_anything(x->outlet2, gensym("name"), 1, x->buffer);
@@ -284,7 +284,7 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 {
     if (m == ASSIST_INLET) { // inlet
         sprintf(s, "OSC input");
-    } 
+    }
     else {    // outlet
         if (a == 0) {
             sprintf(s, "Mapped OSC data");
@@ -376,7 +376,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             post("mapper: error creating input!");
             return;
         }
-    } 
+    }
     else {
         msig = mdev_add_output(x->device, sig_name, sig_length,
                                sig_type, sig_units, 0, 0);
@@ -453,14 +453,14 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     break;
             }
         }
-    }    
+    }
 
     // Update status outlet
     if (is_input) {
         //output numInputs
         maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
-    } 
+    }
     else {
         //output numOutputs
         maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
@@ -500,7 +500,7 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
     }
 }
-    
+
 // *********************************************************
 // -(set signal value)--------------------------------------
 void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
@@ -644,7 +644,7 @@ void mapper_int_handler(mapper_signal msig, mapper_db_signal props, mapper_timet
         t_mapper *x = props->user_data;
         int i, length = props->length;
         int *v = value;
-        
+
         if (length > (MAX_LIST-1)) {
             post("Maximum list length is %i!", MAX_LIST-1);
             length = MAX_LIST-1;
@@ -798,7 +798,7 @@ void mapper_register_signals(t_mapper *x) {
                             continue;
                         }
 
-                        temp_sig = mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0, 
+                        temp_sig = mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0,
                                                   sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
 
                         if (temp_sig) {
@@ -864,7 +864,7 @@ void mapper_register_signals(t_mapper *x) {
                         }
 
                         temp_sig = mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0);
-                        
+
                         if (temp_sig) {
                             if (range_known[0]) {
                                 msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
@@ -884,7 +884,7 @@ void mapper_register_signals(t_mapper *x) {
 // *********************************************************
 // -(poll libmapper)----------------------------------------
 void mapper_poll(t_mapper *x)
-{    
+{
     mdev_poll(x->device, 0);
     if (!x->ready) {
         if (mdev_ready(x->device)) {
@@ -895,7 +895,7 @@ void mapper_poll(t_mapper *x)
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
 }
-    
+
 // *********************************************************
 // -(toggle learning mode)----------------------------------
 void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
@@ -922,7 +922,7 @@ void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // some helper functions for abtracting differences
-// between maxmsp and puredata 
+// between maxmsp and puredata
 
 const char *maxpd_atom_get_string(t_atom *a)
 {
@@ -941,7 +941,7 @@ void maxpd_atom_set_string(t_atom *a, const char *string)
     SETSYMBOL(a, gensym(string));
 #endif
 }
-    
+
 void maxpd_atom_set_int(t_atom *a, int i)
 {
 #ifdef MAXMSP
