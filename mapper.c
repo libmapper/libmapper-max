@@ -193,6 +193,13 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             free(x->name);
             x->name = *alias == '/' ? strdup(alias+1) : strdup(alias);
         }
+        post("mapper: using name %s", x->name);
+
+        if (iface)
+            post("mapper: trying interface %s", iface);
+        else
+            post("mapper: using default interface.");
+
         x->admin = mapper_admin_new(iface, 0, 0);
         if (!x->admin) {
             post("Error initializing admin.");
@@ -204,11 +211,45 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
         }
 
-        if (iface)
-            post("mapper: trying interface %s", iface);
-        else
-            post("mapper: using default interface.");
-        post("mapper: using name %s", x->name);
+        // add other declared properties
+        for (i = 0; i < argc; i++) {
+            if (i > argc - 2) // need 2 arguments for key and value
+                break;
+            if ((strcmp(maxpd_atom_get_string(argv+i), "@alias") == 0) ||
+                (strcmp(maxpd_atom_get_string(argv+i), "@def") == 0) ||
+                (strcmp(maxpd_atom_get_string(argv+i), "@definition") == 0) ||
+                (strcmp(maxpd_atom_get_string(argv+i), "@learn") == 0) ||
+                (strcmp(maxpd_atom_get_string(argv+i), "@interface") == 0)){
+                i++;
+                continue;
+            }
+            else if (maxpd_atom_get_string(argv+i)[0] == '@') {
+                lo_arg *value;
+                switch ((argv+i+1)->a_type) {
+                    case A_SYM: {
+                        value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
+                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, LO_STRING, value);
+                        i++;
+                        break;
+                    }
+                    case A_FLOAT:
+                        value->f = maxpd_atom_get_float(argv+i+1);
+                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, LO_FLOAT, value);
+                        i++;
+                        break;
+#ifdef MAXMSP
+                    case A_LONG:
+                        value->i32 = atom_getlong(argv+i+1);
+                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, LO_INT32, value);
+                        i++;
+                        break;
+#endif
+                    default:
+                        break;
+                }
+            }
+        }
+
         mapper_print_properties(x);
         x->ready = 0;
         x->learn_mode = learn;
@@ -432,8 +473,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             lo_arg *value;
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
-                    value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
-                    msig_set_property(msig, (maxpd_atom_get_string(argv+i)+1), LO_STRING, value);
+                    value = (lo_arg *)maxpd_atom_get_string(argv+i+1);
+                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, LO_STRING, value);
                     i++;
                     break;
                 }
