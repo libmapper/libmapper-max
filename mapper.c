@@ -303,129 +303,168 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 // -(add signal)--------------------------------------------
 void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-    //need to read attribs: type, units, min/minimum, max/maximum
-    //also need to read arbitrary attributes
-    char *sig_name, *sig_units = 0, sig_type = 0;
-    int sig_min_int, sig_max_int, sig_length = 1;
+    const char *sig_name = 0, *sig_units = 0;
+    char sig_type = 0;
+    int is_input, sig_min_int, sig_max_int, sig_length = 1;
     float sig_min_float, sig_max_float;
     long i;
-    short range_known[2] = {0, 0};
-    mapper_signal temp_sig;
+    mapper_signal msig = 0;
 
-    if (argc < 4)
+    if (argc < 4) {
+        post("mapper: not enough arguments for 'add' message.");
+        return;
+    }
+
+    if ((argv->a_type != A_SYM) || ((argv+1)->a_type != A_SYM))
         return;
 
-    if ((argv->a_type == A_SYM) && ((argv+1)->a_type == A_SYM)) {
-        //get signal name
-        sig_name = strdup(maxpd_atom_get_string(argv+1));
+    if (strcmp(maxpd_atom_get_string(argv), "input") == 0)
+        is_input = 1;
+    else if (strcmp(maxpd_atom_get_string(argv), "output") == 0)
+        is_input = 0;
+    else
+        return;
 
-        //parse signal properties
-        for (i = 2; i < argc; i++) {
-            if ((argv + i)->a_type == A_SYM) {
-                if(strcmp(maxpd_atom_get_string(argv+i), "@units") == 0) {
-                    if ((argv+i+1)->a_type == A_SYM) {
-                        sig_units = strdup(maxpd_atom_get_string(argv+i+1));
-                        i++;
-                    }
+    // get signal name
+    sig_name = maxpd_atom_get_string(argv+1);
+
+    // get signal type, length, and units
+    for (i = 2; i < argc; i++) {
+        if (i > argc - 2) // need 2 arguments for key and value
+            break;
+        if ((argv+i)->a_type == A_SYM) {
+            if (strcmp(maxpd_atom_get_string(argv+i), "@type") == 0) {
+                if ((argv+i+1)->a_type == A_SYM) {
+                    sig_type = maxpd_atom_get_string(argv+i+1)[0];
+                    i++;
                 }
-                else if (strcmp(maxpd_atom_get_string(argv+i), "@type") == 0) {
-                    if ((argv+i+1)->a_type == A_SYM) {
-                        const char *temp = maxpd_atom_get_string(argv+i+1);
-                        if ((strcmp(temp, "int") == 0) || (strcmp(temp, "i") == 0))
-                            sig_type = 'i';
-                        else if ((strcmp(temp, "float") == 0) || (strcmp(temp, "f") == 0))
-                            sig_type = 'f';
-                        else {
-                            post("Skipping registration of signal %s (unknown type).", sig_name);
-                            return;
-                        }
-                        i++;
-                    }
+            }
+            else if (strcmp(maxpd_atom_get_string(argv+i), "@length") == 0) {
+                if ((argv+i+1)->a_type == A_FLOAT) {
+                    sig_length = (int)maxpd_atom_get_float(argv+i+1);
+                    i++;
                 }
-                else if ((strcmp(maxpd_atom_get_string(argv+i), "@min") == 0) ||
-                         (strcmp(maxpd_atom_get_string(argv+i), "@minimum") == 0)) {
-                    if ((argv+i+1)->a_type == A_FLOAT) {
-                        sig_min_float = maxpd_atom_get_float(argv+i+1);
-                        sig_min_int = (int)sig_min_float;
-                        range_known[0] = 1;
-                        i++;
-                    }
 #ifdef MAXMSP
-                    else if ((argv + i + 1)->a_type == A_LONG) {
-                        sig_min_int = (int)atom_getlong(argv+i+1);
-                        sig_min_float = (float)sig_min_int;
-                        range_known[0] = 1;
-                        i++;
-                    }
-#endif
+                else if ((argv+i+1)->a_type == A_LONG) {
+                    sig_length = atom_getlong(argv+i+1);
+                    i++;
                 }
-                else if ((strcmp(maxpd_atom_get_string(argv+i), "@max") == 0) ||
-                         (strcmp(maxpd_atom_get_string(argv+i), "@maximum") == 0)) {
-                    if ((argv+i+1)->a_type == A_FLOAT) {
-                        sig_max_float = maxpd_atom_get_float(argv+i+1);
-                        sig_max_int = (int)sig_max_float;
-                        range_known[1] = 1;
-                        i++;
-                    }
-#ifdef MAXMSP
-                    else if ((argv + i + 1)->a_type == A_LONG) {
-                        sig_max_int = (int)atom_getlong(argv+i+1);
-                        sig_max_float = (float)sig_max_int;
-                        range_known[1] = 1;
-                        i++;
-                    }
 #endif
-                }
-                else if (strcmp(maxpd_atom_get_string(argv+i), "@length") == 0) {
-                    if ((argv+i+1)->a_type == A_FLOAT) {
-                        sig_length = (int)maxpd_atom_get_float(argv+i+1);
-                        i++;
-                    }
-#ifdef MAXMSP
-                    else if ((argv+i+1)->a_type == A_LONG) {
-                        sig_length = (int)atom_getlong(argv+i+1);
-                        i++;
-                    }
-#endif
+            }
+            else if(strcmp(maxpd_atom_get_string(argv+i), "@units") == 0) {
+                if ((argv+i+1)->a_type == A_SYM) {
+                    sig_units = maxpd_atom_get_string(argv+i+1);
+                    i++;
                 }
             }
         }
-        if (sig_type) {
-            if (strcmp(maxpd_atom_get_string(argv), "input") == 0) {
-                temp_sig = mdev_add_input(x->device, maxpd_atom_get_string(argv+1), sig_length, 
-                                          sig_type, sig_units, 0, 0,
-                                          sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
-                if (temp_sig) {
-                    if (range_known[0]) {
-                        msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
-                    }
-                    if (range_known[1]) {
-                        msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                    }
-                    //output numInputs
-                    maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
-                    outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
+    }
+    if (!sig_type) {
+        post("mapper: signal has no declared type!");
+        return;
+    }
+    if (sig_length < 1) {
+        post("mapper: signals cannot have length < 1!");
+        return;
+    }
+
+    if (is_input) {
+        msig = mdev_add_input(x->device, sig_name, sig_length,
+                              sig_type, sig_units, 0, 0,
+                              sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
+        if (!msig) {
+            post("mapper: error creating input!");
+            return;
+        }
+    } 
+    else {
+        msig = mdev_add_output(x->device, sig_name, sig_length,
+                               sig_type, sig_units, 0, 0);
+        if (!msig) {
+            post("mapper: error creating output!");
+            return;
+        }
+    }
+
+    // add other declared properties
+    for (i = 2; i < argc; i++) {
+        if (i > argc - 2) // need 2 arguments for key and value
+            break;
+        if ((strcmp(maxpd_atom_get_string(argv+i), "@type") == 0) ||
+            (strcmp(maxpd_atom_get_string(argv+i), "@length") == 0) ||
+            (strcmp(maxpd_atom_get_string(argv+i), "@units") == 0)){
+            i++;
+            continue;
+        }
+        if (strcmp(maxpd_atom_get_string(argv+i), "@min") == 0) {
+            if ((argv+i+1)->a_type == A_FLOAT) {
+                sig_min_float = maxpd_atom_get_float(argv+i+1);
+                sig_min_int = (int)sig_min_float;
+                msig_set_minimum(msig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                i++;
+            }
+    #ifdef MAXMSP
+            else if ((argv + i + 1)->a_type == A_LONG) {
+                sig_min_int = (int)atom_getlong(argv+i+1);
+                sig_min_float = (float)sig_min_int;
+                msig_set_minimum(msig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                i++;
+            }
+    #endif
+        }
+        else if (strcmp(maxpd_atom_get_string(argv+i), "@max") == 0) {
+            if ((argv+i+1)->a_type == A_FLOAT) {
+                sig_max_float = maxpd_atom_get_float(argv+i+1);
+                sig_max_int = (int)sig_max_float;
+                msig_set_maximum(msig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                i++;
+            }
+    #ifdef MAXMSP
+            else if ((argv + i + 1)->a_type == A_LONG) {
+                sig_max_int = (int)atom_getlong(argv+i+1);
+                sig_max_float = (float)sig_max_int;
+                msig_set_maximum(msig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                i++;
+            }
+    #endif
+        }
+        else if (maxpd_atom_get_string(argv+i)[0] == '@') {
+            lo_arg *value;
+            switch ((argv+i+1)->a_type) {
+                case A_SYM: {
+                    value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
+                    msig_set_property(msig, (maxpd_atom_get_string(argv+i)+1), LO_STRING, value);
+                    i++;
+                    break;
                 }
-            } 
-            else if (strcmp(maxpd_atom_get_string(argv), "output") == 0) {
-                temp_sig = mdev_add_output(x->device, maxpd_atom_get_string(argv + 1), sig_length, 
-                                           sig_type, sig_units, 0, 0);
-                if (temp_sig) {
-                    if (range_known[0]) {
-                        msig_set_minimum(temp_sig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
-                    }
-                    if (range_known[1]) {
-                        msig_set_maximum(temp_sig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                    }
-                    //output numOutputs
-                    maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
-                    outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
-                }
+                case A_FLOAT:
+                    value->f = maxpd_atom_get_float(argv+i+1);
+                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, LO_FLOAT, value);
+                    i++;
+                    break;
+#ifdef MAXMSP
+                case A_LONG:
+                    value->i32 = atom_getlong(argv+i+1);
+                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, LO_INT32, value);
+                    i++;
+                    break;
+#endif
+                default:
+                    break;
             }
         }
-        else {
-            post("Skipping registration of signal %s (undeclared type).", sig_name);
-        }
+    }    
+
+    // Update status outlet
+    if (is_input) {
+        //output numInputs
+        maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
+        outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
+    } 
+    else {
+        //output numOutputs
+        maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
+        outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 }
 
