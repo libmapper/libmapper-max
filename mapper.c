@@ -744,8 +744,13 @@ void mapper_int_handler(mapper_signal msig, int instance_id,
                         mapper_db_signal props, mapper_timetag_t *time,
                         void *value)
 {
+    t_mapper *x = props->user_data;
+    int poly = 0;
+    if (props->instances > 1) {
+        maxpd_atom_set_int(x->buffer, instance_id);
+        poly = 1;
+    }
     if (value) {
-        t_mapper *x = props->user_data;
         int i, length = props->length;
         int *v = value;
 
@@ -755,8 +760,14 @@ void mapper_int_handler(mapper_signal msig, int instance_id,
         }
 
         for (i = 0; i < length; i++)
-            maxpd_atom_set_int(x->buffer + i, v[i]);
-        outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
+            maxpd_atom_set_int(x->buffer + i + poly, v[i]);
+        outlet_anything(x->outlet1, gensym((char *)props->name),
+                        length + poly, x->buffer);
+    }
+    else if (poly) {
+        maxpd_atom_set_string(x->buffer + 1, "mute");
+        outlet_anything(x->outlet1, gensym((char *)props->name),
+                        2, x->buffer);
     }
 }
 
@@ -766,8 +777,13 @@ void mapper_float_handler(mapper_signal msig, int instance_id,
                           mapper_db_signal props, mapper_timetag_t *time,
                           void *value)
 {
+    t_mapper *x = props->user_data;
+    int poly = 0;
+    if (props->instances > 1) {
+        maxpd_atom_set_int(x->buffer, instance_id);
+        poly = 1;
+    }
     if (value) {
-        t_mapper *x = props->user_data;
         int i, length = props->length;
         float *v = value;
 
@@ -777,62 +793,14 @@ void mapper_float_handler(mapper_signal msig, int instance_id,
         }
 
         for (i = 0; i < length; i++)
-            maxpd_atom_set_float(x->buffer + i, v[i]);
-        outlet_anything(x->outlet1, gensym((char *)props->name), length, x->buffer);
+            maxpd_atom_set_float(x->buffer + i + poly, v[i]);
+        outlet_anything(x->outlet1, gensym((char *)props->name),
+                        length + poly, x->buffer);
     }
-}
-
-// *********************************************************
-// -(instance handler)--------------------------------------
-void mapper_instance_handler(mapper_signal sig, mapper_db_signal props,
-                             mapper_timetag_t *time, void *value, int id,
-                             void *user_data)
-{
-    t_mapper *x = props->user_data;
-    int i = 0, length = props->length;
-
-    if (length > (MAX_LIST-1)) {
-        post("Maximum list length is %i!", MAX_LIST-1);
-        length = MAX_LIST-1;
-    }
-
-    // Write instance ID to output buffer
-#ifdef MAXMSP
-    atom_setlong(x->buffer, (long)id);
-#else
-    SETFLOAT(x->buffer, (float)id);
-#endif
-
-    if (value) {
-        if (props->type == 'f') {
-            float *v = value;
-            for (i = 0; i < length; i++) {
-#ifdef MAXMSP
-                atom_setfloat(x->buffer + i + 1, v[i]);
-#else
-                SETFLOAT(x->buffer + i + 1, v[i]);
-#endif
-            }
-        }
-        else if (props->type == 'i') {
-            int *v = value;
-            for (i = 0; i < length; i++) {
-#ifdef MAXMSP
-                atom_setlong(x->buffer + i + 1, (long)v[i]);
-#else
-                SETFLOAT(x->buffer + i + 1, (float)v[i]);
-#endif
-            }
-        }
-        outlet_anything(x->outlet1, gensym((char *)props->name), length + 1, x->buffer);
-    }
-    else {
-#ifdef MAXMSP
-        atom_setsym(x->buffer + 1, ps_mute);
-#else
-        SETSYMBOL(x->buffer + 1, ps_mute);
-#endif
-        outlet_anything(x->outlet1, gensym((char *)props->name), 2, x->buffer);
+    else if (poly) {
+        maxpd_atom_set_string(x->buffer + 1, "mute");
+        outlet_anything(x->outlet1, gensym((char *)props->name),
+                        2, x->buffer);
     }
 }
 
