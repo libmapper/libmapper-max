@@ -308,6 +308,10 @@ void mapper_print_properties(t_mapper *x)
         maxpd_atom_set_int(x->buffer, mdev_port(x->device));
         outlet_anything(x->outlet2, gensym("port"), 1, x->buffer);
 
+        //output ordinal
+        maxpd_atom_set_int(x->buffer, mdev_ordinal(x->device));
+        outlet_anything(x->outlet2, gensym("ordinal"), 1, x->buffer);
+
         //output numInputs
         maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
@@ -444,14 +448,14 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 msig_set_minimum(msig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
                 i++;
             }
-    #ifdef MAXMSP
+#ifdef MAXMSP
             else if ((argv + i + 1)->a_type == A_LONG) {
                 sig_min_int = (int)atom_getlong(argv+i+1);
                 sig_min_float = (float)sig_min_int;
                 msig_set_minimum(msig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
                 i++;
             }
-    #endif
+#endif
         }
         else if (strcmp(maxpd_atom_get_string(argv+i), "@max") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
@@ -460,14 +464,14 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 msig_set_maximum(msig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                 i++;
             }
-    #ifdef MAXMSP
+#ifdef MAXMSP
             else if ((argv + i + 1)->a_type == A_LONG) {
                 sig_max_int = (int)atom_getlong(argv+i+1);
                 sig_max_float = (float)sig_max_int;
                 msig_set_maximum(msig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                 i++;
             }
-    #endif
+#endif
         }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
             lo_arg *value;
