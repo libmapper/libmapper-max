@@ -28,7 +28,9 @@
 #include <string.h>
 #include <math.h>
 #include <lo/lo.h>
-#include <arpa/inet.h>
+#ifndef WIN32
+  #include <arpa/inet.h>
+#endif
 
 #include <unistd.h>
 
