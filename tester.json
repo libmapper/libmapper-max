@@ -1,0 +1,41 @@
+{
+    "device" : {
+    	"fileversion" : "dot-1",
+    	"name" : "tester",
+    	"numInputs" : 2,
+    	"numOutputs" : 2,
+        "inputs" : [
+        	{
+				"name" : "/in1",
+				"type" : "f",
+				"units" : "na",
+				"minimum" : 0,
+				"maximum" : 1
+			},
+			{
+            	"name" : "/in2",
+                "type" : "f",
+                "units" : "na",
+                "minimum" : 2.1,
+				"maximum" : 3.1
+            }
+        ],
+        "outputs" : [
+        	{
+            	"name" : "/out1",
+                "type" : "f",
+                "units" : "na",
+                "minimum" : 4,
+				"maximum" : 5
+            },
+            {
+            	"name" : "/out2",
+                "type" : "f",
+                "units" : "na",
+                "minimum" : 6.1,
+				"maximum" : 7.1,
+				"clipMax" : "clamp"
+            }
+        ]
+    }
+}
