@@ -1,0 +1,4 @@
+LIBRARY mapper.mxe
+
+EXPORTS
+	main

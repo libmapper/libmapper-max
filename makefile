@@ -25,6 +25,23 @@ PDNTLIB = /NODEFAULTLIB:libcmt /NODEFAULTLIB:oldnames /NODEFAULTLIB:kernel32 \
 	cl $(PDNTCFLAGS) $(PDNTINCLUDE) /c $*.c
 	link /nologo /dll /export:$(CSYM)_setup $*.obj $(PDNTLIB)
 
+# ----------------------- MINGW -----------------------
+
+max_mingw: $(NAME).mxe
+
+.SUFFIXES: .mxe
+
+LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper-0)
+LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper-0)
+
+PDMINGWCFLAGS = -DMAXMSP -DWIN_VERSION -DWIN_EXT_VERSION $(LIBMAPPER_CFLAGS)
+PDMINGWINCLUDE = -I$(MAXSDKPATH)/c74support/max-includes
+PDMINGWLIB = -L$(MAXSDKPATH)/c74support/max-includes -lMaxAPI $(LIBMAPPER_LIBS)
+
+.c.mxe:
+	$(CC) $(PDMINGWCFLAGS) $(PDMINGWINCLUDE) -c -o $(<:%.c=%.o) $<
+	$(CC) -shared -o $@ $(<:%.c=%.o) $(<:%.c=%.def) $(PDMINGWLIB)
+
 # ----------------------- IRIX 5.x -----------------------
 
 pd_irix5: $(NAME).pd_irix5
