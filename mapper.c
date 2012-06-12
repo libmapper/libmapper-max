@@ -688,11 +688,11 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
 #ifdef MAXMSP
             if (strcmp(atom_getsym(argv + 1)->s_name, "mute") == 0) {
-                msig_update_instance(msig, id, 0);
+                msig_release_instance(msig, id);
             }
 #else
             if (strcmp((argv+i)->a_w.w_symbol->s_name, "mute") == 0) {
-                msig_update_instance(msig, id, 0);
+                msig_release_instance(msig, id);
             }
 #endif
         }
