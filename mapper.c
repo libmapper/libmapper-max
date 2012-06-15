@@ -351,8 +351,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
     const char *sig_name = 0, *sig_units = 0;
     char sig_type = 0;
-    int is_input, sig_min_int, sig_max_int, sig_length = 1, sig_poly = 0;
-    float sig_min_float, sig_max_float;
+    int is_input, sig_length = 1, prop_int = 0;
+    float prop_float;
     long i;
     mapper_signal msig = 0;
 
@@ -444,48 +444,57 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         if (strcmp(maxpd_atom_get_string(argv+i), "@min") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
-                sig_min_float = maxpd_atom_get_float(argv+i+1);
-                sig_min_int = (int)sig_min_float;
-                msig_set_minimum(msig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                prop_float = maxpd_atom_get_float(argv+i+1);
+                prop_int = (int)prop_float;
+                msig_set_minimum(msig, sig_type == 'i' ? (void *)&prop_int : (void *)&prop_float);
                 i++;
             }
 #ifdef MAXMSP
             else if ((argv + i + 1)->a_type == A_LONG) {
-                sig_min_int = (int)atom_getlong(argv+i+1);
-                sig_min_float = (float)sig_min_int;
-                msig_set_minimum(msig, sig_type == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                prop_int = (int)atom_getlong(argv+i+1);
+                prop_float = (float)prop_int;
+                msig_set_minimum(msig, sig_type == 'i' ? (void *)&prop_int : (void *)&prop_float);
                 i++;
             }
 #endif
         }
         else if (strcmp(maxpd_atom_get_string(argv+i), "@max") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
-                sig_max_float = maxpd_atom_get_float(argv+i+1);
-                sig_max_int = (int)sig_max_float;
-                msig_set_maximum(msig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                prop_float = maxpd_atom_get_float(argv+i+1);
+                prop_int = (int)prop_float;
+                msig_set_maximum(msig, sig_type == 'i' ? (void *)&prop_int : (void *)&prop_float);
                 i++;
             }
 #ifdef MAXMSP
             else if ((argv + i + 1)->a_type == A_LONG) {
-                sig_max_int = (int)atom_getlong(argv+i+1);
-                sig_max_float = (float)sig_max_int;
-                msig_set_maximum(msig, sig_type == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
+                prop_int = (int)atom_getlong(argv+i+1);
+                prop_float = (float)prop_int;
+                msig_set_maximum(msig, sig_type == 'i' ? (void *)&prop_int : (void *)&prop_float);
                 i++;
             }
 #endif
         }
         else if (strcmp(atom_getsym(argv+i)->s_name, "@poly") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
-                sig_poly = (int)maxpd_atom_get_float(argv+i+1);
+                prop_int = (int)maxpd_atom_get_float(argv+i+1);
                 i++;
             }
 #ifdef MAXMSP
             else if ((argv+i+1)->a_type == A_LONG) {
-                sig_poly = atom_getlong(argv+i+1);
+                prop_int = atom_getlong(argv+i+1);
                 i++;
             }
 #endif
-            msig_reserve_instances(msig, sig_poly - 1);
+            msig_reserve_instances(msig, prop_int - 1);
+        }
+        else if (strcmp(atom_getsym(argv+i)->s_name, "@stealing") == 0) {
+            if ((argv+i+1)->a_type == A_SYM) {
+                if (strcmp(maxpd_atom_get_string(argv+i+1), "newest") == 0)
+                    msig_set_instance_allocation_mode(msig, IN_STEAL_NEWEST);
+                if (strcmp(maxpd_atom_get_string(argv+i+1), "oldest") == 0)
+                    msig_set_instance_allocation_mode(msig, IN_STEAL_OLDEST);
+                i++;
+            }
         }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
             lo_arg *value;
