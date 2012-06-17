@@ -635,6 +635,9 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 // -(anything)----------------------------------------------
 void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
+    if (!x->ready)
+        return;
+
     int i = 0, j = 0, id = -1;
     if (argc) {
         //find signal
