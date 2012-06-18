@@ -475,6 +475,28 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
         }
+        else if (strcmp(maxpd_atom_get_string(argv+i), "@default") == 0) {
+            if (sig_type == 'i') {
+                int value = 0;
+                if ((argv+i+1)->a_type == A_FLOAT)
+                    value = (int)maxpd_atom_get_float(argv+i+1);
+#ifdef MAXMSP
+                else if ((argv+i+1)->a_type == A_LONG)
+                    value = atom_getlong(argv+i+1);
+#endif
+                msig_set_default_value(msig, &value);
+            }
+            else if (sig_type == 'f') {
+                float value = 0;
+                if ((argv+i+1)->a_type == A_FLOAT)
+                    value = maxpd_atom_get_float(argv+i+1);
+#ifdef MAXMSP
+                else if ((argv+i+1)->a_type == A_LONG)
+                    value = (float)atom_getlong(argv+i+1);
+#endif
+                msig_set_default_value(msig, &value);
+            }
+        }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
             lo_arg *value;
             switch ((argv+i+1)->a_type) {
