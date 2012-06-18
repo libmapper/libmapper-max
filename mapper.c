@@ -226,7 +226,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                 continue;
             }
             else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-                lo_arg *value;
+                lo_arg *value = 0;
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
                         value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
@@ -476,7 +476,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
         }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-            lo_arg *value;
+            lo_arg *value = 0;
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
                     value = (lo_arg *)maxpd_atom_get_string(argv+i+1);
