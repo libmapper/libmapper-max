@@ -88,6 +88,10 @@ static void mapper_read_definition(t_mapper *x);
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
 #endif
 
+static void mapper_instance_management_handler(mapper_signal sig,
+                                               int instance_id,
+                                               msig_instance_event_t event);
+
 static const char *maxpd_atom_get_string(t_atom *a);
 static void maxpd_atom_set_string(t_atom *a, const char *string);
 static void maxpd_atom_set_int(t_atom *a, int i);
@@ -486,6 +490,8 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
             msig_reserve_instances(msig, prop_int - 1);
+            msig_set_instance_management_callback(msig, mapper_instance_management_handler);
+            
         }
         else if (strcmp(maxpd_atom_get_string(argv+i), "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
@@ -806,6 +812,22 @@ void mapper_float_handler(mapper_signal msig, int instance_id,
     }
     else if (poly) {
         maxpd_atom_set_string(x->buffer + 1, "mute");
+        outlet_anything(x->outlet1, gensym((char *)props->name),
+                        2, x->buffer);
+    }
+}
+
+// *********************************************************
+// -(instance management handler)---------------------------
+void mapper_instance_management_handler(mapper_signal sig,
+                                        int instance_id,
+                                        msig_instance_event_t event)
+{
+    mapper_db_signal props = msig_properties(sig);
+    t_mapper *x = props->user_data;
+    if (event == IN_REQUEST_KILL) {
+        maxpd_atom_set_int(x->buffer, instance_id);
+        maxpd_atom_set_string(x->buffer + 1, "req_mute");
         outlet_anything(x->outlet1, gensym((char *)props->name),
                         2, x->buffer);
     }
