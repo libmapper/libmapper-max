@@ -229,7 +229,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                 continue;
             }
             else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-                lo_arg *value;
+                lo_arg *value = 0;
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
                         value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
@@ -474,7 +474,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
         }
-        else if (strcmp(atom_getsym(argv+i)->s_name, "@poly") == 0) {
+        else if (strcmp(maxpd_atom_get_string(argv+i), "@poly") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
                 prop_int = (int)maxpd_atom_get_float(argv+i+1);
                 i++;
@@ -487,7 +487,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
             msig_reserve_instances(msig, prop_int - 1);
         }
-        else if (strcmp(atom_getsym(argv+i)->s_name, "@stealing") == 0) {
+        else if (strcmp(maxpd_atom_get_string(argv+i), "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
                 if (strcmp(maxpd_atom_get_string(argv+i+1), "newest") == 0)
                     msig_set_instance_allocation_mode(msig, IN_STEAL_NEWEST);
@@ -497,7 +497,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-            lo_arg *value;
+            lo_arg *value = 0;
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
                     value = (lo_arg *)maxpd_atom_get_string(argv+i+1);
@@ -698,15 +698,10 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 id = (int)atom_getlong(argv);
             }
 #endif
-#ifdef MAXMSP
-            if (strcmp(atom_getsym(argv + 1)->s_name, "mute") == 0) {
+            if (strcmp(maxpd_atom_get_string(argv + 1), "mute") == 0)
                 msig_release_instance(msig, id);
-            }
-#else
-            if (strcmp((argv+i)->a_w.w_symbol->s_name, "mute") == 0) {
-                msig_release_instance(msig, id);
-            }
-#endif
+            else if (strcmp(maxpd_atom_get_string(argv + 1), "new") == 0)
+                msig_start_new_instance(msig, id);
         }
         else if (props->type == 'i') {
             int payload[props->length];
