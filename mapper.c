@@ -932,7 +932,8 @@ void mapper_register_signals(t_mapper *x) {
 // -(poll libmapper)----------------------------------------
 void mapper_poll(t_mapper *x)
 {
-    mdev_poll(x->device, 0);
+    int count = 10;
+    while(count-- && mdev_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mdev_ready(x->device)) {
             //mapper_db_dump(db);
