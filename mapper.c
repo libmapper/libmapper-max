@@ -63,7 +63,6 @@ typedef struct _mapper
 
 static t_symbol *ps_list;
 static t_symbol *ps_mute;
-static int port = 9000;
 
 // *********************************************************
 // -(function prototypes)-----------------------------------
@@ -210,7 +209,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             post("Error initializing admin.");
             return 0;
         }
-        x->device = mdev_new(x->name, port, x->admin);
+        x->device = mdev_new(x->name, 0, x->admin);
         if (!x->device) {
             post("Error initializing device.");
             return 0;
@@ -753,7 +752,7 @@ void mapper_int_handler(mapper_signal msig, int instance_id,
 {
     t_mapper *x = props->user_data;
     int poly = 0;
-    if (props->instances > 1) {
+    if (props->num_instances > 1) {
         maxpd_atom_set_int(x->buffer, instance_id);
         poly = 1;
     }
@@ -786,7 +785,7 @@ void mapper_float_handler(mapper_signal msig, int instance_id,
 {
     t_mapper *x = props->user_data;
     int poly = 0;
-    if (props->instances > 1) {
+    if (props->num_instances > 1) {
         maxpd_atom_set_int(x->buffer, instance_id);
         poly = 1;
     }
