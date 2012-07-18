@@ -277,6 +277,7 @@
 					MaxAPI,
 					/usr/local/lib/liblo.dylib,
 					"-lmx",
+					"-lz",
 				);
 				PREBINDING = YES;
 				PRODUCT_NAME = mapper;
