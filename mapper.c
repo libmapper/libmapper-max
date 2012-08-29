@@ -28,7 +28,9 @@
 #include <string.h>
 #include <math.h>
 #include <lo/lo.h>
-#include <arpa/inet.h>
+#ifndef WIN32
+  #include <arpa/inet.h>
+#endif
 
 #include <unistd.h>
 
@@ -224,7 +226,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                 continue;
             }
             else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-                lo_arg *value;
+                lo_arg *value = 0;
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
                         value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
@@ -474,7 +476,7 @@ void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
         }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-            lo_arg *value;
+            lo_arg *value = 0;
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
                     value = (lo_arg *)maxpd_atom_get_string(argv+i+1);
@@ -927,7 +929,8 @@ void mapper_register_signals(t_mapper *x) {
 // -(poll libmapper)----------------------------------------
 void mapper_poll(t_mapper *x)
 {
-    mdev_poll(x->device, 0);
+    int count = 10;
+    while(count-- && mdev_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mdev_ready(x->device)) {
             //mapper_db_dump(db);
