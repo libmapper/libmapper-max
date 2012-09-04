@@ -28,7 +28,9 @@
 #include <string.h>
 #include <math.h>
 #include <lo/lo.h>
-#include <arpa/inet.h>
+#ifndef WIN32
+  #include <arpa/inet.h>
+#endif
 
 #include <unistd.h>
 
@@ -146,7 +148,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
     const char *iface = NULL;
 
 #ifdef MAXMSP
-    if (x = object_alloc(mapper_class)) {
+    if ((x = object_alloc(mapper_class))) {
         x->outlet2 = listout((t_object *)x);
         x->outlet1 = listout((t_object *)x);
         x->name = strdup("maxmsp");
@@ -311,6 +313,10 @@ void mapper_print_properties(t_mapper *x)
         //output port
         maxpd_atom_set_int(x->buffer, mdev_port(x->device));
         outlet_anything(x->outlet2, gensym("port"), 1, x->buffer);
+
+        //output ordinal
+        maxpd_atom_set_int(x->buffer, mdev_ordinal(x->device));
+        outlet_anything(x->outlet2, gensym("ordinal"), 1, x->buffer);
 
         //output numInputs
         maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
@@ -553,14 +559,14 @@ void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     sig_name = strdup(maxpd_atom_get_string(argv+1));
 
     if (strcmp(direction, "output") == 0) {
-        if (msig=mdev_get_output_by_name(x->device, sig_name, 0)) {
+        if ((msig=mdev_get_output_by_name(x->device, sig_name, 0))) {
             mdev_remove_output(x->device, msig);
             maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
             outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
         }
     }
     else if (strcmp(direction, "input") == 0) {
-        if (msig=mdev_get_input_by_name(x->device, sig_name, 0)) {
+        if ((msig=mdev_get_input_by_name(x->device, sig_name, 0))) {
             mdev_remove_input(x->device, msig);
             maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
             outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
@@ -878,136 +884,133 @@ void mapper_register_signals(t_mapper *x) {
     mapper_signal temp_sig;
     short range_known[2];
 
-    if (x->d) {
-        // Get pointer to dictionary "device"
-        if (dictionary_getdictionary(x->d, sym_device, &device) == MAX_ERR_NONE) {
-            // Get pointer to atom array "inputs"
-            if (dictionary_getatomarray((t_dictionary *)device, sym_inputs, &inputs) == MAX_ERR_NONE) {
-                atomarray_getatoms((t_atomarray *)inputs, &num_signals, &signals);
-                // iterate through array of atoms
-                for (i=0; i<num_signals; i++) {
-                    // initialize variables
-                    if (sig_units) {
-                        free(&sig_units);
-                    }
-                    if (sig_type) {
-                        free(&sig_type);
-                    }
-                    sig_length = 1;
-                    range_known[0] = 1;
-                    range_known[1] = 1;
+    if (!x->d)
+        return;
 
-                    // each atom object points to a dictionary, need to recover atoms by key
-                    temp = atom_getobj(&(signals[i]));
-                    if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
-                        dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
-                        dictionary_getstring((t_dictionary *)temp, sym_type, &sig_type);
-                        dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length);
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
-                            sig_min_float = (float)sig_min_double;
-                            sig_min_int = (int)sig_min_double;
-                            range_known[0] = 1;
-                        }
-                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
-                            sig_min_float = (float)sig_min_long;
-                            sig_min_int = (int)sig_min_long;
-                            range_known[0] = 1;
-                        }
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
-                            sig_max_float = (float)sig_max_double;
-                            sig_max_int = (int)sig_max_double;
-                            range_known[1] = 1;
-                        }
-                        else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
-                            sig_max_float = (float)sig_max_long;
-                            sig_max_int = (int)sig_max_long;
-                            range_known[1] = 1;
-                        }
-                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
-                            sig_type_char = 'i';
-                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
-                            sig_type_char = 'f';
-                        else {
-                            post("Skipping registration of signal %s (unknown type).", sig_name);
-                            continue;
-                        }
+    // Get pointer to dictionary "device"
+    if (dictionary_getdictionary(x->d, sym_device, &device) != MAX_ERR_NONE)
+        return;
 
-                        temp_sig = mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0,
-                                                  sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
+    // Get pointer to atom array "inputs"
+    if (dictionary_getatomarray((t_dictionary *)device, sym_inputs, &inputs) == MAX_ERR_NONE) {
+        atomarray_getatoms((t_atomarray *)inputs, &num_signals, &signals);
+        // iterate through array of atoms
+        for (i=0; i<num_signals; i++) {
+            // initialize variables
+            range_known[0] = 0;
+            range_known[1] = 0;
 
-                        if (temp_sig) {
-                            if (range_known[0]) {
-                                msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
-                            }
-                            if (range_known[1]) {
-                                msig_set_maximum(temp_sig, sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                            }
-                        }
-                    }
+            // each atom object points to a dictionary, need to recover atoms by key
+            temp = atom_getobj(&(signals[i]));
+            if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) != MAX_ERR_NONE)
+                continue;
+            if (dictionary_getstring((t_dictionary *)temp, sym_type, &sig_type) != MAX_ERR_NONE)
+                continue;
+            if (dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length) != MAX_ERR_NONE)
+                sig_length = 1;
+            if (dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units) != MAX_ERR_NONE)
+                sig_units = 0;
+
+            if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
+                sig_min_float = (float)sig_min_double;
+                sig_min_int = (int)sig_min_double;
+                range_known[0] = 1;
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
+                sig_min_float = (float)sig_min_long;
+                sig_min_int = (int)sig_min_long;
+                range_known[0] = 1;
+            }
+            if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
+                sig_max_float = (float)sig_max_double;
+                sig_max_int = (int)sig_max_double;
+                range_known[1] = 1;
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
+                sig_max_float = (float)sig_max_long;
+                sig_max_int = (int)sig_max_long;
+                range_known[1] = 1;
+            }
+            if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
+                sig_type_char = 'i';
+            else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
+                sig_type_char = 'f';
+            else {
+                post("Skipping registration of signal %s (unknown type).", sig_name);
+                continue;
+            }
+
+            temp_sig = mdev_add_input(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0,
+                                      sig_type_char == 'i' ? mapper_int_handler : mapper_float_handler, x);
+
+            if (temp_sig) {
+                if (range_known[0]) {
+                    msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                }
+                if (range_known[1]) {
+                    msig_set_maximum(temp_sig, sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                 }
             }
-            // Get pointer to atom array "outputs"
-            if (dictionary_getatomarray((t_dictionary *)device, sym_outputs, &outputs) == MAX_ERR_NONE) {
-                atomarray_getatoms((t_atomarray *)outputs, &num_signals, &signals);
-                // iterate through array of atoms
-                for (i=0; i<num_signals; i++) {
-                    // initialize variables
-                    if (sig_units) {
-                        free(&sig_units);
-                    }
-                    if (sig_type) {
-                        free(&sig_type);
-                    }
-                    sig_length = 1;
-                    range_known[0] = 1;
-                    range_known[1] = 1;
+        }
+    }
 
-                    // each atom object points to a dictionary, need to recover atoms by key
-                    temp = atom_getobj(&(signals[i]));
-                    if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) == MAX_ERR_NONE) {
-                        dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units);
-                        dictionary_getstring((t_dictionary *)temp, sym_type, &sig_type);
-                        dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length);
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
-                            sig_min_float = (float)sig_min_double;
-                            sig_min_int = (int)sig_min_double;
-                            range_known[0] = 1;
-                        }
-                        else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
-                            sig_min_float = (float)sig_min_long;
-                            sig_min_int = (int)sig_min_long;
-                            range_known[0] = 1;
-                        }
-                        if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
-                            sig_max_float = (float)sig_max_double;
-                            sig_max_int = (int)sig_max_double;
-                            range_known[1] = 1;
-                        }
-                        else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
-                            sig_max_float = (float)sig_max_long;
-                            sig_max_int = (int)sig_max_long;
-                            range_known[1] = 1;
-                        }
-                        if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
-                            sig_type_char = 'i';
-                        else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
-                            sig_type_char = 'f';
-                        else {
-                            post("Skipping registration of signal %s (unknown type).", sig_name);
-                            continue;
-                        }
+    // Get pointer to atom array "outputs"
+    if (dictionary_getatomarray((t_dictionary *)device, sym_outputs, &outputs) == MAX_ERR_NONE) {
+        atomarray_getatoms((t_atomarray *)outputs, &num_signals, &signals);
+        // iterate through array of atoms
+        for (i=0; i<num_signals; i++) {
+            // initialize variables
+            range_known[0] = 0;
+            range_known[1] = 0;
 
-                        temp_sig = mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0);
+            // each atom object points to a dictionary, need to recover atoms by key
+            temp = atom_getobj(&(signals[i]));
+            if (dictionary_getstring((t_dictionary *)temp, sym_name, &sig_name) != MAX_ERR_NONE)
+                continue;
+            if (dictionary_getstring((t_dictionary *)temp, sym_type, &sig_type) != MAX_ERR_NONE)
+                continue;
+            if (dictionary_getlong((t_dictionary *)temp, sym_length, &sig_length) != MAX_ERR_NONE)
+                sig_length = 1;
+            if (dictionary_getstring((t_dictionary *)temp, sym_units, &sig_units) != MAX_ERR_NONE)
+                sig_units = 0;
 
-                        if (temp_sig) {
-                            if (range_known[0]) {
-                                msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
-                            }
-                            if (range_known[1]) {
-                                msig_set_maximum(temp_sig, sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
-                            }
-                        }
-                    }
+            if (dictionary_getfloat((t_dictionary *)temp, sym_minimum, &sig_min_double) == MAX_ERR_NONE) {
+                sig_min_float = (float)sig_min_double;
+                sig_min_int = (int)sig_min_double;
+                range_known[0] = 1;
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_minimum, &sig_min_long) == MAX_ERR_NONE) {
+                sig_min_float = (float)sig_min_long;
+                sig_min_int = (int)sig_min_long;
+                range_known[0] = 1;
+            }
+            if (dictionary_getfloat((t_dictionary *)temp, sym_maximum, &sig_max_double) == MAX_ERR_NONE) {
+                sig_max_float = (float)sig_max_double;
+                sig_max_int = (int)sig_max_double;
+                range_known[1] = 1;
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_maximum, &sig_max_long) == MAX_ERR_NONE) {
+                sig_max_float = (float)sig_max_long;
+                sig_max_int = (int)sig_max_long;
+                range_known[1] = 1;
+            }
+            if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
+                sig_type_char = 'i';
+            else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
+                sig_type_char = 'f';
+            else {
+                post("Skipping registration of signal %s (unknown type).", sig_name);
+                continue;
+            }
+
+            temp_sig = mdev_add_output(x->device, sig_name, (int)sig_length, sig_type_char, sig_units, 0, 0);
+
+            if (temp_sig) {
+                if (range_known[0]) {
+                    msig_set_minimum(temp_sig, sig_type_char == 'i' ? (void *)&sig_min_int : (void *)&sig_min_float);
+                }
+                if (range_known[1]) {
+                    msig_set_maximum(temp_sig, sig_type_char == 'i' ? (void *)&sig_max_int : (void *)&sig_max_float);
                 }
             }
         }
@@ -1019,7 +1022,8 @@ void mapper_register_signals(t_mapper *x) {
 // -(poll libmapper)----------------------------------------
 void mapper_poll(t_mapper *x)
 {
-    mdev_poll(x->device, 0);
+    int count = 10;
+    while(count-- && mdev_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mdev_ready(x->device)) {
             //mapper_db_dump(db);
