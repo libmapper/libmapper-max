@@ -195,6 +195,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
             free(x->name);
             x->name = *alias == '/' ? strdup(alias+1) : strdup(alias);
         }
+        post("WARNING: this is an experimental build of the mapper object supporting reset-to-default-value on /disconnect");
         post("mapper: using name %s", x->name);
 
         if (iface)
