@@ -54,6 +54,8 @@ typedef struct _mapper
     char *name;
     mapper_admin admin;
     mapper_device device;
+    mapper_timetag_t timetag;
+    int updated;
     int ready;
     int learn_mode;
     t_atom buffer[MAX_LIST];
@@ -74,12 +76,12 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_poll(t_mapper *x);
-static void mapper_float_handler(mapper_signal msig, int instance_id,
-                                 mapper_db_signal props, mapper_timetag_t *time,
-                                 void *value);
-static void mapper_int_handler(mapper_signal msig, int instance_id,
-                               mapper_db_signal props, mapper_timetag_t *time,
-                               void *value);
+static void mapper_float_handler(mapper_signal sig, mapper_db_signal props,
+                                 int instance_id, void *value, int count,
+                                 mapper_timetag_t *tt);
+static void mapper_int_handler(mapper_signal sig, mapper_db_signal props,
+                               int instance_id, void *value, int count,
+                               mapper_timetag_t *tt);
 static void mapper_print_properties(t_mapper *x);
 static void mapper_register_signals(t_mapper *x);
 static void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
@@ -89,6 +91,7 @@ static void mapper_read_definition(t_mapper *x);
     void mapper_assist(t_mapper *x, void *b, long m, long a, char *s);
 #endif
 
+static void maybe_start_queue(t_mapper *x);
 static const char *maxpd_atom_get_string(t_atom *a);
 static void maxpd_atom_set_string(t_atom *a, const char *string);
 static void maxpd_atom_set_int(t_atom *a, int i);
@@ -258,6 +261,7 @@ void *mapper_new(t_symbol *s, int argc, t_atom *argv)
 
         mapper_print_properties(x);
         x->ready = 0;
+        x->updated = 0;
         x->learn_mode = learn;
 #ifdef MAXMSP
         mapper_register_signals(x);
@@ -616,7 +620,8 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
         }
         //update signal
-        msig_update(msig, payload);
+        maybe_start_queue(x);
+        msig_update(msig, payload, 1, x->timetag);
     }
     else if (props->type == 'f') {
         float payload[props->length];
@@ -629,7 +634,8 @@ void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
         }
         //update signal
-        msig_update(msig, payload);
+        maybe_start_queue(x);
+        msig_update(msig, payload, 1, x->timetag);
     }
     else {
         return;
@@ -704,7 +710,7 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
             if (strcmp(maxpd_atom_get_string(argv + 1), "mute") == 0)
-                msig_release_instance(msig, id);
+                msig_release_instance(msig, id, MAPPER_TIMETAG_NOW);
             else if (strcmp(maxpd_atom_get_string(argv + 1), "new") == 0)
                 msig_start_new_instance(msig, id);
         }
@@ -719,11 +725,12 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
             }
             //update signal
+            maybe_start_queue(x);
             if (id == -1) {
-                msig_update(msig, payload);
+                msig_update(msig, payload, 1, x->timetag);
             }
             else {
-                msig_update_instance(msig, id, payload);
+                msig_update_instance(msig, id, payload, 1, x->timetag);
             }
         }
         else if (props->type == 'f') {
@@ -737,11 +744,12 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
             }
             //update signal
+            maybe_start_queue(x);
             if (id == -1) {
-                msig_update(msig, payload);
+                msig_update(msig, payload, 1, x->timetag);
             }
             else {
-                msig_update_instance(msig, id, payload);
+                msig_update_instance(msig, id, payload, 1, x->timetag);
             }
         }
         else {
@@ -752,9 +760,9 @@ void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // -(int handler)-------------------------------------------
-void mapper_int_handler(mapper_signal msig, int instance_id,
-                        mapper_db_signal props, mapper_timetag_t *time,
-                        void *value)
+void mapper_int_handler(mapper_signal msig, mapper_db_signal props,
+                        int instance_id, void *value, int count,
+                        mapper_timetag_t *tt)
 {
     t_mapper *x = props->user_data;
     int poly = 0;
@@ -785,9 +793,9 @@ void mapper_int_handler(mapper_signal msig, int instance_id,
 
 // *********************************************************
 // -(float handler)-----------------------------------------
-void mapper_float_handler(mapper_signal msig, int instance_id,
-                          mapper_db_signal props, mapper_timetag_t *time,
-                          void *value)
+void mapper_float_handler(mapper_signal msig, mapper_db_signal props,
+                          int instance_id, void *value, int count,
+                          mapper_timetag_t *time)
 {
     t_mapper *x = props->user_data;
     int poly = 0;
@@ -1031,6 +1039,10 @@ void mapper_poll(t_mapper *x)
             mapper_print_properties(x);
         }
     }
+    else if (x->updated) {
+        mdev_send_queue(x->device, x->timetag);
+        x->updated = 0;
+    }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
 }
 
@@ -1057,6 +1069,16 @@ void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
     }
 }
+
+static void maybe_start_queue(t_mapper *x)
+{
+    if (!x->updated) {
+        mdev_timetag_now(x->device, &x->timetag);
+        mdev_start_queue(x->device, x->timetag);
+        x->updated = 1;
+    }
+}
+
 
 // *********************************************************
 // some helper functions for abtracting differences
