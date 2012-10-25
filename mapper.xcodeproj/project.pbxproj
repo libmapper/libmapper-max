@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7026199713F176B20017C176 /* connection.c in Sources */ = {isa = PBXBuildFile; fileRef = 7026199613F176B20017C176 /* connection.c */; };
+		703DBC8D1611361D00B8977C /* time.c in Sources */ = {isa = PBXBuildFile; fileRef = 703DBC8C1611361D00B8977C /* time.c */; };
 		707C3F62126A79B40088B8DD /* monitor.c in Sources */ = {isa = PBXBuildFile; fileRef = 707C3F61126A79B40088B8DD /* monitor.c */; };
 		708B1943129058C300F6802B /* table.c in Sources */ = {isa = PBXBuildFile; fileRef = 708B1942129058C300F6802B /* table.c */; };
 		70BB8A181290DB270055E71D /* mapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 70BB8A171290DB270055E71D /* mapper.c */; };
@@ -30,6 +31,7 @@
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7026199613F176B20017C176 /* connection.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = connection.c; path = ../libmapper/src/connection.c; sourceTree = SOURCE_ROOT; };
+		703DBC8C1611361D00B8977C /* time.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = time.c; path = ../libmapper/src/time.c; sourceTree = "<group>"; };
 		707C3F61126A79B40088B8DD /* monitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = monitor.c; path = ../libmapper/src/monitor.c; sourceTree = SOURCE_ROOT; };
 		708B1942129058C300F6802B /* table.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = table.c; path = ../libmapper/src/table.c; sourceTree = SOURCE_ROOT; };
 		70BB8A171290DB270055E71D /* mapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mapper.c; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 				70DBCB3B122318A2003B0196 /* router.c */,
 				70DBCB3C122318A2003B0196 /* signal.c */,
 				708B1942129058C300F6802B /* table.c */,
+				703DBC8C1611361D00B8977C /* time.c */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -228,6 +231,7 @@
 				708B1943129058C300F6802B /* table.c in Sources */,
 				70BB8A181290DB270055E71D /* mapper.c in Sources */,
 				7026199713F176B20017C176 /* connection.c in Sources */,
+				703DBC8D1611361D00B8977C /* time.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
