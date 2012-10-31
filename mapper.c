@@ -92,6 +92,7 @@ static void mapper_read_definition(t_mapper *x);
 #endif
 
 static void maybe_start_queue(t_mapper *x);
+static int maxpd_atom_strcmp(t_atom *a, const char *string);
 static const char *maxpd_atom_get_string(t_atom *a);
 static void maxpd_atom_set_string(t_atom *a, const char *string);
 static void maxpd_atom_set_int(t_atom *a, int i);
@@ -156,7 +157,7 @@ static void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         x->outlet1 = listout((t_object *)x);
         x->name = strdup("maxmsp");
 #else
-    if (x = (t_mapper *) pd_new(mapper_class) ) {
+    if ((x = (t_mapper *) pd_new(mapper_class)) ) {
         x->outlet1 = outlet_new(&x->ob, gensym("list"));
         x->outlet2 = outlet_new(&x->ob, gensym("list"));
         x->name = strdup("puredata");
@@ -164,21 +165,21 @@ static void *mapper_new(t_symbol *s, int argc, t_atom *argv)
 
         for (i = 0; i < argc; i++) {
             if ((argv+i)->a_type == A_SYM) {
-                if(strcmp(maxpd_atom_get_string(argv+i), "@alias") == 0) {
+                if (maxpd_atom_strcmp(argv+i, "@alias") == 0) {
                     if ((argv+i+1)->a_type == A_SYM) {
                         alias = maxpd_atom_get_string(argv+i+1);
                         i++;
                     }
                 }
-                else if ((strcmp(maxpd_atom_get_string(argv+i), "@def") == 0) ||
-                         (strcmp(maxpd_atom_get_string(argv+i), "@definition") == 0)) {
+                else if ((maxpd_atom_strcmp(argv+i, "@def") == 0) ||
+                         (maxpd_atom_strcmp(argv+i, "@definition") == 0)) {
                     if ((argv+i+1)->a_type == A_SYM) {
                         x->definition = strdup(maxpd_atom_get_string(argv+i+1));
                         mapper_read_definition(x);
                         i++;
                     }
                 }
-                else if (strcmp(maxpd_atom_get_string(argv+i), "@learn") == 0) {
+                else if (maxpd_atom_strcmp(argv+i, "@learn") == 0) {
                     if ((argv+i+1)->a_type == A_FLOAT) {
                         learn = (maxpd_atom_get_float(argv+i+1) > 1) ? 0 : 1;
                         i++;
@@ -190,7 +191,7 @@ static void *mapper_new(t_symbol *s, int argc, t_atom *argv)
                     }
 #endif
                 }
-                else if (strcmp(maxpd_atom_get_string(argv+i), "@interface") == 0) {
+                else if (maxpd_atom_strcmp(argv+i, "@interface") == 0) {
                     if ((argv+i+1)->a_type == A_SYM) {
                         iface = maxpd_atom_get_string(argv+i+1);
                         i++;
@@ -224,34 +225,37 @@ static void *mapper_new(t_symbol *s, int argc, t_atom *argv)
         for (i = 0; i < argc; i++) {
             if (i > argc - 2) // need 2 arguments for key and value
                 break;
-            if ((strcmp(maxpd_atom_get_string(argv+i), "@alias") == 0) ||
-                (strcmp(maxpd_atom_get_string(argv+i), "@def") == 0) ||
-                (strcmp(maxpd_atom_get_string(argv+i), "@definition") == 0) ||
-                (strcmp(maxpd_atom_get_string(argv+i), "@learn") == 0) ||
-                (strcmp(maxpd_atom_get_string(argv+i), "@interface") == 0)){
+            if ((maxpd_atom_strcmp(argv+i, "@alias") == 0) ||
+                (maxpd_atom_strcmp(argv+i, "@def") == 0) ||
+                (maxpd_atom_strcmp(argv+i, "@definition") == 0) ||
+                (maxpd_atom_strcmp(argv+i, "@learn") == 0) ||
+                (maxpd_atom_strcmp(argv+i, "@interface") == 0)){
                 i++;
                 continue;
             }
             else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-                lo_arg *value = 0;
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
-                        value = (lo_arg *)(maxpd_atom_get_string(argv+i+1));
-                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, LO_STRING, value);
+                        const char *value = maxpd_atom_get_string(argv+i+1);
+                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, 's', (lo_arg *)value);
                         i++;
                         break;
                     }
                     case A_FLOAT:
-                        value->f = maxpd_atom_get_float(argv+i+1);
-                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, LO_FLOAT, value);
+                    {
+                        float value = maxpd_atom_get_float(argv+i+1);
+                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, 'f', (lo_arg *)&value);
                         i++;
                         break;
+                    }
 #ifdef MAXMSP
                     case A_LONG:
-                        value->i32 = atom_getlong(argv+i+1);
-                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, LO_INT32, value);
+                    {
+                        int value = atom_getlong(argv+i+1);
+                        mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1, 'i', (lo_arg *)&value);
                         i++;
                         break;
+                    }
 #endif
                     default:
                         break;
@@ -373,9 +377,9 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     if ((argv->a_type != A_SYM) || ((argv+1)->a_type != A_SYM))
         return;
 
-    if (strcmp(maxpd_atom_get_string(argv), "input") == 0)
+    if (maxpd_atom_strcmp(argv, "input") == 0)
         is_input = 1;
-    else if (strcmp(maxpd_atom_get_string(argv), "output") == 0)
+    else if (maxpd_atom_strcmp(argv, "output") == 0)
         is_input = 0;
     else
         return;
@@ -388,13 +392,13 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         if (i > argc - 2) // need 2 arguments for key and value
             break;
         if ((argv+i)->a_type == A_SYM) {
-            if (strcmp(maxpd_atom_get_string(argv+i), "@type") == 0) {
+            if (maxpd_atom_strcmp(argv+i, "@type") == 0) {
                 if ((argv+i+1)->a_type == A_SYM) {
                     sig_type = maxpd_atom_get_string(argv+i+1)[0];
                     i++;
                 }
             }
-            else if (strcmp(maxpd_atom_get_string(argv+i), "@length") == 0) {
+            else if (maxpd_atom_strcmp(argv+i, "@length") == 0) {
                 if ((argv+i+1)->a_type == A_FLOAT) {
                     sig_length = (int)maxpd_atom_get_float(argv+i+1);
                     i++;
@@ -406,7 +410,7 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 }
 #endif
             }
-            else if(strcmp(maxpd_atom_get_string(argv+i), "@units") == 0) {
+            else if(maxpd_atom_strcmp(argv+i, "@units") == 0) {
                 if ((argv+i+1)->a_type == A_SYM) {
                     sig_units = maxpd_atom_get_string(argv+i+1);
                     i++;
@@ -445,13 +449,13 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     for (i = 2; i < argc; i++) {
         if (i > argc - 2) // need 2 arguments for key and value
             break;
-        if ((strcmp(maxpd_atom_get_string(argv+i), "@type") == 0) ||
-            (strcmp(maxpd_atom_get_string(argv+i), "@length") == 0) ||
-            (strcmp(maxpd_atom_get_string(argv+i), "@units") == 0)){
+        if ((maxpd_atom_strcmp(argv+i, "@type") == 0) ||
+            (maxpd_atom_strcmp(argv+i, "@length") == 0) ||
+            (maxpd_atom_strcmp(argv+i, "@units") == 0)){
             i++;
             continue;
         }
-        if (strcmp(maxpd_atom_get_string(argv+i), "@min") == 0) {
+        if (maxpd_atom_strcmp(argv+i, "@min") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
                 prop_float = maxpd_atom_get_float(argv+i+1);
                 prop_int = (int)prop_float;
@@ -467,7 +471,7 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
         }
-        else if (strcmp(maxpd_atom_get_string(argv+i), "@max") == 0) {
+        else if (maxpd_atom_strcmp(argv+i, "@max") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
                 prop_float = maxpd_atom_get_float(argv+i+1);
                 prop_int = (int)prop_float;
@@ -483,7 +487,7 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
         }
-        else if (strcmp(maxpd_atom_get_string(argv+i), "@poly") == 0) {
+        else if (maxpd_atom_strcmp(argv+i, "@poly") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
                 prop_int = (int)maxpd_atom_get_float(argv+i+1);
                 i++;
@@ -496,35 +500,38 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
             msig_reserve_instances(msig, prop_int - 1);
         }
-        else if (strcmp(maxpd_atom_get_string(argv+i), "@stealing") == 0) {
+        else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
-                if (strcmp(maxpd_atom_get_string(argv+i+1), "newest") == 0)
+                if (maxpd_atom_strcmp(argv+i+1, "newest") == 0)
                     msig_set_instance_allocation_mode(msig, IN_STEAL_NEWEST);
-                if (strcmp(maxpd_atom_get_string(argv+i+1), "oldest") == 0)
+                if (maxpd_atom_strcmp(argv+i+1, "oldest") == 0)
                     msig_set_instance_allocation_mode(msig, IN_STEAL_OLDEST);
                 i++;
             }
         }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
-            lo_arg *value = 0;
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
-                    value = (lo_arg *)maxpd_atom_get_string(argv+i+1);
-                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, LO_STRING, value);
+                    const char *value = maxpd_atom_get_string(argv+i+1);
+                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, 's', (lo_arg *)value);
                     i++;
                     break;
                 }
                 case A_FLOAT:
-                    value->f = maxpd_atom_get_float(argv+i+1);
-                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, LO_FLOAT, value);
+                {
+                    float value = maxpd_atom_get_float(argv+i+1);
+                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, 'f', (lo_arg *)&value);
                     i++;
                     break;
+                }
 #ifdef MAXMSP
                 case A_LONG:
-                    value->i32 = atom_getlong(argv+i+1);
-                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, LO_INT32, value);
+                {
+                    int value = atom_getlong(argv+i+1);
+                    msig_set_property(msig, maxpd_atom_get_string(argv+i)+1, 'i', (lo_arg *)&value);
                     i++;
                     break;
+                }
 #endif
                 default:
                     break;
@@ -709,9 +716,9 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 id = (int)atom_getlong(argv);
             }
 #endif
-            if (strcmp(maxpd_atom_get_string(argv + 1), "mute") == 0)
+            if (maxpd_atom_strcmp(argv+1, "mute") == 0)
                 msig_release_instance(msig, id, MAPPER_TIMETAG_NOW);
-            else if (strcmp(maxpd_atom_get_string(argv + 1), "new") == 0)
+            else if (maxpd_atom_strcmp(argv+1, "new") == 0)
                 msig_start_new_instance(msig, id);
         }
         else if (props->type == 'i') {
@@ -1083,6 +1090,17 @@ static void maybe_start_queue(t_mapper *x)
 // *********************************************************
 // some helper functions for abtracting differences
 // between maxmsp and puredata
+
+static int maxpd_atom_strcmp(t_atom *a, const char *string)
+{
+    if (a->a_type != A_SYM || !string)
+        return 1;
+#ifdef MAXMSP
+    return strcmp(atom_getsym(a)->s_name, string);
+#else
+    return strcmp((a)->a_w.w_symbol->s_name, string);
+#endif
+}
 
 static const char *maxpd_atom_get_string(t_atom *a)
 {
