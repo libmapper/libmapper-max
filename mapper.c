@@ -37,6 +37,10 @@
 #define INTERVAL 1
 #define MAX_LIST 256
 
+#define INPUT 0
+#define OUTPUT 1
+#define METRONOME 2
+
 // *********************************************************
 // -(object struct)-----------------------------------------
 typedef struct _mapper
@@ -73,8 +77,9 @@ static t_symbol *ps_mute;
 static void *mapper_new(t_symbol *s, int argc, t_atom *argv);
 static void mapper_free(t_mapper *x);
 static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
-static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_add(t_mapper *x, t_symbol *s,
+                       int argc, t_atom *argv);
+static void mapper_remove(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_poll(t_mapper *x);
 static void mapper_float_handler(mapper_signal sig, mapper_db_signal props,
                                  int instance_id, void *value, int count,
@@ -115,12 +120,12 @@ static void *mapper_class;
         t_class *c;
         c = class_new("mapper", (method)mapper_new, (method)mapper_free,
                       (long)sizeof(t_mapper), 0L, A_GIMME, 0);
-        class_addmethod(c, (method)mapper_assist,         "assist",   A_CANT,     0);
-        class_addmethod(c, (method)mapper_add_signal,     "add",      A_GIMME,    0);
-        class_addmethod(c, (method)mapper_remove_signal,  "remove",   A_GIMME,    0);
-        class_addmethod(c, (method)mapper_anything,       "anything", A_GIMME,    0);
-        class_addmethod(c, (method)mapper_learn,          "learn",    A_GIMME,    0);
-        class_addmethod(c, (method)mapper_set,            "set",      A_GIMME,    0);
+        class_addmethod(c, (method)mapper_assist,   "assist",   A_CANT,     0);
+        class_addmethod(c, (method)mapper_add,      "add",      A_GIMME,    0);
+        class_addmethod(c, (method)mapper_remove,   "remove",   A_GIMME,    0);
+        class_addmethod(c, (method)mapper_anything, "anything", A_GIMME,    0);
+        class_addmethod(c, (method)mapper_learn,    "learn",    A_GIMME,    0);
+        class_addmethod(c, (method)mapper_set,      "set",      A_GIMME,    0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
         ps_list = gensym("list");
@@ -133,11 +138,11 @@ static void *mapper_class;
         t_class *c;
         c = class_new(gensym("mapper"), (t_newmethod)mapper_new, (t_method)mapper_free,
                       (long)sizeof(t_mapper), 0L, A_GIMME, 0);
-        class_addmethod(c,   (t_method)mapper_add_signal,    gensym("add"),    A_GIMME, 0);
-        class_addmethod(c,   (t_method)mapper_remove_signal, gensym("remove"), A_GIMME, 0);
+        class_addmethod(c,   (t_method)mapper_add,      gensym("add"),    A_GIMME, 0);
+        class_addmethod(c,   (t_method)mapper_remove,   gensym("remove"), A_GIMME, 0);
         class_addanything(c, (t_method)mapper_anything);
-        class_addmethod(c,   (t_method)mapper_learn,         gensym("learn"),  A_GIMME, 0);
-        class_addmethod(c,   (t_method)mapper_set,           gensym("set"),    A_GIMME, 0);
+        class_addmethod(c,   (t_method)mapper_learn,    gensym("learn"),  A_GIMME, 0);
+        class_addmethod(c,   (t_method)mapper_set,      gensym("set"),    A_GIMME, 0);
         mapper_class = c;
         ps_list = gensym("list");
         ps_mute = gensym("mute");
@@ -364,18 +369,18 @@ void mapper_assist(t_mapper *x, void *b, long m, long a, char *s)
 
 // *********************************************************
 // -(add signal)--------------------------------------------
-static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
+static void mapper_add(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
-    const char *sig_name = 0, *sig_units = 0;
+    const char *name = 0, *sig_units = 0;
     char sig_type = 0;
-    int direction, sig_length = 1, prop_int = 0, count = 4;
+    int object_type, sig_length = 1, prop_int = 0, count = 4;
     float prop_float;
     long i;
     mapper_signal msig = 0;
     mapper_timetag_t start = MAPPER_TIMETAG_NOW;
     double bpm = 120;
 
-    if (argc < 4) {
+    if (argc < 2) {
         post("mapper: not enough arguments for 'add' message.");
         return;
     }
@@ -384,16 +389,16 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         return;
 
     if (maxpd_atom_strcmp(argv, "input") == 0)
-        direction = 0;
+        object_type = INPUT;
     else if (maxpd_atom_strcmp(argv, "output") == 0)
-        direction = 1;
-    else if (maxpd_atom_strcmp(argv, "metro") == 0)
-        direction = 2;
+        object_type = OUTPUT;
+    else if (maxpd_atom_strcmp(argv, "metronome") == 0)
+        object_type = METRONOME;
     else
         return;
 
     // get signal name
-    sig_name = maxpd_atom_get_string(argv+1);
+    name = maxpd_atom_get_string(argv+1);
 
     // get signal type, length, and units
     for (i = 2; i < argc; i++) {
@@ -426,17 +431,17 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
     }
-    if (!sig_type) {
+    if (!sig_type && object_type != METRONOME) {
         post("mapper: signal has no declared type!");
         return;
     }
-    if (sig_length < 1) {
+    if (sig_length < 1 && object_type != METRONOME) {
         post("mapper: signals cannot have length < 1!");
         return;
     }
 
-    if (direction == 0) {
-        msig = mdev_add_input(x->device, sig_name, sig_length,
+    if (object_type == INPUT) {
+        msig = mdev_add_input(x->device, name, sig_length,
                               sig_type, sig_units, 0, 0,
                               sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
         if (!msig) {
@@ -444,8 +449,8 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             return;
         }
     }
-    else if (direction == 1) {
-        msig = mdev_add_output(x->device, sig_name, sig_length,
+    else if (object_type == OUTPUT) {
+        msig = mdev_add_output(x->device, name, sig_length,
                                sig_type, sig_units, 0, 0);
         if (!msig) {
             post("mapper: error creating output!");
@@ -535,12 +540,12 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         else if (maxpd_atom_strcmp(argv+i, "@start") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
-                mapper_timetag_set_from_double(&start, (double)maxpd_atom_get_float(argv+i+1));
+                mapper_timetag_set_from_float(&start, maxpd_atom_get_float(argv+i+1));
                 i++;
             }
 #ifdef MAXMSP
             else if ((argv+i+1)->a_type == A_LONG) {
-                mapper_timetag_set_from_double(&start, (double)atom_getlong(argv+i+1));
+                mapper_timetag_set_from_int(&start, atom_getlong(argv+i+1));
                 i++;
             }
 #endif
@@ -600,29 +605,29 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     }
 
     // Update status outlet
-    if (direction == 0) {
+    if (object_type == INPUT) {
         //output numInputs
         maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
-    else if (direction == 1) {
+    else if (object_type == OUTPUT) {
         //output numOutputs
         maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
-    else if (direction == 2) {
-        mdev_add_metronome(x->device, "/metro", start, bpm,
+    else if (object_type == METRONOME) {
+        mdev_add_metronome(x->device, name, start, bpm,
                            count, mapper_metro_handler, x);
     }
 }
 
 // *********************************************************
 // -(remove signal)-----------------------------------------
-static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
+static void mapper_remove(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
     mapper_signal msig;
     mapper_metronome m;
-    char *sig_name = NULL, *direction = NULL;
+    const char *sig_name = NULL;
 
     if (argc < 2) {
         return;
@@ -631,24 +636,24 @@ static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *arg
         post("Unable to parse remove message!");
         return;
     }
-    direction = strdup(maxpd_atom_get_string(argv));
-    sig_name = strdup(maxpd_atom_get_string(argv+1));
 
-    if (strcmp(direction, "output") == 0) {
+    sig_name = maxpd_atom_get_string(argv+1);
+
+    if (maxpd_atom_strcmp(argv, "output") == 0) {
         if ((msig=mdev_get_output_by_name(x->device, sig_name, 0))) {
             mdev_remove_output(x->device, msig);
             maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
             outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
         }
     }
-    else if (strcmp(direction, "input") == 0) {
+    else if (maxpd_atom_strcmp(argv, "input") == 0) {
         if ((msig=mdev_get_input_by_name(x->device, sig_name, 0))) {
             mdev_remove_input(x->device, msig);
             maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
             outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
         }
     }
-    else if (strcmp(direction, "metro") == 0) {
+    else if (maxpd_atom_strcmp(argv, "metronome") == 0) {
         if ((m=mdev_get_metronome_by_name(x->device, sig_name, 0)))
             mdev_remove_metronome(x->device, m);
     }
@@ -935,7 +940,7 @@ static void mapper_metro_handler(mapper_metronome m, unsigned int bar,
     t_mapper *x = user_data;
     maxpd_atom_set_int(x->buffer, bar);
     maxpd_atom_set_int(x->buffer+1, beat);
-    outlet_anything(x->outlet1, gensym("metro"), 2, x->buffer);
+    outlet_anything(x->outlet1, gensym(mapper_metronome_name(m)), 2, x->buffer);
 }
 
 // *********************************************************
