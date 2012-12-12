@@ -82,6 +82,8 @@ static void mapper_float_handler(mapper_signal sig, mapper_db_signal props,
 static void mapper_int_handler(mapper_signal sig, mapper_db_signal props,
                                int instance_id, void *value, int count,
                                mapper_timetag_t *tt);
+static void mapper_release_handler(mapper_signal sig, mapper_db_signal props,
+                                   int instance_id, msig_instance_event_t event);
 static void mapper_print_properties(t_mapper *x);
 static void mapper_register_signals(t_mapper *x);
 static void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
@@ -500,6 +502,22 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
             msig_reserve_instances(msig, prop_int - 1);
         }
+        else if (maxpd_atom_strcmp(argv+i, "@allow_remote_release") == 0) {
+            if ((argv+i+1)->a_type == A_FLOAT) {
+                prop_int = (int)maxpd_atom_get_float(argv+i+1);
+                i++;
+            }
+#ifdef MAXMSP
+            else if ((argv+i+1)->a_type == A_LONG) {
+                prop_int = atom_getlong(argv+i+1);
+                i++;
+            }
+#endif
+            if (prop_int) {
+                msig_set_instance_management_callback(msig, mapper_release_handler,
+                                                      IN_REQUEST_RELEASE, x);
+            }
+        }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
                 if (maxpd_atom_strcmp(argv+i+1, "newest") == 0)
@@ -610,6 +628,23 @@ static void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         return;
     }
 
+    // check if input instance release
+    if ((argc == 3) && ((argv+2)->a_type == A_SYM)) {
+        if (strcmp(maxpd_atom_get_string(argv+2), "mute") != 0)
+            return;
+        if ((argv+1)->a_type == A_FLOAT) {
+            maybe_start_queue(x);
+            msig_release_instance(msig, (int)atom_getfloat(argv+1), x->timetag);
+        }
+#ifdef MAXMSP
+        else if ((argv+1)->a_type == A_LONG) {
+            maybe_start_queue(x);
+            msig_release_instance(msig, (int)atom_getlong(argv+1), x->timetag);
+        }
+#endif
+        return;
+    }
+
     // get signal properties
     mapper_db_signal props = msig_properties(msig);
     if (props->length != argc - 1) {
@@ -717,7 +752,7 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
             if (maxpd_atom_strcmp(argv+1, "mute") == 0)
-                msig_release_instance(msig, id, MAPPER_TIMETAG_NOW);
+                msig_release_instance(msig, id, x->timetag);
             else if (maxpd_atom_strcmp(argv+1, "new") == 0)
                 msig_start_new_instance(msig, id);
         }
@@ -829,6 +864,16 @@ static void mapper_float_handler(mapper_signal msig, mapper_db_signal props,
         outlet_anything(x->outlet1, gensym((char *)props->name),
                         2, x->buffer);
     }
+}
+
+// *********************************************************
+// -(instance release request handler)----------------------
+static void mapper_release_handler(mapper_signal sig, mapper_db_signal props,
+                                   int instance_id, msig_instance_event_t event)
+{
+    t_mapper *x = props->user_data;
+    maybe_start_queue(x);
+    msig_release_instance(sig, instance_id, x->timetag);
 }
 
 // *********************************************************
