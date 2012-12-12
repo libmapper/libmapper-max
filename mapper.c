@@ -84,6 +84,8 @@ static void mapper_int_handler(mapper_signal sig, mapper_db_signal props,
                                mapper_timetag_t *tt);
 static void mapper_release_handler(mapper_signal sig, mapper_db_signal props,
                                    int instance_id, msig_instance_event_t event);
+static void mapper_metro_handler(mapper_metronome m, unsigned int bar,
+                                 unsigned int beat, void *user_data);
 static void mapper_print_properties(t_mapper *x);
 static void mapper_register_signals(t_mapper *x);
 static void mapper_learn(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
@@ -366,10 +368,12 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
     const char *sig_name = 0, *sig_units = 0;
     char sig_type = 0;
-    int is_input, sig_length = 1, prop_int = 0;
+    int direction, sig_length = 1, prop_int = 0, count = 4;
     float prop_float;
     long i;
     mapper_signal msig = 0;
+    mapper_timetag_t start = MAPPER_TIMETAG_NOW;
+    double bpm = 120;
 
     if (argc < 4) {
         post("mapper: not enough arguments for 'add' message.");
@@ -380,9 +384,11 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         return;
 
     if (maxpd_atom_strcmp(argv, "input") == 0)
-        is_input = 1;
+        direction = 0;
     else if (maxpd_atom_strcmp(argv, "output") == 0)
-        is_input = 0;
+        direction = 1;
+    else if (maxpd_atom_strcmp(argv, "metro") == 0)
+        direction = 2;
     else
         return;
 
@@ -429,7 +435,7 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         return;
     }
 
-    if (is_input) {
+    if (direction == 0) {
         msig = mdev_add_input(x->device, sig_name, sig_length,
                               sig_type, sig_units, 0, 0,
                               sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
@@ -438,7 +444,7 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             return;
         }
     }
-    else {
+    else if (direction == 1) {
         msig = mdev_add_output(x->device, sig_name, sig_length,
                                sig_type, sig_units, 0, 0);
         if (!msig) {
@@ -527,6 +533,42 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 i++;
             }
         }
+        else if (maxpd_atom_strcmp(argv+i, "@start") == 0) {
+            if ((argv+i+1)->a_type == A_FLOAT) {
+                mapper_timetag_set_from_double(&start, (double)maxpd_atom_get_float(argv+i+1));
+                i++;
+            }
+#ifdef MAXMSP
+            else if ((argv+i+1)->a_type == A_LONG) {
+                mapper_timetag_set_from_double(&start, (double)atom_getlong(argv+i+1));
+                i++;
+            }
+#endif
+        }
+        else if (maxpd_atom_strcmp(argv+i, "@bpm") == 0) {
+            if ((argv+i+1)->a_type == A_FLOAT) {
+                bpm = (double)maxpd_atom_get_float(argv+i+1);
+                i++;
+            }
+#ifdef MAXMSP
+            else if ((argv+i+1)->a_type == A_LONG) {
+                bpm = (double)atom_getlong(argv+i+1);
+                i++;
+            }
+#endif
+        }
+        else if (maxpd_atom_strcmp(argv+i, "@count") == 0) {
+            if ((argv+i+1)->a_type == A_FLOAT) {
+                count = (int)maxpd_atom_get_float(argv+i+1);
+                i++;
+            }
+#ifdef MAXMSP
+            else if ((argv+i+1)->a_type == A_LONG) {
+                count = (int)atom_getlong(argv+i+1);
+                i++;
+            }
+#endif
+        }
         else if (maxpd_atom_get_string(argv+i)[0] == '@') {
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
@@ -558,15 +600,19 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     }
 
     // Update status outlet
-    if (is_input) {
+    if (direction == 0) {
         //output numInputs
         maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
-    else {
+    else if (direction == 1) {
         //output numOutputs
         maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
+    }
+    else if (direction == 2) {
+        mdev_add_metronome(x->device, "/metro", start, bpm,
+                           count, mapper_metro_handler, x);
     }
 }
 
@@ -575,6 +621,7 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 {
     mapper_signal msig;
+    mapper_metronome m;
     char *sig_name = NULL, *direction = NULL;
 
     if (argc < 2) {
@@ -600,6 +647,10 @@ static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *arg
             maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
             outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
         }
+    }
+    else if (strcmp(direction, "metro") == 0) {
+        if ((m=mdev_get_metronome_by_name(x->device, sig_name, 0)))
+            mdev_remove_metronome(x->device, m);
     }
 }
 
@@ -874,6 +925,17 @@ static void mapper_release_handler(mapper_signal sig, mapper_db_signal props,
     t_mapper *x = props->user_data;
     maybe_start_queue(x);
     msig_release_instance(sig, instance_id, x->timetag);
+}
+
+// *********************************************************
+// -(metronome handler)----------------------
+static void mapper_metro_handler(mapper_metronome m, unsigned int bar,
+                                 unsigned int beat, void *user_data)
+{
+    t_mapper *x = user_data;
+    maxpd_atom_set_int(x->buffer, bar);
+    maxpd_atom_set_int(x->buffer+1, beat);
+    outlet_anything(x->outlet1, gensym("metro"), 2, x->buffer);
 }
 
 // *********************************************************
