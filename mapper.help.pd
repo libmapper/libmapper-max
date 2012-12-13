@@ -1,4 +1,4 @@
-#N canvas 191 212 440 435 10;
+#N canvas 605 162 440 435 10;
 #X text 20 12 mapper;
 #X text 22 27 A pd wrapper for libmapper/Digital Orchestra Tools;
 #X text 20 353 For more information visit;
@@ -57,7 +57,7 @@ use linear scaling when creating mapping connections.;
 #X restore 140 240 pd learn_mode;
 #N canvas 575 569 760 406 simple_example 0;
 #X obj 82 28 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 5800 1;
+-1 -1 0 1;
 #X obj 82 169 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
 -1 -1 0 1;
 #X obj 79 53 prepend /out1;
@@ -119,7 +119,7 @@ of devices communicating over the local network. The inputs and outputs
 of each device can be discovered and queried by other participants
 in the network \, and mapping connections can be created \, edited
 \, and destroyed using messages or graphical interfaces.;
-#N canvas 1482 798 450 300 info 0;
+#N canvas 990 600 450 300 info 0;
 #X obj 34 35 inlet;
 #X obj 34 70 route name IP port numInputs numOutputs;
 #X obj 34 141 symbol;
@@ -129,12 +129,14 @@ in the network \, and mapping connections can be created \, edited
 #X obj 126 166 outlet;
 #X obj 172 166 outlet;
 #X obj 218 166 outlet;
+#X obj 265 103 print extra_props;
 #X connect 0 0 1 0;
 #X connect 1 0 2 0;
 #X connect 1 1 4 0;
 #X connect 1 2 6 0;
 #X connect 1 3 7 0;
 #X connect 1 4 8 0;
+#X connect 1 5 9 0;
 #X connect 2 0 3 0;
 #X connect 4 0 5 0;
 #X restore 165 132 pd info;

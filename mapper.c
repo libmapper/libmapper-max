@@ -55,6 +55,7 @@ typedef struct _mapper
     void *outlet1;
     void *outlet2;
     void *clock;          // pointer to clock object
+    void *status_clock;
     char *name;
     mapper_admin admin;
     mapper_device device;
@@ -81,6 +82,7 @@ static void mapper_add(t_mapper *x, t_symbol *s,
                        int argc, t_atom *argv);
 static void mapper_remove(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_poll(t_mapper *x);
+static void mapper_sync_status(t_mapper *x);
 static void mapper_float_handler(mapper_signal sig, mapper_db_signal props,
                                  int instance_id, void *value, int count,
                                  mapper_timetag_t *tt);
@@ -279,10 +281,13 @@ static void *mapper_new(t_symbol *s, int argc, t_atom *argv)
 #ifdef MAXMSP
         mapper_register_signals(x);
         x->clock = clock_new(x, (method)mapper_poll);    // Create the timing clock
+        x->status_clock = clock_new(x, (method)mapper_sync_status);
 #else
         x->clock = clock_new(x, (t_method)mapper_poll);
+        x->status_clock = clock_new(x, (t_method)mapper_sync_status);
 #endif
         clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+        clock_delay(x->status_clock, 1000);
     }
     return (x);
 }
@@ -293,6 +298,9 @@ static void mapper_free(t_mapper *x)
 {
     clock_unset(x->clock);    // Remove clock routine from the scheduler
     clock_free(x->clock);        // Frees memeory used by clock
+
+    clock_unset(x->status_clock);
+    clock_free(x->status_clock);
 
 #ifdef MAXMSP
     object_free(x->d);          // Frees memory used by dictionary
@@ -1163,6 +1171,19 @@ static void mapper_poll(t_mapper *x)
         x->updated = 0;
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+}
+
+// *********************************************************
+// -(poll libmapper)----------------------------------------
+static void mapper_sync_status(t_mapper *x)
+{
+    maxpd_atom_set_float(x->buffer, (float)mdev_get_clock_offset(x->device));
+    outlet_anything(x->outlet2, gensym("clock_offset"), 1, x->buffer);
+
+    maxpd_atom_set_float(x->buffer, (float)mdev_get_sync_jitter(x->device));
+    outlet_anything(x->outlet2, gensym("sync_jitter"), 1, x->buffer);
+
+    clock_delay(x->status_clock, 1000);  // Set clock to go off after delay
 }
 
 // *********************************************************
