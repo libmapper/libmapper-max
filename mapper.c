@@ -65,9 +65,6 @@ typedef struct _mapper
 #endif
 } t_mapper;
 
-static t_symbol *ps_list;
-static t_symbol *ps_mute;
-
 // *********************************************************
 // -(function prototypes)-----------------------------------
 static void *mapper_new(t_symbol *s, int argc, t_atom *argv);
@@ -121,8 +118,6 @@ static void *mapper_class;
         class_addmethod(c, (method)mapper_set,            "set",      A_GIMME,    0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
-        ps_list = gensym("list");
-        ps_mute = gensym("mute");
         return 0;
     }
 #else
@@ -137,8 +132,6 @@ static void *mapper_class;
         class_addmethod(c,   (t_method)mapper_learn,         gensym("learn"),  A_GIMME, 0);
         class_addmethod(c,   (t_method)mapper_set,           gensym("set"),    A_GIMME, 0);
         mapper_class = c;
-        ps_list = gensym("list");
-        ps_mute = gensym("mute");
         return 0;
     }
 #endif
@@ -710,14 +703,8 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     return;
                 }
                 //output updated numOutputs
-#ifdef MAXMSP
-                atom_setsym(x->buffer, gensym("numOutputs"));
-                atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet2, ps_list, 2, x->buffer);
-#else
-                SETFLOAT(x->buffer, mdev_num_outputs(x->device));
+                maxpd_atom_set_float(x->buffer, mdev_num_outputs(x->device));
                 outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
-#endif
             }
             else {
                 return;
