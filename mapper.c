@@ -859,8 +859,10 @@ static void mapper_release_handler(mapper_signal sig, mapper_db_signal props,
                                    int instance_id, msig_instance_event_t event)
 {
     t_mapper *x = props->user_data;
-    maybe_start_queue(x);
-    msig_release_instance(sig, instance_id, x->timetag);
+    maxpd_atom_set_int(x->buffer, instance_id);
+    maxpd_atom_set_string(x->buffer+1, "remote_release");
+    outlet_anything(x->outlet1, gensym((char *)props->name),
+                    2, x->buffer);
 }
 
 // *********************************************************
