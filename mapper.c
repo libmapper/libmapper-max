@@ -623,7 +623,7 @@ static void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
     // check if input instance release
     if ((argc == 3) && ((argv+2)->a_type == A_SYM)) {
-        if (strcmp(maxpd_atom_get_string(argv+2), "mute") != 0)
+        if (strcmp(maxpd_atom_get_string(argv+2), "release") != 0)
             return;
         if ((argv+1)->a_type == A_FLOAT) {
             maybe_start_queue(x);
@@ -738,7 +738,7 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 id = (int)atom_getlong(argv);
             }
 #endif
-            if (maxpd_atom_strcmp(argv+1, "mute") == 0)
+            if (maxpd_atom_strcmp(argv+1, "release") == 0)
                 msig_release_instance(msig, id, x->timetag);
             else if (maxpd_atom_strcmp(argv+1, "new") == 0)
                 msig_start_new_instance(msig, id);
@@ -814,7 +814,7 @@ static void mapper_int_handler(mapper_signal msig, mapper_db_signal props,
                         length + poly, x->buffer);
     }
     else if (poly) {
-        maxpd_atom_set_string(x->buffer + 1, "mute");
+        maxpd_atom_set_string(x->buffer + 1, "release");
         outlet_anything(x->outlet1, gensym((char *)props->name),
                         2, x->buffer);
     }
@@ -847,7 +847,7 @@ static void mapper_float_handler(mapper_signal msig, mapper_db_signal props,
                         length + poly, x->buffer);
     }
     else if (poly) {
-        maxpd_atom_set_string(x->buffer + 1, "mute");
+        maxpd_atom_set_string(x->buffer + 1, "release");
         outlet_anything(x->outlet1, gensym((char *)props->name),
                         2, x->buffer);
     }

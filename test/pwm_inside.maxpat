@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 6,
 			"minor" : 0,
-			"revision" : 7
+			"revision" : 8
 		}
 ,
 		"rect" : [ 633.0, 68.0, 379.0, 665.0 ],
@@ -64,8 +64,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 255.0, 585.0, 105.0, 31.0 ],
-					"text" : "set /freq $1 mute, set /duty $1 mute"
+					"patching_rect" : [ 255.0, 585.0, 120.0, 31.0 ],
+					"text" : "set /freq $1 release, set /duty $1 release"
 				}
 
 			}
@@ -92,6 +92,10 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 255.0, 630.0, 37.0, 20.0 ],
+					"saved_object_attributes" : 					{
+						"attr_comment" : ""
+					}
+,
 					"text" : "out 1"
 				}
 
@@ -119,7 +123,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "int" ],
-					"patching_rect" : [ 150.0, 270.0, 24.0, 20.0 ],
+					"patching_rect" : [ 165.0, 270.0, 24.0, 20.0 ],
 					"text" : "t 1"
 				}
 
@@ -147,8 +151,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "bang", "" ],
-					"patching_rect" : [ 105.0, 240.0, 64.0, 20.0 ],
-					"text" : "sel mute"
+					"patching_rect" : [ 105.0, 240.0, 79.0, 20.0 ],
+					"text" : "sel release"
 				}
 
 			}
@@ -316,10 +320,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 180.0, 630.0, 44.0, 20.0 ],
-					"saved_object_attributes" : 					{
-						"attr_comment" : ""
-					}
-,
 					"text" : "out~ 2"
 				}
 
@@ -349,10 +349,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 630.0, 44.0, 20.0 ],
-					"saved_object_attributes" : 					{
-						"attr_comment" : ""
-					}
-,
 					"text" : "out~ 1"
 				}
 
@@ -367,10 +363,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 75.0, 30.0, 30.0, 20.0 ],
-					"saved_object_attributes" : 					{
-						"attr_comment" : ""
-					}
-,
 					"text" : "in 1"
 				}
 
@@ -699,7 +691,7 @@
 					"destination" : [ "obj-37", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"midpoints" : [ 159.5, 302.0, 39.5, 302.0 ],
+					"midpoints" : [ 174.5, 302.0, 39.5, 302.0 ],
 					"source" : [ "obj-36", 0 ]
 				}
 
@@ -709,7 +701,7 @@
 					"destination" : [ "obj-40", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"midpoints" : [ 159.5, 302.0, 219.5, 302.0 ],
+					"midpoints" : [ 174.5, 302.0, 219.5, 302.0 ],
 					"source" : [ "obj-36", 0 ]
 				}
 
