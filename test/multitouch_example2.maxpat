@@ -7,7 +7,7 @@
 			"revision" : 8
 		}
 ,
-		"rect" : [ 700.0, 44.0, 506.0, 507.0 ],
+		"rect" : [ 748.0, 44.0, 506.0, 507.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -1210,8 +1210,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 345.0, 45.0, 492.0, 58.0 ],
-					"text" : "add output /x @type f @min 0 @max 500 @poly 10 @stealing oldest @allow_remote_release 1, add output /y @type f @min 0 @max 500 @poly 10 @stealing oldest @allow_remote_release 1, add input /x @type f @min 0 @max 500 @poly 10, add input /y @type f @min 0 @max 500 @poly 10"
+					"patching_rect" : [ 345.0, 45.0, 390.0, 58.0 ],
+					"text" : "add output /x @type f @min 0 @max 500 @poly 10 @stealing oldest, add output /y @type f @min 0 @max 500 @poly 10 @stealing oldest, add input /x @type f @min 0 @max 500 @poly 10, add input /y @type f @min 0 @max 500 @poly 10"
 				}
 
 			}

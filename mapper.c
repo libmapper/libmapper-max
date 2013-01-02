@@ -438,6 +438,8 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             post("mapper: error creating output!");
             return;
         }
+        msig_set_instance_management_callback(msig, mapper_release_handler,
+                                              IN_REQUEST_RELEASE, x);
     }
 
     // add other declared properties
@@ -494,22 +496,6 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
             msig_reserve_instances(msig, prop_int - 1);
-        }
-        else if (maxpd_atom_strcmp(argv+i, "@allow_remote_release") == 0) {
-            if ((argv+i+1)->a_type == A_FLOAT) {
-                prop_int = (int)maxpd_atom_get_float(argv+i+1);
-                i++;
-            }
-#ifdef MAXMSP
-            else if ((argv+i+1)->a_type == A_LONG) {
-                prop_int = atom_getlong(argv+i+1);
-                i++;
-            }
-#endif
-            if (prop_int) {
-                msig_set_instance_management_callback(msig, mapper_release_handler,
-                                                      IN_REQUEST_RELEASE, x);
-            }
         }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
