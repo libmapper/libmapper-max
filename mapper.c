@@ -385,7 +385,7 @@ static void mapper_add(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     float prop_float;
     long i;
     mapper_signal msig = 0;
-    mapper_timetag_t start = MAPPER_TIMETAG_NOW;
+    mapper_timetag_t start = MAPPER_NOW;
     double bpm = 120;
 
     if (argc < 2) {
