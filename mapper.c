@@ -70,9 +70,6 @@ typedef struct _mapper
 #endif
 } t_mapper;
 
-static t_symbol *ps_list;
-static t_symbol *ps_mute;
-
 // *********************************************************
 // -(function prototypes)-----------------------------------
 static void *mapper_new(t_symbol *s, int argc, t_atom *argv);
@@ -130,8 +127,6 @@ static void *mapper_class;
         class_addmethod(c, (method)mapper_set,      "set",      A_GIMME,    0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
-        ps_list = gensym("list");
-        ps_mute = gensym("mute");
         return 0;
     }
 #else
@@ -146,8 +141,6 @@ static void *mapper_class;
         class_addmethod(c,   (t_method)mapper_learn,    gensym("learn"),  A_GIMME, 0);
         class_addmethod(c,   (t_method)mapper_set,      gensym("set"),    A_GIMME, 0);
         mapper_class = c;
-        ps_list = gensym("list");
-        ps_mute = gensym("mute");
         return 0;
     }
 #endif
@@ -464,6 +457,8 @@ static void mapper_add(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             post("mapper: error creating output!");
             return;
         }
+        msig_set_instance_management_callback(msig, mapper_release_handler,
+                                              IN_REQUEST_RELEASE, x);
     }
 
     // add other declared properties
@@ -520,22 +515,6 @@ static void mapper_add(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
             msig_reserve_instances(msig, prop_int - 1);
-        }
-        else if (maxpd_atom_strcmp(argv+i, "@allow_remote_release") == 0) {
-            if ((argv+i+1)->a_type == A_FLOAT) {
-                prop_int = (int)maxpd_atom_get_float(argv+i+1);
-                i++;
-            }
-#ifdef MAXMSP
-            else if ((argv+i+1)->a_type == A_LONG) {
-                prop_int = atom_getlong(argv+i+1);
-                i++;
-            }
-#endif
-            if (prop_int) {
-                msig_set_instance_management_callback(msig, mapper_release_handler,
-                                                      IN_REQUEST_RELEASE, x);
-            }
         }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
@@ -694,7 +673,7 @@ static void mapper_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
     // check if input instance release
     if ((argc == 3) && ((argv+2)->a_type == A_SYM)) {
-        if (strcmp(maxpd_atom_get_string(argv+2), "mute") != 0)
+        if (strcmp(maxpd_atom_get_string(argv+2), "release") != 0)
             return;
         if ((argv+1)->a_type == A_FLOAT) {
             maybe_start_queue(x);
@@ -774,14 +753,8 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                     return;
                 }
                 //output updated numOutputs
-#ifdef MAXMSP
-                atom_setsym(x->buffer, gensym("numOutputs"));
-                atom_setlong(x->buffer + 1, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet2, ps_list, 2, x->buffer);
-#else
-                SETFLOAT(x->buffer, mdev_num_outputs(x->device));
+                maxpd_atom_set_float(x->buffer, mdev_num_outputs(x->device));
                 outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
-#endif
             }
             else {
                 return;
@@ -815,7 +788,7 @@ static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 id = (int)atom_getlong(argv);
             }
 #endif
-            if (maxpd_atom_strcmp(argv+1, "mute") == 0)
+            if (maxpd_atom_strcmp(argv+1, "release") == 0)
                 msig_release_instance(msig, id, x->timetag);
             else if (maxpd_atom_strcmp(argv+1, "new") == 0)
                 msig_start_new_instance(msig, id);
@@ -891,7 +864,7 @@ static void mapper_int_handler(mapper_signal msig, mapper_db_signal props,
                         length + poly, x->buffer);
     }
     else if (poly) {
-        maxpd_atom_set_string(x->buffer + 1, "mute");
+        maxpd_atom_set_string(x->buffer + 1, "release");
         outlet_anything(x->outlet1, gensym((char *)props->name),
                         2, x->buffer);
     }
@@ -924,7 +897,7 @@ static void mapper_float_handler(mapper_signal msig, mapper_db_signal props,
                         length + poly, x->buffer);
     }
     else if (poly) {
-        maxpd_atom_set_string(x->buffer + 1, "mute");
+        maxpd_atom_set_string(x->buffer + 1, "release");
         outlet_anything(x->outlet1, gensym((char *)props->name),
                         2, x->buffer);
     }
@@ -936,8 +909,10 @@ static void mapper_release_handler(mapper_signal sig, mapper_db_signal props,
                                    int instance_id, msig_instance_event_t event)
 {
     t_mapper *x = props->user_data;
-    maybe_start_queue(x);
-    msig_release_instance(sig, instance_id, x->timetag);
+    maxpd_atom_set_int(x->buffer, instance_id);
+    maxpd_atom_set_string(x->buffer+1, "remote_release");
+    outlet_anything(x->outlet1, gensym((char *)props->name),
+                    2, x->buffer);
 }
 
 // *********************************************************
