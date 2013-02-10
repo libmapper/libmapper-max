@@ -2,8 +2,6 @@
     "device" : {
         "fileversion" : "dot-1",
         "name" : "tester",
-        "numInputs" : 2,
-        "numOutputs" : 2,
         "inputs" : [
             {
                 "name" : "/in1",
