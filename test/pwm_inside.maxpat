@@ -92,10 +92,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 255.0, 630.0, 37.0, 20.0 ],
-					"saved_object_attributes" : 					{
-						"attr_comment" : ""
-					}
-,
 					"text" : "out 1"
 				}
 
@@ -123,7 +119,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "int" ],
-					"patching_rect" : [ 165.0, 270.0, 24.0, 20.0 ],
+					"patching_rect" : [ 210.0, 270.0, 24.0, 20.0 ],
 					"text" : "t 1"
 				}
 
@@ -151,8 +147,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "bang", "" ],
-					"patching_rect" : [ 105.0, 240.0, 79.0, 20.0 ],
-					"text" : "sel release"
+					"patching_rect" : [ 105.0, 240.0, 124.0, 20.0 ],
+					"text" : "sel upstream_release"
 				}
 
 			}
@@ -320,6 +316,10 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 180.0, 630.0, 44.0, 20.0 ],
+					"saved_object_attributes" : 					{
+						"attr_comment" : ""
+					}
+,
 					"text" : "out~ 2"
 				}
 
@@ -349,6 +349,10 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 630.0, 44.0, 20.0 ],
+					"saved_object_attributes" : 					{
+						"attr_comment" : ""
+					}
+,
 					"text" : "out~ 1"
 				}
 
@@ -363,6 +367,10 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 75.0, 30.0, 30.0, 20.0 ],
+					"saved_object_attributes" : 					{
+						"attr_comment" : ""
+					}
+,
 					"text" : "in 1"
 				}
 
@@ -691,7 +699,7 @@
 					"destination" : [ "obj-37", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"midpoints" : [ 174.5, 302.0, 39.5, 302.0 ],
+					"midpoints" : [ 219.5, 302.0, 39.5, 302.0 ],
 					"source" : [ "obj-36", 0 ]
 				}
 
@@ -701,7 +709,7 @@
 					"destination" : [ "obj-40", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"midpoints" : [ 174.5, 302.0, 219.5, 302.0 ],
+					"midpoints" : [ 219.5, 302.0, 219.5, 302.0 ],
 					"source" : [ "obj-36", 0 ]
 				}
 
