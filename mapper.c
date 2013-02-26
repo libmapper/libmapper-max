@@ -72,6 +72,7 @@ static void mapper_free(t_mapper *x);
 static void mapper_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
+static void mapper_clear_signals(t_mapper *x, t_symbol *s, int argc, t_atom *argv);
 static void mapper_poll(t_mapper *x);
 static void mapper_float_handler(mapper_signal sig, mapper_db_signal props,
                                  int instance_id, void *value, int count,
@@ -116,6 +117,7 @@ static void *mapper_class;
         class_addmethod(c, (method)mapper_anything,       "anything", A_GIMME,    0);
         class_addmethod(c, (method)mapper_learn,          "learn",    A_GIMME,    0);
         class_addmethod(c, (method)mapper_set,            "set",      A_GIMME,    0);
+        class_addmethod(c, (method)mapper_clear_signals,  "clear",    A_GIMME,    0);
         class_register(CLASS_BOX, c); /* CLASS_NOBOX */
         mapper_class = c;
         return 0;
@@ -131,6 +133,7 @@ static void *mapper_class;
         class_addanything(c, (t_method)mapper_anything);
         class_addmethod(c,   (t_method)mapper_learn,         gensym("learn"),  A_GIMME, 0);
         class_addmethod(c,   (t_method)mapper_set,           gensym("set"),    A_GIMME, 0);
+        class_addmethod(c,   (t_method)mapper_clear_signals, gensym("clear"),  A_GIMME, 0);
         mapper_class = c;
         return 0;
     }
@@ -426,18 +429,14 @@ static void mapper_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         msig = mdev_add_input(x->device, sig_name, sig_length,
                               sig_type, sig_units, 0, 0,
                               sig_type == 'i' ? mapper_int_handler : mapper_float_handler, x);
-        if (!msig) {
-            post("mapper: error creating input!");
+        if (!msig)
             return;
-        }
     }
     else {
         msig = mdev_add_output(x->device, sig_name, sig_length,
                                sig_type, sig_units, 0, 0);
-        if (!msig) {
-            post("mapper: error creating output!");
+        if (!msig)
             return;
-        }
         msig_set_instance_management_callback(msig, mapper_release_handler,
                                               IN_REQUEST_RELEASE, x);
     }
@@ -579,6 +578,45 @@ static void mapper_remove_signal(t_mapper *x, t_symbol *s, int argc, t_atom *arg
             maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
             outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
         }
+    }
+}
+
+// *********************************************************
+// -(clear all signals)-------------------------------------
+static void mapper_clear_signals(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
+{
+    int clear_inputs = 0, clear_outputs = 0;
+
+    if (!argc)
+        clear_inputs = clear_outputs = 1;
+    else if (maxpd_atom_strcmp(argv, "inputs") == 0)
+        clear_inputs = 1;
+    else if (maxpd_atom_strcmp(argv, "outputs") == 0)
+        clear_outputs = 1;
+    else
+        return;
+
+    int i, num;
+    mapper_signal *psig;
+    if (clear_inputs) {
+        post("clearing inputs");
+        psig = mdev_get_inputs(x->device);
+        num = mdev_num_inputs(x->device);
+        for (i = 0; i < num; i++) {
+            mdev_remove_input(x->device, psig[i]);
+        }
+        maxpd_atom_set_int(x->buffer, mdev_num_inputs(x->device));
+        outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
+    }
+    if (clear_outputs) {
+        post("clearing outputs");
+        psig = mdev_get_outputs(x->device);
+        num = mdev_num_outputs(x->device);
+        for (i = 0; i < num; i++) {
+            mdev_remove_output(x->device, psig[i]);
+        }
+        maxpd_atom_set_int(x->buffer, mdev_num_outputs(x->device));
+        outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 }
 
