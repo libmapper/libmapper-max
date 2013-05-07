@@ -83,11 +83,11 @@ static void mapperobj_float_handler(mapper_signal sig, mapper_db_signal props,
 static void mapperobj_int_handler(mapper_signal sig, mapper_db_signal props,
                                   int instance_id, void *value, int count,
                                   mapper_timetag_t *tt);
-static void mapperobj_instance_management_handler(mapper_signal sig,
-                                                  mapper_db_signal props,
-                                                  int instance_id,
-                                                  msig_instance_event_t event,
-                                                  mapper_timetag_t *tt);
+static void mapperobj_instance_event_handler(mapper_signal sig,
+                                             mapper_db_signal props,
+                                             int instance_id,
+                                             msig_instance_event_t event,
+                                             mapper_timetag_t *tt);
 
 static void mapperobj_print_properties(t_mapper *x);
 
@@ -518,26 +518,17 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
 #endif
             if (prop_int > 1) {
                 msig_reserve_instances(msig, prop_int - 1);
-                int flags = IN_UPSTREAM_RELEASE | IN_DOWNSTREAM_RELEASE;
-                if (!msig_get_instance_allocation_mode(msig))
-                    flags |= IN_OVERFLOW;
-                msig_set_instance_management_callback(msig,
-                    mapperobj_instance_management_handler, flags, x);
+                msig_set_instance_event_callback(msig,
+                    mapperobj_instance_event_handler, IN_ALL, x);
             }
         }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
                 if (maxpd_atom_strcmp(argv+i+1, "newest") == 0) {
                     msig_set_instance_allocation_mode(msig, IN_STEAL_NEWEST);
-                    msig_set_instance_management_callback(msig,
-                        mapperobj_instance_management_handler,
-                        IN_UPSTREAM_RELEASE | IN_DOWNSTREAM_RELEASE, x);
                 }
                 if (maxpd_atom_strcmp(argv+i+1, "oldest") == 0) {
                     msig_set_instance_allocation_mode(msig, IN_STEAL_OLDEST);
-                    msig_set_instance_management_callback(msig,
-                        mapperobj_instance_management_handler,
-                        IN_UPSTREAM_RELEASE | IN_DOWNSTREAM_RELEASE, x);
                 }
                 i++;
             }
@@ -879,12 +870,13 @@ static void mapperobj_float_handler(mapper_signal msig, mapper_db_signal props,
 
 // *********************************************************
 // -(instance management handler)----------------------
-static void mapperobj_instance_management_handler(mapper_signal sig,
-                                                  mapper_db_signal props,
-                                                  int instance_id,
-                                                  msig_instance_event_t event,
-                                                  mapper_timetag_t *tt)
+static void mapperobj_instance_event_handler(mapper_signal sig,
+                                             mapper_db_signal props,
+                                             int instance_id,
+                                             msig_instance_event_t event,
+                                             mapper_timetag_t *tt)
 {
+    int id, mode;
     t_mapper *x = props->user_data;
     maxpd_atom_set_int(x->buffer, instance_id);
     switch (event) {
@@ -901,12 +893,29 @@ static void mapperobj_instance_management_handler(mapper_signal sig,
                             3, x->buffer);
             break;
         case IN_OVERFLOW:
-            maxpd_atom_set_string(x->buffer+1, "overflow");
-            outlet_anything(x->outlet1, gensym((char *)props->name),
-                            2, x->buffer);
+            mode = msig_get_instance_allocation_mode(sig);
+            switch (mode) {
+                case IN_STEAL_OLDEST:
+                    if (msig_get_oldest_active_instance(sig, &id))
+                        return;
+                    msig_release_instance(sig, id, *tt);
+                    break;
+                case IN_STEAL_NEWEST:
+                    if (msig_get_newest_active_instance(sig, &id))
+                        return;
+                    msig_release_instance(sig, id, *tt);
+                    break;
+                case 0:
+                    maxpd_atom_set_string(x->buffer+1, "overflow");
+                    outlet_anything(x->outlet1, gensym((char *)props->name),
+                                    2, x->buffer);
+                    break;
+                default:
+                    break;
+            }
             break;
         default:
-            return;
+            break;
     }
 }
 
