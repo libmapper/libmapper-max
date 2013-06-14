@@ -1237,7 +1237,7 @@ static void mapperobj_learn(t_mapper *x, t_symbol *s,
 static void maybe_start_queue(t_mapper *x)
 {
     if (!x->updated) {
-        mdev_timetag_now(x->device, &x->timetag);
+        mdev_now(x->device, &x->timetag);
         mdev_start_queue(x->device, x->timetag);
         x->updated = 1;
     }

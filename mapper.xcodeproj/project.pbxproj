@@ -188,7 +188,7 @@
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/../libmapper\"",
 					/Developer/Headers/FlatCarbon,
-					/usr/local/include/,
+					"/usr/local/include/**",
 					"\"/Library/Application Support/c74support/max-includes\"",
 				);
 				INFOPLIST_FILE = Info.plist;
