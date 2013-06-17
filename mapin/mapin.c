@@ -53,7 +53,9 @@ static void mapin_free(t_mapin *x);
 
 static t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv);
 
-static void mapin_update(t_mapin *x, t_symbol *s, int argc, t_atom *argv);
+static int atom_strcmp(t_atom *a, const char *string);
+static const char *atom_get_string(t_atom *a);
+static void atom_set_string(t_atom *a, const char *string);
 
 // *********************************************************
 // -(global class pointer variable)-------------------------
@@ -66,8 +68,6 @@ int main(void)
     t_class *c;
     c = class_new("mapin", (method)mapin_new, (method)mapin_free,
                   (long)sizeof(t_mapin), 0L, A_GIMME, 0);
-
-    class_addmethod(c, (method)mapin_update, "update", A_CANT, 0);
 
     CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_name);
     CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_length);
@@ -105,7 +105,6 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 
     if ((x = (t_mapin *)object_alloc(mapin_class))) {
         x->outlet = listout((t_object *)x);
-        post("mapin obj %p added outlet %p", x, x->outlet);
         x->sig_name = gensym(atom_getsym(argv)->s_name);
         char *temp = atom_getsym(argv+1)->s_name;
         x->sig_type = temp[0];
@@ -140,8 +139,53 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 			// hashtab knows not to free us when it is freed.
 			hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
         }
+
+        if (!x->sig_ptr) {
+            post("error: mapout did not get sig_ptr");
+        }
+        else {
+            // add other declared properties
+            for (; i < argc; i++) {
+                if (i > argc - 2) // need 2 arguments for key and value
+                    break;
+                if ((atom_strcmp(argv+i, "@name") == 0) ||
+                    (atom_strcmp(argv+i, "@type") == 0) ||
+                    (atom_strcmp(argv+i, "@length") == 0)){
+                    i++;
+                    continue;
+                }
+                else if (atom_get_string(argv+i)[0] == '@') {
+                    switch ((argv+i+1)->a_type) {
+                        case A_SYM: {
+                            const char *value = atom_get_string(argv+i+1);
+                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                              's', (lo_arg *)value);
+                            i++;
+                            break;
+                        }
+                        case A_FLOAT:
+                        {
+                            float value = atom_getfloat(argv+i+1);
+                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                              'f', (lo_arg *)&value);
+                            i++;
+                            break;
+                        }
+                        case A_LONG:
+                        {
+                            int value = atom_getlong(argv+i+1);
+                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                              'i', (lo_arg *)&value);
+                            i++;
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
     }
-    x->sig_ptr = 0;
     return (x);
 }
 
@@ -184,14 +228,21 @@ static int check_sig_ptr(t_mapin *x)
 }
 
 // *********************************************************
-// -(anything)----------------------------------------------
-static void mapin_update(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
-{
-    // first check if signal attribute exists
-    if (!x->sig_ptr) {
-        post("no libmapper signal!");
-        return;
-    }
+// some helper functions
 
-    outlet_anything(x->outlet, gensym("list"), argc, argv);
+static int atom_strcmp(t_atom *a, const char *string)
+{
+    if (a->a_type != A_SYM || !string)
+        return 1;
+    return strcmp(atom_getsym(a)->s_name, string);
+}
+
+static const char *atom_get_string(t_atom *a)
+{
+    return atom_getsym(a)->s_name;
+}
+
+static void atom_set_string(t_atom *a, const char *string)
+{
+    atom_setsym(a, gensym((char *)string));
 }

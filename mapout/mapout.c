@@ -62,6 +62,10 @@ static void mapout_int(t_mapout *x, long i);
 static void mapout_float(t_mapout *x, double f);
 static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv);
 
+static int atom_strcmp(t_atom *a, const char *string);
+static const char *atom_get_string(t_atom *a);
+static void atom_set_string(t_atom *a, const char *string);
+
 // *********************************************************
 // -(global class pointer variable)-------------------------
 static void *mapout_class;
@@ -147,6 +151,53 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
 			// hashtab knows not to free us when it is freed.
 			hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
         }
+
+        if (!x->sig_ptr) {
+            post("error: mapout did not get sig_ptr");
+        }
+        else {
+            // add other declared properties
+            for (; i < argc; i++) {
+                if (i > argc - 2) // need 2 arguments for key and value
+                    break;
+                if ((atom_strcmp(argv+i, "@name") == 0) ||
+                    (atom_strcmp(argv+i, "@type") == 0) ||
+                    (atom_strcmp(argv+i, "@length") == 0)){
+                    i++;
+                    continue;
+                }
+                else if (atom_get_string(argv+i)[0] == '@') {
+                    switch ((argv+i+1)->a_type) {
+                        case A_SYM: {
+                            const char *value = atom_get_string(argv+i+1);
+                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                              's', (lo_arg *)value);
+                            i++;
+                            break;
+                        }
+                        case A_FLOAT:
+                        {
+                            float value = atom_getfloat(argv+i+1);
+                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                              'f', (lo_arg *)&value);
+                            i++;
+                            break;
+                        }
+                        case A_LONG:
+                        {
+                            int value = atom_getlong(argv+i+1);
+                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                              'i', (lo_arg *)&value);
+                            i++;
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+            
     }
     return (x);
 }
@@ -285,4 +336,24 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
     }
+}
+
+// *********************************************************
+// some helper functions
+
+static int atom_strcmp(t_atom *a, const char *string)
+{
+    if (a->a_type != A_SYM || !string)
+        return 1;
+    return strcmp(atom_getsym(a)->s_name, string);
+}
+
+static const char *atom_get_string(t_atom *a)
+{
+    return atom_getsym(a)->s_name;
+}
+
+static void atom_set_string(t_atom *a, const char *string)
+{
+    atom_setsym(a, gensym((char *)string));
 }
