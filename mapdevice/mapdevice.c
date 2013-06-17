@@ -13,8 +13,7 @@
 
 /* TODO:
  *  DONE: mapin object
- *  handle other signal props
- *      add most of them afterwards
+ *  DONE: handle other signal props
  *  handle device launched after signals
  *  handle signal removal
  *  handle device removal
@@ -84,6 +83,9 @@ static void mapdevice_detach_obj(t_hashtab_entry *e, void *arg);
 static void mapdevice_detach(t_mapdevice *x);
 static void mapdevice_attach_obj(t_hashtab_entry *e, void *arg);
 static void mapdevice_attach(t_mapdevice *x);
+
+static void mapdevice_add_signal(t_mapdevice *x, t_object *obj);
+static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj);
 
 static void mapdevice_poll(t_mapdevice *x);
 
@@ -255,52 +257,10 @@ void mapdevice_notify(t_mapdevice *x, t_symbol *s, t_symbol *msg, void *sender, 
 	else if (msg == gensym("hashtab_entry_new")) { // something arrived in the hashtab
 		t_symbol *key = (t_symbol *)data;
 		t_object *obj = NULL;
-        mapper_signal sig = NULL;
 		hashtab_lookup(sender, key, &obj);
-		if (obj) {
-			object_attach_byptr(x, obj); // attach to object
-            t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
-            const char *name = temp->s_name;
-            char type = object_attr_getchar(obj, gensym("sig_type"));
-            long length = object_attr_getlong(obj, gensym("sig_length"));
-            
-            if (object_classname(obj) == gensym("mapout")) {
-                sig = mdev_get_output_by_name(x->device, name, 0);
-                if (!sig)
-                    sig = mdev_add_output(x->device, name, length, type, 0, 0, 0);
-                atom_setobj(x->buffer, (void *)sig);
-                object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-
-                //output numOutputs
-                atom_setlong(x->buffer, mdev_num_outputs(x->device));
-                outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
-            }
-            else if (object_classname(obj) == gensym("mapin")) {
-                sig = mdev_get_input_by_name(x->device, name, 0);
-                if (sig) {
-                    // get user_data
-                    mapper_db_signal props = msig_properties(sig);
-                    t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
-                    ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
-                    ptrs->objs[ptrs->num_objs] = obj;
-                    ptrs->num_objs++;
-                }
-                else {
-                    t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
-                    ptrs->home = x;
-                    ptrs->objs = (t_object **)malloc(sizeof(t_object *));
-                    ptrs->num_objs = 1;
-                    ptrs->objs[0] = obj;
-                    sig = mdev_add_input(x->device, name, length, type, 0, 0, 0, type == 'i' ?
-                                         mapdevice_int_handler : mapdevice_float_handler, ptrs);
-                }
-                atom_setobj(x->buffer, (void *)sig);
-                object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-
-                //output numInputs
-                atom_setlong(x->buffer, mdev_num_inputs(x->device));
-                outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
-            }
+        if (obj) {
+            mapdevice_add_signal(x, obj);
+            object_attach_byptr(x, obj); // attach to object
         }
 		object_post((t_object *)x, "Attached to %ld signals.", hashtab_getsize(sender));
 	}
@@ -309,8 +269,10 @@ void mapdevice_notify(t_mapdevice *x, t_symbol *s, t_symbol *msg, void *sender, 
 		t_object *obj = NULL;
 		
 		hashtab_lookup(sender, key, &obj);
-		if (obj)
+		if (obj) {
+            mapdevice_remove_signal(x, obj);
 			object_detach_byptr(x, obj); // detach from it
+        }
 		// we receive the notification before the entry is removed from the hashtable
         object_post((t_object *)x, "Attached to %ld signals.", hashtab_getsize(sender) - 1);
 	}
@@ -338,6 +300,7 @@ void mapdevice_attach_obj(t_hashtab_entry *e, void *arg)
 	t_mapdevice *x = (t_mapdevice *)arg;
 	if (x) {
 		// attach to the object to receive its notifications
+        mapdevice_add_signal(x, e->value);
 		object_attach_byptr(x, e->value);
 	}
 }
@@ -369,6 +332,122 @@ void mapdevice_attach(t_mapdevice *x)
 
         object_post((t_object *)x, "Attached to %ld signals.", hashtab_getsize(x->ht));
 	}
+}
+
+static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
+{
+    mapper_signal sig = NULL;
+    if (obj) {
+        t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
+        const char *name = temp->s_name;
+        char type = object_attr_getchar(obj, gensym("sig_type"));
+        long length = object_attr_getlong(obj, gensym("sig_length"));
+        
+        if (object_classname(obj) == gensym("mapout")) {
+            sig = mdev_get_output_by_name(x->device, name, 0);
+            if (sig) {
+                // another max object associated with this signal exists
+                mapper_db_signal props = msig_properties(sig);
+                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+                // increment the refcount
+                ptrs->num_objs++;
+            }
+            if (!sig) {
+                sig = mdev_add_output(x->device, name, length, type, 0, 0, 0);
+                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
+                ptrs->num_objs = 1;
+                mapper_db_signal props = msig_properties(sig);
+                props->user_data = ptrs;
+            }
+            atom_setobj(x->buffer, (void *)sig);
+            object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
+            
+            //output numOutputs
+            atom_setlong(x->buffer, mdev_num_outputs(x->device));
+            outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
+        }
+        else if (object_classname(obj) == gensym("mapin")) {
+            sig = mdev_get_input_by_name(x->device, name, 0);
+            if (sig) {
+                // get user_data
+                mapper_db_signal props = msig_properties(sig);
+                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
+                ptrs->objs[ptrs->num_objs] = obj;
+                ptrs->num_objs++;
+            }
+            else {
+                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
+                ptrs->home = x;
+                ptrs->objs = (t_object **)malloc(sizeof(t_object *));
+                ptrs->num_objs = 1;
+                ptrs->objs[0] = obj;
+                sig = mdev_add_input(x->device, name, length, type, 0, 0, 0, type == 'i' ?
+                                     mapdevice_int_handler : mapdevice_float_handler, ptrs);
+            }
+            atom_setobj(x->buffer, (void *)sig);
+            object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
+            
+            //output numInputs
+            atom_setlong(x->buffer, mdev_num_inputs(x->device));
+            outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
+        }
+    }
+}
+
+static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
+{
+    mapper_signal sig;
+    mapper_db_signal props;
+    if (!obj)
+        return;
+
+    t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
+    const char *name = temp->s_name;
+
+    if (object_classname(obj) == gensym("mapout")) {
+        sig = mdev_get_output_by_name(x->device, name, 0);
+        if (sig) {
+            props = msig_properties(sig);
+            t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+            if (ptrs->num_objs == 1) {
+                free(ptrs);
+                mdev_remove_output(x->device, sig);
+            }
+            else
+                ptrs->num_objs--;
+        }
+    }
+    else if (object_classname(obj) == gensym("mapin")) {
+        sig = mdev_get_input_by_name(x->device, name, 0);
+        if (sig) {
+            props = msig_properties(sig);
+            t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+            if (ptrs->num_objs == 1) {
+                free(ptrs->objs);
+                free(ptrs);
+                mdev_remove_input(x->device, sig);
+            }
+            else {
+                // need to realloc obj ptr memory
+                // find index of this obj in ptr array
+                int i;
+                for (i=0; i<ptrs->num_objs; i++) {
+                    if (ptrs->objs[i] == obj)
+                        break;
+                }
+                if (i == ptrs->num_objs) {
+                    post("error: obj ptr not found in signal user_data!");
+                    return;
+                }
+                i++;
+                for (; i<ptrs->num_objs; i++)
+                    ptrs->objs[i-1] = ptrs->objs[i];
+                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs-1) * sizeof(t_object *));
+                ptrs->num_objs--;
+            }
+        }
+    }
 }
 
 // *********************************************************
