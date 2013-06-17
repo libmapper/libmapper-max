@@ -121,6 +121,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
         char *temp = atom_getsym(argv+1)->s_name;
         x->sig_type = temp[0];
         x->sig_ptr = 0;
+        x->sig_props = 0;
         
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
@@ -258,16 +259,18 @@ static void mapout_int(t_mapout *x, long i)
 
 // *********************************************************
 // -(float input)-------------------------------------------
-static void mapout_float(t_mapout *x, double f)
+static void mapout_float(t_mapout *x, double d)
 {
     if (check_sig_ptr(x))
         return;
     if (x->sig_props->length != 1)
         return;
-    if (x->sig_props->type == 'f')
+    if (x->sig_props->type == 'f') {
+        float f = (float)d;
         msig_update(x->sig_ptr, &f, 1, MAPPER_NOW);
+    }
     else if (x->sig_props->type == 'i') {
-        int i = (int)f;
+        int i = (int)d;
         msig_update(x->sig_ptr, &i, 1, MAPPER_NOW);
     }
 }
