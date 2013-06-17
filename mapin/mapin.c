@@ -109,6 +109,7 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
         char *temp = atom_getsym(argv+1)->s_name;
         x->sig_type = temp[0];
         x->sig_ptr = 0;
+        x->sig_props = 0;
 
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
