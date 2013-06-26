@@ -43,6 +43,7 @@ typedef struct _mapin
     mapper_db_signal    sig_props;
     void                *outlet;
     t_symbol            *myobjname;
+    long                arg_len;
     t_atom              buffer[MAX_LIST];
 } t_mapin;
 
@@ -120,71 +121,33 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
             i = 2;
         }
 
-        jp = (t_object *)gensym("#P")->s_thing;
-        if (jp) {
-            t_hashtab *ht;
+        // cache the registered name so we can remove self from hashtab later
+        x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
 
+        jp = (t_object *)gensym("#P")->s_thing;
+        t_hashtab *ht;
+        while (jp) {
             // look in the jpatcher's obex for an object called "mapperhash"
 			object_obex_lookup(jp, gensym("mapperhash"), (t_object **)&ht);
-			if (!ht) {
-				// it's not there? create it.
-				ht = hashtab_new(0);
-				// objects stored in the obex will be freed when the obex's owner is freed
-				// in this case, when the patcher object is freed. so we don't need to
-				// manage the memory associated with the "mapperhash".
-				object_obex_store(jp, gensym("mapperhash"), (t_object *)ht);
-			}
-			// cache the registered name so we can remove self from hashtab
-			x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
-			// store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
-			// hashtab knows not to free us when it is freed.
-			hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+            if (!ht) {
+                // try parent patcher
+                jp = jpatcher_get_parentpatcher(jp);
+            }
+            else {
+                // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
+                // hashtab knows not to free us when it is freed.
+                hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+                break;
+            }
         }
 
-        if (!x->sig_ptr) {
-            post("error: mapout did not get sig_ptr");
-        }
-        else {
-            // add other declared properties
-            for (; i < argc; i++) {
-                if (i > argc - 2) // need 2 arguments for key and value
-                    break;
-                if ((atom_strcmp(argv+i, "@name") == 0) ||
-                    (atom_strcmp(argv+i, "@type") == 0) ||
-                    (atom_strcmp(argv+i, "@length") == 0)){
-                    i++;
-                    continue;
-                }
-                else if (atom_get_string(argv+i)[0] == '@') {
-                    switch ((argv+i+1)->a_type) {
-                        case A_SYM: {
-                            const char *value = atom_get_string(argv+i+1);
-                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
-                                              's', (lo_arg *)value);
-                            i++;
-                            break;
-                        }
-                        case A_FLOAT:
-                        {
-                            float value = atom_getfloat(argv+i+1);
-                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
-                                              'f', (lo_arg *)&value);
-                            i++;
-                            break;
-                        }
-                        case A_LONG:
-                        {
-                            int value = atom_getlong(argv+i+1);
-                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
-                                              'i', (lo_arg *)&value);
-                            i++;
-                            break;
-                        }
-                        default:
-                            break;
-                    }
-                }
-            }
+        x->arg_len = argc - i - 1;
+        if (x->arg_len > MAX_LIST)
+            x->arg_len = MAX_LIST;
+
+        // we need to cache any arguments to add later
+        for (; i < argc; i++) {
+            memcpy(&x->buffer[i], argv+i, sizeof(t_atom));
         }
     }
     return (x);
@@ -210,6 +173,53 @@ static void mapin_free(t_mapin *x)
 }
 
 // *********************************************************
+// -(parse props from object arguments)---------------------
+void parse_extra_properties(t_mapin *x, int argc, t_atom *argv)
+{
+    int i;
+    // add other declared properties
+    for (i = 0; i < argc; i++) {
+        if (i > argc - 2) // need 2 arguments for key and value
+            break;
+        if ((atom_strcmp(argv+i, "@name") == 0) ||
+            (atom_strcmp(argv+i, "@type") == 0) ||
+            (atom_strcmp(argv+i, "@length") == 0)){
+            i++;
+            continue;
+        }
+        else if (atom_get_string(argv+i)[0] == '@') {
+            switch ((argv+i+1)->a_type) {
+                case A_SYM: {
+                    const char *value = atom_get_string(argv+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                      's', (lo_arg *)value);
+                    i++;
+                    break;
+                }
+                case A_FLOAT:
+                {
+                    float value = atom_getfloat(argv+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                      'f', (lo_arg *)&value);
+                    i++;
+                    break;
+                }
+                case A_LONG:
+                {
+                    int value = atom_getlong(argv+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                      'i', (lo_arg *)&value);
+                    i++;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+// *********************************************************
 // -(set the signal pointer)--------------------------------
 t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 {
@@ -223,6 +233,7 @@ static int check_sig_ptr(t_mapin *x)
         return 1;
     }
     else if (!x->sig_props) {
+        parse_extra_properties(x, x->arg_len, x->buffer);
         x->sig_props = msig_properties(x->sig_ptr);
     }
     return 0;

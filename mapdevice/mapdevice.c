@@ -14,13 +14,11 @@
 /* TODO:
  *  DONE: mapin object
  *  DONE: handle other signal props
- *  handle device launched after signals
- *  handle signal removal
- *  handle device removal
- *  handle device relaunch
- *  test multiple copies of same signal
- *      mapin
- *      mapout
+ *  DONE: handle device launched after signals
+ *  DONE: handle signal removal
+ *  DONE: handle device removal
+ *  DONE: handle device relaunch
+ *  DONE: test multiple copies of same signal
  *  attach device to top patcher
  *  test launching conflicting devices
  *  test lanching conflicting signal props
@@ -52,6 +50,7 @@
 typedef struct _mapdevice
 {
     t_object            ob;
+    long                back_off;
     void                *outlet;
     t_hashtab           *ht;
     void                *clock;
@@ -62,6 +61,7 @@ typedef struct _mapdevice
     int                 updated;
     int                 ready;
     t_atom              buffer[MAX_LIST];
+    t_object            *patcher;
 } t_mapdevice;
 
 typedef struct _mapin_ptrs
@@ -82,7 +82,7 @@ static void mapdevice_notify(t_mapdevice *x, t_symbol *s, t_symbol *msg,
 static void mapdevice_detach_obj(t_hashtab_entry *e, void *arg);
 static void mapdevice_detach(t_mapdevice *x);
 static void mapdevice_attach_obj(t_hashtab_entry *e, void *arg);
-static void mapdevice_attach(t_mapdevice *x);
+static int mapdevice_attach(t_mapdevice *x);
 
 static void mapdevice_add_signal(t_mapdevice *x, t_object *obj);
 static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj);
@@ -119,7 +119,9 @@ int main(void)
     t_class *c;
     c = class_new("mapdevice", (method)mapdevice_new, (method)mapdevice_free,
                   (long)sizeof(t_mapdevice), 0L, A_GIMME, 0);
+
     class_addmethod(c, (method)mapdevice_notify, "notify", A_CANT, 0);
+
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mapdevice_class = c;
     return 0;
@@ -136,9 +138,13 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
 
     if ((x = object_alloc(mapdevice_class))) {
         x->outlet = listout((t_object *)x);
-        x->name = strdup("maxmsp");
+        x->name = 0;
+        x->back_off = 0;
 
-        for (i = 0; i < argc; i++) {
+        if (mapdevice_attach(x))
+            return 0;
+
+        for (i = 0; i < argc-1; i++) {
             if ((argv+i)->a_type == A_SYM) {
                 if (atom_strcmp(argv+i, "@alias") == 0) {
                     if ((argv+i+1)->a_type == A_SYM) {
@@ -155,8 +161,10 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             }
         }
         if (alias) {
-            free(x->name);
             x->name = *alias == '/' ? strdup(alias+1) : strdup(alias);
+        }
+        else {
+            x->name = strdup("maxmsp");
         }
         post("mapdevice: using name %s", x->name);
 
@@ -223,8 +231,6 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
         // Create the timing clock
         x->clock = clock_new(x, (method)mapdevice_poll);
         clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
-
-        mapdevice_attach(x);
     }
     return (x);
 }
@@ -233,11 +239,19 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
 // -(free)--------------------------------------------------
 static void mapdevice_free(t_mapdevice *x)
 {
-   // mapdevice_detach(x);
+    
+//    object_obex_store(x->patcher, gensym("mapdevice_obj"), NULL);
 
+    // check if reference was removed
+    t_object *obj;
+    object_obex_lookup(x->patcher, gensym("mapdevice_obj"), (t_object **)&obj);
+    post("mapdevice_free, patcher = %p, obj = %p", x->patcher, obj);
+
+    mapdevice_detach(x);
+    post("check1");
     clock_unset(x->clock);      // Remove clock routine from the scheduler
     clock_free(x->clock);       // Frees memeory used by clock
-
+post("check2");
     if (x->device) {
         mdev_free(x->device);
     }
@@ -283,6 +297,8 @@ void mapdevice_detach_obj(t_hashtab_entry *e, void *arg)
 	t_mapdevice *x = (t_mapdevice *)arg;
 	if (x) {
 		// detach from the object, it's going away...
+        atom_setobj(x->buffer, 0);
+        object_attr_setvalueof(e->value, gensym("sig_ptr"), 1, x->buffer);
 		object_detach_byptr(x, e->value);
 	}
 }
@@ -305,33 +321,70 @@ void mapdevice_attach_obj(t_hashtab_entry *e, void *arg)
 	}
 }
 
-void mapdevice_attach(t_mapdevice *x)
+long object_iterator(t_mapdevice *x, t_object *obj)
 {
-	t_object *jp;
+    t_symbol *cls = object_classname(obj);
 
-	object_obex_lookup(x, gensym("#P"), &jp); // get the object's patcher
-	if (jp) {
-		t_hashtab *ht;
+    // if this is a device object, stop iterating
+    if (cls == gensym("mapdevice"))
+        return 1;
+    else if (cls != gensym("mapin") && cls != gensym("mapout"))
+        return 0;
 
-		// look in the jpatcher's obex for an object called "mapperhash"
-		object_obex_lookup(jp, gensym("mapperhash"), (t_object **)&ht);
-		if (!ht) {
-			// it's not there? create it.
-			ht = hashtab_new(0);
-			// objects stored in the obex will be freed when the obex's owner is freed
-			// in this case, when the patcher object is freed. so we don't need to
-			// manage the memory associated with the "mapperhash".
-			object_obex_store(jp, gensym("mapperhash"), (t_object *)ht);
-		}
-		x->ht = ht;
-		// attach to the hashtab, registering it if necessary
-		// this way, we can receive notifications from the hashtab as things are added and removed
-		object_attach_byptr_register(x, x->ht, CLASS_NOBOX);
-		// call a method on every object in the hash table
-		hashtab_funall(x->ht, (method)mapdevice_attach_obj, x);
+    // check if signal is attached to a device at same level, if so stop iterating
+    long distance = object_attr_getlong(obj, gensym("mapattached"));
+    if (distance == 0) {
+        // object is attached to another mapdevice object in this patcher
+        return 1;
+    }
+    else if (distance < 0) {
+        // object is already attached to another device, we need to detach it
+        object_method(obj, gensym("mapdetatch"));
+    }
 
-        object_post((t_object *)x, "Attached to %ld signals.", hashtab_getsize(x->ht));
-	}
+    // attach object to our hashtable
+    object_method(obj, gensym("mapattach"), x->ht);
+    return 0;
+}
+
+int mapdevice_attach(t_mapdevice *x)
+{
+	t_object *patcher;
+    long result = 0;
+
+	object_obex_lookup(x, gensym("#P"), &patcher); // get the object's patcher
+	if (!patcher)
+        return 1;
+
+    t_hashtab *ht;
+
+    // look in the jpatcher's obex for an object called "mapperhash"
+    object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+    if (ht)
+        return 1;
+
+    ht = hashtab_new(0);
+    // objects stored in the obex will be freed when the obex's owner is freed
+    // in this case, when the patcher object is freed. so we don't need to
+    // manage the memory associated with the "mapperhash".
+    object_obex_store(patcher, gensym("mapperhash"), (t_object *)ht);
+
+    x->ht = ht;
+    // attach to the hashtab, registering it if necessary
+    // this way, we can receive notifications from the hashtab as things are added and removed
+    object_attach_byptr_register(x, x->ht, CLASS_NOBOX);
+
+    // walk down patcher hierarchy looking for mapin and mapout objects
+    // question: we need to stop descent per branch... can we do this??
+    object_method(patcher, gensym("iterate"), object_iterator, (void *)x,
+                  PI_DEEP, &result);
+
+    // call a method on every object in the hash table
+    hashtab_funall(x->ht, (method)mapdevice_attach_obj, x);
+
+    object_post((t_object *)x, "Attached to %ld signal objects.", hashtab_getsize(x->ht));
+
+    return 0;
 }
 
 static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
@@ -387,7 +440,8 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
             }
             atom_setobj(x->buffer, (void *)sig);
             object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-            
+            object_method(obj, gensym("check_sig_ptr"));
+
             //output numInputs
             atom_setlong(x->buffer, mdev_num_inputs(x->device));
             outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
