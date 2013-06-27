@@ -239,19 +239,10 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
 // -(free)--------------------------------------------------
 static void mapdevice_free(t_mapdevice *x)
 {
-    
-//    object_obex_store(x->patcher, gensym("mapdevice_obj"), NULL);
-
-    // check if reference was removed
-    t_object *obj;
-    object_obex_lookup(x->patcher, gensym("mapdevice_obj"), (t_object **)&obj);
-    post("mapdevice_free, patcher = %p, obj = %p", x->patcher, obj);
-
     mapdevice_detach(x);
-    post("check1");
+
     clock_unset(x->clock);      // Remove clock routine from the scheduler
     clock_free(x->clock);       // Frees memeory used by clock
-post("check2");
     if (x->device) {
         mdev_free(x->device);
     }
@@ -308,6 +299,8 @@ void mapdevice_detach(t_mapdevice *x)
 	if (x->ht) {
 		hashtab_funall(x->ht, (method)mapdevice_detach_obj, x);
 		object_detach_byptr(x, x->ht); // detach from the hashtable
+        hashtab_chuck(x->ht);
+        object_obex_store(x->patcher, gensym("mapperhash"), NULL);
 	}
 }
 
@@ -349,17 +342,16 @@ long object_iterator(t_mapdevice *x, t_object *obj)
 
 int mapdevice_attach(t_mapdevice *x)
 {
-	t_object *patcher;
     long result = 0;
 
-	object_obex_lookup(x, gensym("#P"), &patcher); // get the object's patcher
-	if (!patcher)
+	object_obex_lookup(x, gensym("#P"), &x->patcher); // get the object's patcher
+	if (!x->patcher)
         return 1;
 
     t_hashtab *ht;
 
     // look in the jpatcher's obex for an object called "mapperhash"
-    object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+    object_obex_lookup(x->patcher, gensym("mapperhash"), (t_object **)&ht);
     if (ht)
         return 1;
 
@@ -367,7 +359,7 @@ int mapdevice_attach(t_mapdevice *x)
     // objects stored in the obex will be freed when the obex's owner is freed
     // in this case, when the patcher object is freed. so we don't need to
     // manage the memory associated with the "mapperhash".
-    object_obex_store(patcher, gensym("mapperhash"), (t_object *)ht);
+    object_obex_store(x->patcher, gensym("mapperhash"), (t_object *)ht);
 
     x->ht = ht;
     // attach to the hashtab, registering it if necessary
@@ -376,7 +368,7 @@ int mapdevice_attach(t_mapdevice *x)
 
     // walk down patcher hierarchy looking for mapin and mapout objects
     // question: we need to stop descent per branch... can we do this??
-    object_method(patcher, gensym("iterate"), object_iterator, (void *)x,
+    object_method(x->patcher, gensym("iterate"), object_iterator, (void *)x,
                   PI_DEEP, &result);
 
     // call a method on every object in the hash table
@@ -405,7 +397,7 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 // increment the refcount
                 ptrs->num_objs++;
             }
-            if (!sig) {
+            else {
                 sig = mdev_add_output(x->device, name, length, type, 0, 0, 0);
                 t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
                 ptrs->num_objs = 1;
