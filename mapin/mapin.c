@@ -39,16 +39,15 @@ typedef struct _mapin
     t_symbol            *sig_name;
     long                sig_length;
     char                sig_type;
-    mapper_device       dev_ptr;
+    mapper_device       dev_obj;
     mapper_signal       sig_ptr;
+    mapper_timetag_t    *tt_ptr;
     mapper_db_signal    sig_props;
-    mapper_timetag_t    timetag;
     void                *outlet;
     t_symbol            *myobjname;
     t_hashtab           *ht;
     long                num_args;
     t_atom              *args;
-    t_atom              buffer[MAX_LIST];
 } t_mapin;
 
 // *********************************************************
@@ -59,7 +58,8 @@ static void mapin_free(t_mapin *x);
 static void add_to_hashtab(t_mapin *x, t_hashtab *ht);
 static void remove_from_hashtab(t_mapin *x);
 static t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv);
-static t_max_err set_dev_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv);
+static t_max_err set_dev_obj(t_mapin *x, t_object *attr, long argc, t_atom *argv);
+static t_max_err set_tt_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv);
 
 static void mapin_int(t_mapin *x, long i);
 static void mapin_float(t_mapin *x, double f);
@@ -90,10 +90,12 @@ int main(void)
     CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_name);
     CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_length);
     CLASS_ATTR_CHAR(c, "sig_type", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_type);
-    CLASS_ATTR_OBJ(c, "dev_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, dev_ptr);
-    CLASS_ATTR_ACCESSORS(c, "dev_ptr", 0, set_dev_ptr);
+    CLASS_ATTR_OBJ(c, "dev_obj", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, dev_obj);
+    CLASS_ATTR_ACCESSORS(c, "dev_obj", 0, set_dev_obj);
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
+    CLASS_ATTR_OBJ(c, "tt_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, tt_ptr);
+    CLASS_ATTR_ACCESSORS(c, "tt_ptr", 0, set_tt_ptr);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mapin_class = c;
@@ -194,7 +196,7 @@ void remove_from_hashtab(t_mapin *x)
         hashtab_chuckkey(x->ht, x->myobjname);
         x->ht = NULL;
     }
-    x->dev_ptr = 0;
+    x->dev_obj = 0;
     x->sig_ptr = 0;
     x->sig_props = 0;
 }
@@ -250,9 +252,9 @@ void parse_extra_properties(t_mapin *x)
 
 // *********************************************************
 // -(set the device pointer)--------------------------------
-t_max_err set_dev_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
+t_max_err set_dev_obj(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->dev_ptr = (mapper_device)argv->a_w.w_obj;
+    x->dev_obj = (t_object *)argv->a_w.w_obj;
     return 0;
 }
 
@@ -266,9 +268,17 @@ t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
     return 0;
 }
 
+// *********************************************************
+// -(set the device pointer)--------------------------------
+t_max_err set_tt_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
+{
+    x->tt_ptr = (mapper_timetag_t *)argv->a_w.w_obj;
+    return 0;
+}
+
 static int check_ptrs(t_mapin *x)
 {
-    if (!x || !x->dev_ptr || !x->sig_ptr) {
+    if (!x || !x->dev_obj || !x->sig_ptr) {
         return 1;
     }
     else if (!x->sig_props) {
@@ -322,13 +332,12 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
     
     int i = 0, j = 0, id = -1;
     if (argc) {
-        mdev_now(x->dev_ptr, &x->timetag);
         if (argc == 2 && (argv + 1)->a_type == A_SYM) {
             if ((argv)->a_type != A_LONG)
                 return;
             id = (int)atom_getlong(argv);
             if (strcmp(atom_getsym(argv+1)->s_name, "release") == 0)
-                msig_release_instance(x->sig_ptr, id, x->timetag);
+                msig_release_instance(x->sig_ptr, id, *x->tt_ptr);
         }
         else if (argc == x->sig_props->length + 1) {
             // Special case: signal value may be preceded by instance number
@@ -337,7 +346,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                 j = 1;
             }
             else {
-                post("Instance ID is not int!");
+                object_post((t_object *)x, "Instance ID is not int!");
                 return;
             }
         }
@@ -352,13 +361,17 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                     payload[i] = (int)atom_getfloat(argv + i + j);
                 else if ((argv + i + j)->a_type == A_LONG)
                     payload[i] = (int)atom_getlong(argv + i + j);
+                else {
+                    object_post((t_object *)x, "Illegal data type in list!");
+                    return;
+                }
             }
             //update signal
             if (id == -1) {
-                msig_update(x->sig_ptr, payload, 1, x->timetag);
+                msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
             }
             else {
-                msig_update_instance(x->sig_ptr, id, payload, 1, x->timetag);
+                msig_update_instance(x->sig_ptr, id, payload, 1, *x->tt_ptr);
             }
         }
         else if (x->sig_props->type == 'f') {
@@ -368,13 +381,17 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                     payload[i] = atom_getfloat(argv + i + j);
                 else if ((argv + i + j)->a_type == A_LONG)
                     payload[i] = (float)atom_getlong(argv + i + j);
+                else {
+                    object_post((t_object *)x, "Illegal data type in list!");
+                    return;
+                }
             }
             //update signal
             if (id == -1) {
-                msig_update(x->sig_ptr, payload, 1, x->timetag);
+                msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
             }
             else {
-                msig_update_instance(x->sig_ptr, id, payload, 1, x->timetag);
+                msig_update_instance(x->sig_ptr, id, payload, 1, *x->tt_ptr);
             }
         }
     }

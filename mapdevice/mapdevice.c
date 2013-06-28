@@ -86,6 +86,8 @@ static int mapdevice_attach(t_mapdevice *x);
 static void mapdevice_add_signal(t_mapdevice *x, t_object *obj);
 static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj);
 
+static void mapdevice_maybe_start_queue(t_mapdevice *x);
+
 static void mapdevice_poll(t_mapdevice *x);
 
 static void mapdevice_float_handler(mapper_signal sig, mapper_db_signal props,
@@ -120,6 +122,7 @@ int main(void)
                   (long)sizeof(t_mapdevice), 0L, A_GIMME, 0);
 
     class_addmethod(c, (method)mapdevice_notify, "notify", A_CANT, 0);
+    class_addmethod(c, (method)mapdevice_maybe_start_queue, "maybe_start_queue", A_CANT, 0);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mapdevice_class = c;
@@ -161,21 +164,16 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
         else {
             x->name = strdup("maxmsp");
         }
-        post("mapdevice: using name %s", x->name);
-
-        if (iface)
-            post("mapdevice: trying network interface %s", iface);
-        else
-            post("mapdevice: using default network interface.");
 
         x->admin = mapper_admin_new(iface, 0, 0);
         if (!x->admin) {
-            post("mapdevice: error initializing libmapper admin.");
+            object_post((t_object *)x, "error initializing libmapper admin.");
             return 0;
         }
+
         x->device = mdev_new(x->name, 0, x->admin);
         if (!x->device) {
-            post("mapdevice: error initializing libmapper device.");
+            object_post((t_object *)x, "error initializing libmapper device.");
             return 0;
         }
 
@@ -258,10 +256,7 @@ static void mapdevice_free(t_mapdevice *x)
 
 void mapdevice_notify(t_mapdevice *x, t_symbol *s, t_symbol *msg, void *sender, void *data)
 {
-    if (msg == gensym("update")) {
-        // update appropriate signal
-    }
-	else if (msg == gensym("hashtab_entry_new")) { // something arrived in the hashtab
+	if (msg == gensym("hashtab_entry_new")) { // something arrived in the hashtab
 		t_symbol *key = (t_symbol *)data;
 		t_object *obj = NULL;
 		hashtab_lookup(sender, key, &obj);
@@ -269,7 +264,6 @@ void mapdevice_notify(t_mapdevice *x, t_symbol *s, t_symbol *msg, void *sender, 
             mapdevice_add_signal(x, obj);
             object_attach_byptr(x, obj); // attach to object
         }
-		object_post((t_object *)x, "Attached to %ld signals.", hashtab_getsize(sender));
 	}
     else if (msg == gensym("hashtab_entry_free")) { // something left the hashtab
 		t_symbol *key = (t_symbol *)data;
@@ -280,8 +274,6 @@ void mapdevice_notify(t_mapdevice *x, t_symbol *s, t_symbol *msg, void *sender, 
             mapdevice_remove_signal(x, obj);
 			object_detach_byptr(x, obj); // detach from it
         }
-		// we receive the notification before the entry is removed from the hashtable
-        object_post((t_object *)x, "Attached to %ld signals.", hashtab_getsize(sender) - 1);
 	}
 }
 
@@ -356,7 +348,7 @@ int mapdevice_attach(t_mapdevice *x)
     while (patcher) {
         object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
         if (ht) {
-            post("error: found mapdevice object in parent patcher!");
+            object_post((t_object *)x, "error: found mapdevice object in parent patcher!");
             return 1;
         }
         patcher = jpatcher_get_parentpatcher(patcher);
@@ -366,7 +358,7 @@ int mapdevice_attach(t_mapdevice *x)
     object_method(x->patcher, gensym("iterate"), check_downstream, (void *)x,
                   PI_DEEP, &result);
     if (result) {
-        post("error: found mapdevice object in downstream patcher!");
+        object_post((t_object *)x, "error: found mapdevice object in parent patcher!");
         return 1;
     }
 
@@ -386,8 +378,6 @@ int mapdevice_attach(t_mapdevice *x)
 
     // call a method on every object in the hash table
     hashtab_funall(x->ht, (method)mapdevice_attach_obj, x);
-
-    object_post((t_object *)x, "Attached to %ld signal objects.", hashtab_getsize(x->ht));
 
     return 0;
 }
@@ -417,11 +407,6 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 mapper_db_signal props = msig_properties(sig);
                 props->user_data = ptrs;
             }
-            atom_setobj(x->buffer, (void *)x->device);
-            object_attr_setvalueof(obj, gensym("dev_ptr"), 1, x->buffer);
-            atom_setobj(x->buffer, (void *)sig);
-            object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-
             //output numOutputs
             atom_setlong(x->buffer, mdev_num_outputs(x->device));
             outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
@@ -445,15 +430,19 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 sig = mdev_add_input(x->device, name, length, type, 0, 0, 0, type == 'i' ?
                                      mapdevice_int_handler : mapdevice_float_handler, ptrs);
             }
-            atom_setobj(x->buffer, (void *)x->device);
-            object_attr_setvalueof(obj, gensym("dev_ptr"), 1, x->buffer);
-            atom_setobj(x->buffer, (void *)sig);
-            object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-
             //output numInputs
             atom_setlong(x->buffer, mdev_num_inputs(x->device));
             outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
         }
+        else
+            return;
+
+        atom_setobj(x->buffer, (void *)x);
+        object_attr_setvalueof(obj, gensym("dev_obj"), 1, x->buffer);
+        atom_setobj(x->buffer, (void *)sig);
+        object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
+        atom_setobj(x->buffer, (void *)&x->timetag);
+        object_attr_setvalueof(obj, gensym("tt_ptr"), 1, x->buffer);
     }
 }
 
@@ -498,7 +487,7 @@ static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
                         break;
                 }
                 if (i == ptrs->num_objs) {
-                    post("error: obj ptr not found in signal user_data!");
+                    object_post((t_object *)x, "error: obj ptr not found in signal user_data!");
                     return;
                 }
                 i++;
@@ -602,7 +591,6 @@ static void mapdevice_float_handler(mapper_signal msig, mapper_db_signal props,
         float *v = value;
 
         if (length > (MAX_LIST-1)) {
-            post("Maximum list length is %i!", MAX_LIST-1);
             length = MAX_LIST-1;
         }
 
@@ -673,6 +661,17 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
 }
 
 // *********************************************************
+// -(start a new queue if necessary)------------------------
+static void mapdevice_maybe_start_queue(t_mapdevice *x)
+{
+    if (!x->updated) {
+        mdev_now(x->device, &x->timetag);
+        mdev_start_queue(x->device, x->timetag);
+        x->updated = 1;
+    }
+}
+
+// *********************************************************
 // -(poll libmapper)----------------------------------------
 static void mapdevice_poll(t_mapdevice *x)
 {
@@ -680,7 +679,8 @@ static void mapdevice_poll(t_mapdevice *x)
     while(count-- && mdev_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mdev_ready(x->device)) {
-            //mapdevice_db_dump(db);
+            object_post((t_object *)x, "registered device %s on network interface %s",
+                 mdev_name(x->device), mdev_interface(x->device));
             x->ready = 1;
             mapdevice_print_properties(x);
         }

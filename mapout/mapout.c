@@ -45,14 +45,15 @@ typedef struct _mapout
     t_symbol            *sig_name;
     long                sig_length;
     char                sig_type;
-    mapper_device       dev_ptr;
+    t_object            *dev_obj;
     mapper_signal       sig_ptr;
+    mapper_timetag_t    *tt_ptr;
     mapper_db_signal    sig_props;
+    void                *outlet;
     t_symbol            *myobjname;
     t_hashtab           *ht;
     long                num_args;
     t_atom              *args;
-    mapper_timetag_t    timetag;
 } t_mapout;
 
 // *********************************************************
@@ -63,7 +64,8 @@ static void mapout_free(t_mapout *x);
 static void add_to_hashtab(t_mapout *x, t_hashtab *ht);
 static void remove_from_hashtab(t_mapout *x);
 static t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv);
-static t_max_err set_dev_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv);
+static t_max_err set_dev_obj(t_mapout *x, t_object *attr, long argc, t_atom *argv);
+static t_max_err set_tt_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv);
 
 static void mapout_int(t_mapout *x, long i);
 static void mapout_float(t_mapout *x, double f);
@@ -94,10 +96,12 @@ int main(void)
     CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_name);
     CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_length);
     CLASS_ATTR_CHAR(c, "sig_type", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_type);
-    CLASS_ATTR_OBJ(c, "dev_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, dev_ptr);
-    CLASS_ATTR_ACCESSORS(c, "dev_ptr", 0, set_dev_ptr);
+    CLASS_ATTR_OBJ(c, "dev_obj", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, dev_obj);
+    CLASS_ATTR_ACCESSORS(c, "dev_obj", 0, set_dev_obj);
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
+    CLASS_ATTR_OBJ(c, "tt_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, tt_ptr);
+    CLASS_ATTR_ACCESSORS(c, "tt_ptr", 0, set_tt_ptr);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mapout_class = c;
@@ -129,6 +133,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
     }
 
     if ((x = (t_mapout *)object_alloc(mapout_class))) {
+        x->outlet = listout((t_object *)x);
 
         x->sig_name = gensym(atom_getsym(argv)->s_name);
 
@@ -198,7 +203,7 @@ void remove_from_hashtab(t_mapout *x)
         hashtab_chuckkey(x->ht, x->myobjname);
         x->ht = NULL;
     }
-    x->dev_ptr = 0;
+    x->dev_obj = 0;
     x->sig_ptr = 0;
     x->sig_props = 0;
 }
@@ -254,9 +259,9 @@ void parse_extra_properties(t_mapout *x)
 
 // *********************************************************
 // -(set the device pointer)--------------------------------
-t_max_err set_dev_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
+t_max_err set_dev_obj(t_mapout *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->dev_ptr = (mapper_device)argv->a_w.w_obj;
+    x->dev_obj = (t_object *)argv->a_w.w_obj;
     return 0;
 }
 
@@ -270,9 +275,17 @@ t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
     return 0;
 }
 
+// *********************************************************
+// -(set the device pointer)--------------------------------
+t_max_err set_tt_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
+{
+    x->tt_ptr = (mapper_timetag_t *)argv->a_w.w_obj;
+    return 0;
+}
+
 static int check_ptrs(t_mapout *x)
 {
-    if (!x || !x->dev_ptr || !x->sig_ptr) {
+    if (!x || !x->dev_obj || !x->sig_ptr) {
         return 1;
     }
     else if (!x->sig_props) {
@@ -290,11 +303,14 @@ static void mapout_int(t_mapout *x, long i)
 
     if (x->sig_props->length != 1)
         return;
-    if (x->sig_props->type == 'i')
-        msig_update(x->sig_ptr, &i, 1, MAPPER_NOW);
+    if (x->sig_props->type == 'i') {
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &i, 1, *x->tt_ptr);
+    }
     else if (x->sig_props->type == 'f') {
         float f = (float)i;
-        msig_update(x->sig_ptr, &f, 1, MAPPER_NOW);
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &f, 1, *x->tt_ptr);
     }
 }
 
@@ -309,11 +325,13 @@ static void mapout_float(t_mapout *x, double d)
         return;
     if (x->sig_props->type == 'f') {
         float f = (float)d;
-        msig_update(x->sig_ptr, &f, 1, MAPPER_NOW);
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &f, 1, *x->tt_ptr);
     }
     else if (x->sig_props->type == 'i') {
         int i = (int)d;
-        msig_update(x->sig_ptr, &i, 1, MAPPER_NOW);
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &i, 1, *x->tt_ptr);
     }
 }
 
@@ -326,13 +344,14 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
 
     int i = 0, j = 0, id = -1;
     if (argc) {
-        mdev_now(x->dev_ptr, &x->timetag);
         if (argc == 2 && (argv + 1)->a_type == A_SYM) {
             if ((argv)->a_type != A_LONG)
                 return;
             id = (int)atom_getlong(argv);
-            if (strcmp(atom_getsym(argv+1)->s_name, "release") == 0)
-                msig_release_instance(x->sig_ptr, id, x->timetag);
+            if (strcmp(atom_getsym(argv+1)->s_name, "release") == 0) {
+                object_method(x->dev_obj, gensym("maybe_start_queue"));
+                msig_release_instance(x->sig_ptr, id, *x->tt_ptr);
+            }
         }
         else if (argc == x->sig_props->length + 1) {
             // Special case: signal value may be preceded by instance number
@@ -341,7 +360,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
                 j = 1;
             }
             else {
-                post("Instance ID is not int!");
+                object_post((t_object *)x, "Instance ID is not int!");
                 return;
             }
         }
@@ -356,13 +375,18 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
                     payload[i] = (int)atom_getfloat(argv + i + j);
                 else if ((argv + i + j)->a_type == A_LONG)
                     payload[i] = (int)atom_getlong(argv + i + j);
+                else {
+                    object_post((t_object *)x, "Illegal data type in list!");
+                    return;
+                }
             }
             //update signal
+            object_method(x->dev_obj, gensym("maybe_start_queue"));
             if (id == -1) {
-                msig_update(x->sig_ptr, payload, 1, x->timetag);
+                msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
             }
             else {
-                msig_update_instance(x->sig_ptr, id, payload, 1, x->timetag);
+                msig_update_instance(x->sig_ptr, id, payload, 1, *x->tt_ptr);
             }
         }
         else if (x->sig_props->type == 'f') {
@@ -372,13 +396,18 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
                     payload[i] = atom_getfloat(argv + i + j);
                 else if ((argv + i + j)->a_type == A_LONG)
                     payload[i] = (float)atom_getlong(argv + i + j);
+                else {
+                    object_post((t_object *)x, "Illegal data type in list!");
+                    return;
+                }
             }
             //update signal
+            object_method(x->dev_obj, gensym("maybe_start_queue"));
             if (id == -1) {
-                msig_update(x->sig_ptr, payload, 1, x->timetag);
+                msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
             }
             else {
-                msig_update_instance(x->sig_ptr, id, payload, 1, x->timetag);
+                msig_update_instance(x->sig_ptr, id, payload, 1, *x->tt_ptr);
             }
         }
     }
