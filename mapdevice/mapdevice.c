@@ -291,6 +291,7 @@ void mapdevice_detach_obj(t_hashtab_entry *e, void *arg)
 	if (x) {
 		// detach from the object, it's going away...
         atom_setobj(x->buffer, 0);
+        object_attr_setvalueof(e->value, gensym("dev_ptr"), 1, x->buffer);
         object_attr_setvalueof(e->value, gensym("sig_ptr"), 1, x->buffer);
 		object_detach_byptr(x, e->value);
 	}
@@ -399,7 +400,7 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
         const char *name = temp->s_name;
         char type = object_attr_getchar(obj, gensym("sig_type"));
         long length = object_attr_getlong(obj, gensym("sig_length"));
-        
+
         if (object_classname(obj) == gensym("mapout")) {
             sig = mdev_get_output_by_name(x->device, name, 0);
             if (sig) {
@@ -416,9 +417,11 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 mapper_db_signal props = msig_properties(sig);
                 props->user_data = ptrs;
             }
+            atom_setobj(x->buffer, (void *)x->device);
+            object_attr_setvalueof(obj, gensym("dev_ptr"), 1, x->buffer);
             atom_setobj(x->buffer, (void *)sig);
             object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-            
+
             //output numOutputs
             atom_setlong(x->buffer, mdev_num_outputs(x->device));
             outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
@@ -442,9 +445,10 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 sig = mdev_add_input(x->device, name, length, type, 0, 0, 0, type == 'i' ?
                                      mapdevice_int_handler : mapdevice_float_handler, ptrs);
             }
+            atom_setobj(x->buffer, (void *)x->device);
+            object_attr_setvalueof(obj, gensym("dev_ptr"), 1, x->buffer);
             atom_setobj(x->buffer, (void *)sig);
             object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-            object_method(obj, gensym("check_sig_ptr"));
 
             //output numInputs
             atom_setlong(x->buffer, mdev_num_inputs(x->device));
@@ -459,7 +463,6 @@ static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
     mapper_db_signal props;
     if (!obj)
         return;
-
     t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
     const char *name = temp->s_name;
 

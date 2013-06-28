@@ -45,6 +45,7 @@ typedef struct _mapout
     t_symbol            *sig_name;
     long                sig_length;
     char                sig_type;
+    mapper_device       dev_ptr;
     mapper_signal       sig_ptr;
     mapper_db_signal    sig_props;
     t_symbol            *myobjname;
@@ -62,6 +63,7 @@ static void mapout_free(t_mapout *x);
 static void add_to_hashtab(t_mapout *x, t_hashtab *ht);
 static void remove_from_hashtab(t_mapout *x);
 static t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv);
+static t_max_err set_dev_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv);
 
 static void mapout_int(t_mapout *x, long i);
 static void mapout_float(t_mapout *x, double f);
@@ -92,6 +94,8 @@ int main(void)
     CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_name);
     CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_length);
     CLASS_ATTR_CHAR(c, "sig_type", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_type);
+    CLASS_ATTR_OBJ(c, "dev_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, dev_ptr);
+    CLASS_ATTR_ACCESSORS(c, "dev_ptr", 0, set_dev_ptr);
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
 
@@ -194,6 +198,7 @@ void remove_from_hashtab(t_mapout *x)
         hashtab_chuckkey(x->ht, x->myobjname);
         x->ht = NULL;
     }
+    x->dev_ptr = 0;
     x->sig_ptr = 0;
     x->sig_props = 0;
 }
@@ -248,6 +253,14 @@ void parse_extra_properties(t_mapout *x)
 }
 
 // *********************************************************
+// -(set the device pointer)--------------------------------
+t_max_err set_dev_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
+{
+    x->dev_ptr = (mapper_device)argv->a_w.w_obj;
+    return 0;
+}
+
+// *********************************************************
 // -(set the signal pointer)--------------------------------
 t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
 {
@@ -257,9 +270,9 @@ t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
     return 0;
 }
 
-static int check_sig_ptr(t_mapout *x)
+static int check_ptrs(t_mapout *x)
 {
-    if (!x || !x->sig_ptr) {
+    if (!x || !x->dev_ptr || !x->sig_ptr) {
         return 1;
     }
     else if (!x->sig_props) {
@@ -272,8 +285,9 @@ static int check_sig_ptr(t_mapout *x)
 // -(int input)---------------------------------------------
 static void mapout_int(t_mapout *x, long i)
 {
-    if (check_sig_ptr(x))
+    if (check_ptrs(x))
         return;
+
     if (x->sig_props->length != 1)
         return;
     if (x->sig_props->type == 'i')
@@ -288,8 +302,9 @@ static void mapout_int(t_mapout *x, long i)
 // -(float input)-------------------------------------------
 static void mapout_float(t_mapout *x, double d)
 {
-    if (check_sig_ptr(x))
+    if (check_ptrs(x))
         return;
+
     if (x->sig_props->length != 1)
         return;
     if (x->sig_props->type == 'f') {
@@ -306,11 +321,12 @@ static void mapout_float(t_mapout *x, double d)
 // -(list input)--------------------------------------------
 static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
 {
-    if (check_sig_ptr(x))
+    if (check_ptrs(x))
         return;
 
     int i = 0, j = 0, id = -1;
     if (argc) {
+        mdev_now(x->dev_ptr, &x->timetag);
         if (argc == 2 && (argv + 1)->a_type == A_SYM) {
             if ((argv)->a_type != A_LONG)
                 return;
