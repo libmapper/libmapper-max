@@ -48,6 +48,9 @@ typedef struct _mapout
     mapper_signal       sig_ptr;
     mapper_db_signal    sig_props;
     t_symbol            *myobjname;
+    t_hashtab           *ht;
+    long                num_args;
+    t_atom              *args;
     mapper_timetag_t    timetag;
 } t_mapout;
 
@@ -56,6 +59,8 @@ typedef struct _mapout
 static void *mapout_new(t_symbol *s, int argc, t_atom *argv);
 static void mapout_free(t_mapout *x);
 
+static void add_to_hashtab(t_mapout *x, t_hashtab *ht);
+static void remove_from_hashtab(t_mapout *x);
 static t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv);
 
 static void mapout_int(t_mapout *x, long i);
@@ -81,6 +86,8 @@ int main(void)
     class_addmethod(c, (method)mapout_int, "int", A_LONG, 0);
     class_addmethod(c, (method)mapout_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mapout_list, "list", A_GIMME, 0);
+    class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
+    class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
 
     CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_name);
     CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapout, sig_length);
@@ -103,7 +110,8 @@ static void mapout_usage()
 static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
 {
     t_mapout *x = NULL;
-    t_object *jp = NULL;
+    t_object *patcher = NULL;
+    t_hashtab *ht;
 
     long i = 0;
 
@@ -132,73 +140,34 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
             i = 2;
         }
 
-        jp = (t_object *)gensym("#P")->s_thing;
-        if (jp) {
-            t_hashtab *ht;
+        x->num_args = argc - i - 1;
+        if (x->num_args > MAX_LIST)
+            x->num_args = MAX_LIST;
 
-            // look in the jpatcher's obex for an object called "mapperhash"
-			object_obex_lookup(jp, gensym("mapperhash"), (t_object **)&ht);
-			if (!ht) {
-				// it's not there? create it.
-				ht = hashtab_new(0);
-				// objects stored in the obex will be freed when the obex's owner is freed
-				// in this case, when the patcher object is freed. so we don't need to
-				// manage the memory associated with the "mapperhash".
-				object_obex_store(jp, gensym("mapperhash"), (t_object *)ht);
-			}
-			// cache the registered name so we can remove self from hashtab
-			x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
-			// store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
-			// hashtab knows not to free us when it is freed.
-			hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+        // we need to cache any arguments to add later
+        long alloced;
+        char result;
+        atom_alloc_array(x->num_args, &alloced, &x->args, &result);
+        if (!result)
+            return 0;
+
+        int j = 0;
+        for (; i < argc; i++, j++) {
+            memcpy(&x->args[j], argv+i, sizeof(t_atom));
         }
 
-        if (!x->sig_ptr) {
-            post("error: mapout did not get sig_ptr");
-        }
-        else {
-            // add other declared properties
-            for (; i < argc; i++) {
-                if (i > argc - 2) // need 2 arguments for key and value
-                    break;
-                if ((atom_strcmp(argv+i, "@name") == 0) ||
-                    (atom_strcmp(argv+i, "@type") == 0) ||
-                    (atom_strcmp(argv+i, "@length") == 0)){
-                    i++;
-                    continue;
-                }
-                else if (atom_get_string(argv+i)[0] == '@') {
-                    switch ((argv+i+1)->a_type) {
-                        case A_SYM: {
-                            const char *value = atom_get_string(argv+i+1);
-                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
-                                              's', (lo_arg *)value);
-                            i++;
-                            break;
-                        }
-                        case A_FLOAT:
-                        {
-                            float value = atom_getfloat(argv+i+1);
-                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
-                                              'f', (lo_arg *)&value);
-                            i++;
-                            break;
-                        }
-                        case A_LONG:
-                        {
-                            int value = atom_getlong(argv+i+1);
-                            msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
-                                              'i', (lo_arg *)&value);
-                            i++;
-                            break;
-                        }
-                        default:
-                            break;
-                    }
-                }
+        // cache the registered name so we can remove self from hashtab
+        x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
+
+        patcher = (t_object *)gensym("#P")->s_thing;
+        while (patcher) {
+            object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+            if (ht) {
+                add_to_hashtab(x, ht);
+                break;
             }
+            patcher = jpatcher_get_parentpatcher(patcher);
         }
-            
     }
     return (x);
 }
@@ -207,19 +176,73 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
 // -(free)--------------------------------------------------
 static void mapout_free(t_mapout *x)
 {
-    t_object *jp;
+    remove_from_hashtab(x);
+    free(x->args);
+}
 
-    // get the object's patcher
-	object_obex_lookup(x, gensym("#P"), &jp);
-	if (jp) {
-		t_hashtab *ht;
+void add_to_hashtab(t_mapout *x, t_hashtab *ht)
+{
+    // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
+    // hashtab knows not to free us when it is freed.
+    hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+    x->ht = ht;
+}
 
-		// find the mapperhash
-		object_obex_lookup(jp, gensym("mapperhash"), (t_object **)&ht);
-		if (ht) {
-			hashtab_chuckkey(ht, x->myobjname); // remove self from hashtab
-		}
-	}
+void remove_from_hashtab(t_mapout *x)
+{
+    if (x->ht) {
+        hashtab_chuckkey(x->ht, x->myobjname);
+        x->ht = NULL;
+    }
+    x->sig_ptr = 0;
+    x->sig_props = 0;
+}
+
+// *********************************************************
+// -(parse props from object arguments)---------------------
+void parse_extra_properties(t_mapout *x, int argc, t_atom *argv)
+{
+    int i;
+    // add other declared properties
+    for (i = 0; i < argc; i++) {
+        if (i > argc - 2) // need 2 arguments for key and value
+            break;
+        if ((atom_strcmp(argv+i, "@name") == 0) ||
+            (atom_strcmp(argv+i, "@type") == 0) ||
+            (atom_strcmp(argv+i, "@length") == 0)){
+            i++;
+            continue;
+        }
+        else if (atom_get_string(argv+i)[0] == '@') {
+            switch ((argv+i+1)->a_type) {
+                case A_SYM: {
+                    const char *value = atom_get_string(argv+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                      's', (lo_arg *)value);
+                    i++;
+                    break;
+                }
+                case A_FLOAT:
+                {
+                    float value = atom_getfloat(argv+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                      'f', (lo_arg *)&value);
+                    i++;
+                    break;
+                }
+                case A_LONG:
+                {
+                    int value = atom_getlong(argv+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                                      'i', (lo_arg *)&value);
+                    i++;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
 }
 
 // *********************************************************

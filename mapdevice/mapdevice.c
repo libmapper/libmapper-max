@@ -50,7 +50,6 @@
 typedef struct _mapdevice
 {
     t_object            ob;
-    long                back_off;
     void                *outlet;
     t_hashtab           *ht;
     void                *clock;
@@ -139,10 +138,6 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
     if ((x = object_alloc(mapdevice_class))) {
         x->outlet = listout((t_object *)x);
         x->name = 0;
-        x->back_off = 0;
-
-        if (mapdevice_attach(x))
-            return 0;
 
         for (i = 0; i < argc-1; i++) {
             if ((argv+i)->a_type == A_SYM) {
@@ -181,6 +176,13 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
         x->device = mdev_new(x->name, 0, x->admin);
         if (!x->device) {
             post("mapdevice: error initializing libmapper device.");
+            return 0;
+        }
+
+        if (mapdevice_attach(x)) {
+            mdev_free(x->device);
+            mapper_admin_free(x->admin);
+            free(x->name);
             return 0;
         }
 
@@ -298,6 +300,7 @@ void mapdevice_detach(t_mapdevice *x)
 {
 	if (x->ht) {
 		hashtab_funall(x->ht, (method)mapdevice_detach_obj, x);
+        hashtab_methodall(x->ht, gensym("remove_from_hashtab"));
 		object_detach_byptr(x, x->ht); // detach from the hashtable
         hashtab_chuck(x->ht);
         object_obex_store(x->patcher, gensym("mapperhash"), NULL);
@@ -314,61 +317,70 @@ void mapdevice_attach_obj(t_hashtab_entry *e, void *arg)
 	}
 }
 
-long object_iterator(t_mapdevice *x, t_object *obj)
+long check_downstream(t_mapdevice *x, t_object *obj)
 {
     t_symbol *cls = object_classname(obj);
 
     // if this is a device object, stop iterating
     if (cls == gensym("mapdevice"))
         return 1;
-    else if (cls != gensym("mapin") && cls != gensym("mapout"))
+    else
+        return 0;
+}
+
+long add_downstream(t_mapdevice *x, t_object *obj)
+{
+    t_symbol *cls = object_classname(obj);
+
+    if (cls != gensym("mapin") && cls != gensym("mapout"))
         return 0;
 
-    // check if signal is attached to a device at same level, if so stop iterating
-    long distance = object_attr_getlong(obj, gensym("mapattached"));
-    if (distance == 0) {
-        // object is attached to another mapdevice object in this patcher
-        return 1;
-    }
-    else if (distance < 0) {
-        // object is already attached to another device, we need to detach it
-        object_method(obj, gensym("mapdetatch"));
-    }
-
-    // attach object to our hashtable
-    object_method(obj, gensym("mapattach"), x->ht);
+    object_method(obj, gensym("add_to_hashtab"), x->ht);
     return 0;
 }
 
 int mapdevice_attach(t_mapdevice *x)
 {
+    t_object *patcher = NULL;
+    t_hashtab *ht = 0;
     long result = 0;
 
-	object_obex_lookup(x, gensym("#P"), &x->patcher); // get the object's patcher
-	if (!x->patcher)
+	object_obex_lookup(x, gensym("#P"), &patcher); // get the object's patcher
+	if (!patcher)
         return 1;
 
-    t_hashtab *ht;
+    x->patcher = patcher;
 
-    // look in the jpatcher's obex for an object called "mapperhash"
-    object_obex_lookup(x->patcher, gensym("mapperhash"), (t_object **)&ht);
-    if (ht)
+    // walk up the patcher hierarchy checking if there is an upstream mapdevice object
+    while (patcher) {
+        object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+        if (ht) {
+            post("error: found mapdevice object in parent patcher!");
+            return 1;
+        }
+        patcher = jpatcher_get_parentpatcher(patcher);
+    }
+
+    // walk down the patcher hierarchy checking if there is a downstream mapdevice object
+    object_method(x->patcher, gensym("iterate"), check_downstream, (void *)x,
+                  PI_DEEP, &result);
+    if (result) {
+        post("error: found mapdevice object in downstream patcher!");
         return 1;
+    }
 
-    ht = hashtab_new(0);
+    x->ht = hashtab_new(0);
     // objects stored in the obex will be freed when the obex's owner is freed
     // in this case, when the patcher object is freed. so we don't need to
     // manage the memory associated with the "mapperhash".
-    object_obex_store(x->patcher, gensym("mapperhash"), (t_object *)ht);
+    object_obex_store(x->patcher, gensym("mapperhash"), (t_object *)x->ht);
 
-    x->ht = ht;
     // attach to the hashtab, registering it if necessary
     // this way, we can receive notifications from the hashtab as things are added and removed
     object_attach_byptr_register(x, x->ht, CLASS_NOBOX);
 
-    // walk down patcher hierarchy looking for mapin and mapout objects
-    // question: we need to stop descent per branch... can we do this??
-    object_method(x->patcher, gensym("iterate"), object_iterator, (void *)x,
+    // add downstream mapin and mapout objects to hashtable
+    object_method(x->patcher, gensym("iterate"), add_downstream, (void *)x,
                   PI_DEEP, &result);
 
     // call a method on every object in the hash table

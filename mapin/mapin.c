@@ -43,7 +43,9 @@ typedef struct _mapin
     mapper_db_signal    sig_props;
     void                *outlet;
     t_symbol            *myobjname;
-    long                arg_len;
+    t_hashtab           *ht;
+    long                num_args;
+    t_atom              *args;
     t_atom              buffer[MAX_LIST];
 } t_mapin;
 
@@ -52,6 +54,8 @@ typedef struct _mapin
 static void *mapin_new(t_symbol *s, int argc, t_atom *argv);
 static void mapin_free(t_mapin *x);
 
+static void add_to_hashtab(t_mapin *x, t_hashtab *ht);
+static void remove_from_hashtab(t_mapin *x);
 static t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv);
 
 static int atom_strcmp(t_atom *a, const char *string);
@@ -69,6 +73,9 @@ int main(void)
     t_class *c;
     c = class_new("mapin", (method)mapin_new, (method)mapin_free,
                   (long)sizeof(t_mapin), 0L, A_GIMME, 0);
+
+    class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
+    class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
 
     CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_name);
     CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, sig_length);
@@ -91,7 +98,8 @@ static void mapin_usage()
 static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 {
     t_mapin *x = NULL;
-    t_object *jp = NULL;
+    t_object *patcher = NULL;
+    t_hashtab *ht;
 
     long i = 0;
 
@@ -121,33 +129,33 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
             i = 2;
         }
 
+        x->num_args = argc - i - 1;
+        if (x->num_args > MAX_LIST)
+            x->num_args = MAX_LIST;
+
+        // we need to cache any arguments to add later
+        long alloced;
+        char result;
+        atom_alloc_array(x->num_args, &alloced, &x->args, &result);
+        if (!result)
+            return 0;
+
+        int j = 0;
+        for (; i < argc; i++, j++) {
+            memcpy(&x->args[j], argv+i, sizeof(t_atom));
+        }
+
         // cache the registered name so we can remove self from hashtab later
         x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
 
-        jp = (t_object *)gensym("#P")->s_thing;
-        t_hashtab *ht;
-        while (jp) {
-            // look in the jpatcher's obex for an object called "mapperhash"
-			object_obex_lookup(jp, gensym("mapperhash"), (t_object **)&ht);
-            if (!ht) {
-                // try parent patcher
-                jp = jpatcher_get_parentpatcher(jp);
-            }
-            else {
-                // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
-                // hashtab knows not to free us when it is freed.
-                hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+        patcher = (t_object *)gensym("#P")->s_thing;
+        while (patcher) {
+			object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+            if (ht) {
+                add_to_hashtab(x, ht);
                 break;
             }
-        }
-
-        x->arg_len = argc - i - 1;
-        if (x->arg_len > MAX_LIST)
-            x->arg_len = MAX_LIST;
-
-        // we need to cache any arguments to add later
-        for (; i < argc; i++) {
-            memcpy(&x->buffer[i], argv+i, sizeof(t_atom));
+            patcher = jpatcher_get_parentpatcher(patcher);
         }
     }
     return (x);
@@ -157,19 +165,25 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 // -(free)--------------------------------------------------
 static void mapin_free(t_mapin *x)
 {
-    t_object *jp;
+    remove_from_hashtab(x);
+    free(x->args);
+}
 
-    // get the object's patcher
-	object_obex_lookup(x, gensym("#P"), &jp);
-	if (jp) {
-		t_hashtab *ht;
+void add_to_hashtab(t_mapin *x, t_hashtab *ht)
+{
+    // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
+    // hashtab knows not to free us when it is freed.
+    hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+}
 
-		// find the mapperhash
-		object_obex_lookup(jp, gensym("mapperhash"), (t_object **)&ht);
-		if (ht) {
-			hashtab_chuckkey(ht, x->myobjname); // remove self from hashtab
-		}
-	}
+void remove_from_hashtab(t_mapin *x)
+{
+    if (x->ht) {
+        hashtab_chuckkey(x->ht, x->myobjname);
+        x->ht = NULL;
+    }
+    x->sig_ptr = 0;
+    x->sig_props = 0;
 }
 
 // *********************************************************
@@ -233,7 +247,6 @@ static int check_sig_ptr(t_mapin *x)
         return 1;
     }
     else if (!x->sig_props) {
-        parse_extra_properties(x, x->arg_len, x->buffer);
         x->sig_props = msig_properties(x->sig_ptr);
     }
     return 0;
