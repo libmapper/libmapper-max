@@ -397,15 +397,19 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 // another max object associated with this signal exists
                 mapper_db_signal props = msig_properties(sig);
                 t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
-                // increment the refcount
+                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
+                ptrs->objs[ptrs->num_objs] = obj;
                 ptrs->num_objs++;
             }
             else {
-                sig = mdev_add_output(x->device, name, length, type, 0, 0, 0);
                 t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
+                ptrs->home = x;
+                ptrs->objs = (t_object **)malloc(sizeof(t_object *));
                 ptrs->num_objs = 1;
-                mapper_db_signal props = msig_properties(sig);
-                props->user_data = ptrs;
+                ptrs->objs[0] = obj;
+                sig = mdev_add_output(x->device, name, length, type, 0, 0, 0);
+                msig_set_callback(sig, type == 'i' ? mapdevice_int_handler :
+                                  mapdevice_float_handler, ptrs);
             }
             //output numOutputs
             atom_setlong(x->buffer, mdev_num_outputs(x->device));
@@ -414,7 +418,7 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
         else if (object_classname(obj) == gensym("mapin")) {
             sig = mdev_get_input_by_name(x->device, name, 0);
             if (sig) {
-                // get user_data
+                // another max object associated with this signal exists
                 mapper_db_signal props = msig_properties(sig);
                 t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
                 ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
