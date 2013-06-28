@@ -180,7 +180,8 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 static void mapin_free(t_mapin *x)
 {
     remove_from_hashtab(x);
-    free(x->args);
+    if (x->args)
+        free(x->args);
 }
 
 void add_to_hashtab(t_mapin *x, t_hashtab *ht)

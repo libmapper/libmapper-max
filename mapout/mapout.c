@@ -70,6 +70,7 @@ static t_max_err set_tt_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv
 static void mapout_int(t_mapout *x, long i);
 static void mapout_float(t_mapout *x, double f);
 static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv);
+static void mapout_query(t_mapout *x);
 
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
@@ -90,6 +91,7 @@ int main(void)
     class_addmethod(c, (method)mapout_int, "int", A_LONG, 0);
     class_addmethod(c, (method)mapout_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mapout_list, "list", A_GIMME, 0);
+    class_addmethod(c, (method)mapout_query, "query", 0);
     class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
     class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
 
@@ -186,7 +188,8 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
 static void mapout_free(t_mapout *x)
 {
     remove_from_hashtab(x);
-    free(x->args);
+    if (x->args)
+        free(x->args);
 }
 
 void add_to_hashtab(t_mapout *x, t_hashtab *ht)
@@ -411,6 +414,16 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
     }
+}
+
+// *********************************************************
+// -(query remote endpoints)--------------------------------
+static void mapout_query(t_mapout *x)
+{
+    if (check_ptrs(x))
+        return;
+
+    msig_query_remotes(x->sig_ptr, MAPPER_NOW);
 }
 
 // *********************************************************
