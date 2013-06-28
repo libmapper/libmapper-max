@@ -114,9 +114,14 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 
     if ((x = (t_mapin *)object_alloc(mapin_class))) {
         x->outlet = listout((t_object *)x);
+
         x->sig_name = gensym(atom_getsym(argv)->s_name);
+
         char *temp = atom_getsym(argv+1)->s_name;
         x->sig_type = temp[0];
+        if (x->sig_type != 'i' && x->sig_type != 'f')
+            return 0;
+
         x->sig_ptr = 0;
         x->sig_props = 0;
 
@@ -129,20 +134,15 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
             i = 2;
         }
 
-        x->num_args = argc - i - 1;
-        if (x->num_args > MAX_LIST)
-            x->num_args = MAX_LIST;
-
         // we need to cache any arguments to add later
-        long alloced;
-        char result;
-        atom_alloc_array(x->num_args, &alloced, &x->args, &result);
-        if (!result)
-            return 0;
-
-        int j = 0;
-        for (; i < argc; i++, j++) {
-            memcpy(&x->args[j], argv+i, sizeof(t_atom));
+        x->num_args = argc - i;
+        if (x->num_args) {
+            long alloced;
+            char result;
+            atom_alloc_array(x->num_args, &alloced, &x->args, &result);
+            if (!result || !alloced)
+                return 0;
+            sysmem_copyptr(argv+i, x->args, x->num_args * sizeof(t_atom));
         }
 
         // cache the registered name so we can remove self from hashtab later
@@ -188,40 +188,42 @@ void remove_from_hashtab(t_mapin *x)
 
 // *********************************************************
 // -(parse props from object arguments)---------------------
-void parse_extra_properties(t_mapin *x, int argc, t_atom *argv)
+void parse_extra_properties(t_mapin *x)
 {
     int i;
     // add other declared properties
-    for (i = 0; i < argc; i++) {
-        if (i > argc - 2) // need 2 arguments for key and value
+    for (i = 0; i < x->num_args; i++) {
+        if (i > x->num_args - 2) // need 2 arguments for key and value
             break;
-        if ((atom_strcmp(argv+i, "@name") == 0) ||
-            (atom_strcmp(argv+i, "@type") == 0) ||
-            (atom_strcmp(argv+i, "@length") == 0)){
+        else if ((x->args+i)->a_type != A_SYM)
+            break;
+        else if ((atom_strcmp(x->args+i, "@name") == 0) ||
+            (atom_strcmp(x->args+i, "@type") == 0) ||
+            (atom_strcmp(x->args+i, "@length") == 0)){
             i++;
             continue;
         }
-        else if (atom_get_string(argv+i)[0] == '@') {
-            switch ((argv+i+1)->a_type) {
+        else if (atom_get_string(x->args+i)[0] == '@') {
+            switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
-                    const char *value = atom_get_string(argv+i+1);
-                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                    const char *value = atom_get_string(x->args+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
                                       's', (lo_arg *)value);
                     i++;
                     break;
                 }
                 case A_FLOAT:
                 {
-                    float value = atom_getfloat(argv+i+1);
-                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                    float value = atom_getfloat(x->args+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
                                       'f', (lo_arg *)&value);
                     i++;
                     break;
                 }
                 case A_LONG:
                 {
-                    int value = atom_getlong(argv+i+1);
-                    msig_set_property(x->sig_ptr, atom_get_string(argv+i)+1,
+                    int value = atom_getlong(x->args+i+1);
+                    msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
                                       'i', (lo_arg *)&value);
                     i++;
                     break;
@@ -238,6 +240,8 @@ void parse_extra_properties(t_mapin *x, int argc, t_atom *argv)
 t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 {
     x->sig_ptr = (mapper_signal)argv->a_w.w_obj;
+    if (x->sig_ptr)
+        parse_extra_properties(x);
     return 0;
 }
 
