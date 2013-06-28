@@ -164,7 +164,7 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 
         patcher = (t_object *)gensym("#P")->s_thing;
         while (patcher) {
-			object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+            object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
             if (ht) {
                 add_to_hashtab(x, ht);
                 break;
@@ -189,6 +189,7 @@ void add_to_hashtab(t_mapin *x, t_hashtab *ht)
     // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
     // hashtab knows not to free us when it is freed.
     hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+    x->ht = ht;
 }
 
 void remove_from_hashtab(t_mapin *x)
@@ -297,11 +298,14 @@ static void mapin_int(t_mapin *x, long i)
 
     if (x->sig_props->length != 1)
         return;
-    if (x->sig_props->type == 'i')
-        msig_update(x->sig_ptr, &i, 1, MAPPER_NOW);
+    if (x->sig_props->type == 'i') {
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &i, 1, *x->tt_ptr);
+    }
     else if (x->sig_props->type == 'f') {
         float f = (float)i;
-        msig_update(x->sig_ptr, &f, 1, MAPPER_NOW);
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &f, 1, *x->tt_ptr);
     }
 }
 
@@ -316,11 +320,13 @@ static void mapin_float(t_mapin *x, double d)
         return;
     if (x->sig_props->type == 'f') {
         float f = (float)d;
-        msig_update(x->sig_ptr, &f, 1, MAPPER_NOW);
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &f, 1, *x->tt_ptr);
     }
     else if (x->sig_props->type == 'i') {
         int i = (int)d;
-        msig_update(x->sig_ptr, &i, 1, MAPPER_NOW);
+        object_method(x->dev_obj, gensym("maybe_start_queue"));
+        msig_update(x->sig_ptr, &i, 1, *x->tt_ptr);
     }
 }
 
@@ -330,15 +336,17 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
 {
     if (check_ptrs(x))
         return;
-    
+
     int i = 0, j = 0, id = -1;
     if (argc) {
         if (argc == 2 && (argv + 1)->a_type == A_SYM) {
             if ((argv)->a_type != A_LONG)
                 return;
             id = (int)atom_getlong(argv);
-            if (strcmp(atom_getsym(argv+1)->s_name, "release") == 0)
+            if (strcmp(atom_getsym(argv+1)->s_name, "release") == 0) {
+                object_method(x->dev_obj, gensym("maybe_start_queue"));
                 msig_release_instance(x->sig_ptr, id, *x->tt_ptr);
+            }
         }
         else if (argc == x->sig_props->length + 1) {
             // Special case: signal value may be preceded by instance number
@@ -368,6 +376,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                 }
             }
             //update signal
+            object_method(x->dev_obj, gensym("maybe_start_queue"));
             if (id == -1) {
                 msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
             }
@@ -388,6 +397,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                 }
             }
             //update signal
+            object_method(x->dev_obj, gensym("maybe_start_queue"));
             if (id == -1) {
                 msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
             }

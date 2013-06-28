@@ -283,7 +283,7 @@ void mapdevice_detach_obj(t_hashtab_entry *e, void *arg)
 	if (x) {
 		// detach from the object, it's going away...
         atom_setobj(x->buffer, 0);
-        object_attr_setvalueof(e->value, gensym("dev_ptr"), 1, x->buffer);
+        object_attr_setvalueof(e->value, gensym("dev_obj"), 1, x->buffer);
         object_attr_setvalueof(e->value, gensym("sig_ptr"), 1, x->buffer);
 		object_detach_byptr(x, e->value);
 	}
@@ -452,54 +452,46 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
 
 static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
 {
-    mapper_signal sig;
+    mapper_signal sig = 0;
     mapper_db_signal props;
     if (!obj)
         return;
     t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
     const char *name = temp->s_name;
 
-    if (object_classname(obj) == gensym("mapout")) {
+    if (object_classname(obj) == gensym("mapout"))
         sig = mdev_get_output_by_name(x->device, name, 0);
-        if (sig) {
-            props = msig_properties(sig);
-            t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
-            if (ptrs->num_objs == 1) {
-                free(ptrs);
-                mdev_remove_output(x->device, sig);
-            }
-            else
-                ptrs->num_objs--;
-        }
-    }
-    else if (object_classname(obj) == gensym("mapin")) {
+    else if (object_classname(obj) == gensym("mapin"))
         sig = mdev_get_input_by_name(x->device, name, 0);
-        if (sig) {
-            props = msig_properties(sig);
-            t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
-            if (ptrs->num_objs == 1) {
-                free(ptrs->objs);
-                free(ptrs);
+
+    if (sig) {
+        props = msig_properties(sig);
+        t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+        if (ptrs->num_objs == 1) {
+            free(ptrs->objs);
+            free(ptrs);
+            if (props->is_output)
+                mdev_remove_output(x->device, sig);
+            else
                 mdev_remove_input(x->device, sig);
+        }
+        else {
+            // need to realloc obj ptr memory
+            // find index of this obj in ptr array
+            int i;
+            for (i=0; i<ptrs->num_objs; i++) {
+                if (ptrs->objs[i] == obj)
+                    break;
             }
-            else {
-                // need to realloc obj ptr memory
-                // find index of this obj in ptr array
-                int i;
-                for (i=0; i<ptrs->num_objs; i++) {
-                    if (ptrs->objs[i] == obj)
-                        break;
-                }
-                if (i == ptrs->num_objs) {
-                    object_post((t_object *)x, "error: obj ptr not found in signal user_data!");
-                    return;
-                }
-                i++;
-                for (; i<ptrs->num_objs; i++)
-                    ptrs->objs[i-1] = ptrs->objs[i];
-                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs-1) * sizeof(t_object *));
-                ptrs->num_objs--;
+            if (i == ptrs->num_objs) {
+                object_post((t_object *)x, "error: obj ptr not found in signal user_data!");
+                return;
             }
+            i++;
+            for (; i<ptrs->num_objs; i++)
+                ptrs->objs[i-1] = ptrs->objs[i];
+            ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs-1) * sizeof(t_object *));
+            ptrs->num_objs--;
         }
     }
 }

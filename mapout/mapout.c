@@ -11,12 +11,6 @@
 // General License version 2.1 or later.  Please see COPYING for details.
 //
 
-/* TODO:
- * on startup:
-    scan patcher and subpatchers for mapin and mapout objects
-    register them as libmapper signals
- */
-
 // *********************************************************
 // -(Includes)----------------------------------------------
 
@@ -146,7 +140,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
 
         x->sig_ptr = 0;
         x->sig_props = 0;
-        
+
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
             i = 3;
@@ -167,7 +161,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
             sysmem_copyptr(argv+i, x->args, x->num_args * sizeof(t_atom));
         }
 
-        // cache the registered name so we can remove self from hashtab
+        // cache the registered name so we can remove self from hashtab later
         x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
 
         patcher = (t_object *)gensym("#P")->s_thing;
@@ -422,6 +416,9 @@ static void mapout_query(t_mapout *x)
 {
     if (check_ptrs(x))
         return;
+
+    /* TODO: we should cache query timetag and object pointer so that
+     *  we can deliver responses only to the object being queried. */
 
     msig_query_remotes(x->sig_ptr, MAPPER_NOW);
 }
