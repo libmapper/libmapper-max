@@ -43,6 +43,8 @@ typedef struct _mapout
     mapper_signal       sig_ptr;
     mapper_timetag_t    *tt_ptr;
     mapper_db_signal    sig_props;
+    long                is_instance;
+    int                 instance;
     void                *outlet;
     t_symbol            *myobjname;
     t_hashtab           *ht;
@@ -65,6 +67,7 @@ static void mapout_int(t_mapout *x, long i);
 static void mapout_float(t_mapout *x, double f);
 static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv);
 static void mapout_query(t_mapout *x);
+static void mapout_release(t_mapout *x);
 
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
@@ -86,6 +89,7 @@ int main(void)
     class_addmethod(c, (method)mapout_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mapout_list, "list", A_GIMME, 0);
     class_addmethod(c, (method)mapout_query, "query", 0);
+    class_addmethod(c, (method)mapout_release, "release", 0);
     class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
     class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
 
@@ -140,6 +144,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
 
         x->sig_ptr = 0;
         x->sig_props = 0;
+        x->is_instance = 0;
 
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
@@ -222,6 +227,14 @@ void parse_extra_properties(t_mapout *x)
             i++;
             continue;
         }
+        else if (atom_strcmp(x->args+i, "@instance") == 0 &&
+                 (x->args+i+1)->a_type == A_LONG) {
+            x->is_instance = 1;
+            x->instance = atom_getlong(x->args+i+1);
+            i++;
+            // TODO: we need to check that this instance id has not already been used!
+            msig_reserve_instance(x->sig_ptr, &x->instance, (void *)x);
+        }
         else if (atom_get_string(x->args+i)[0] == '@') {
             switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
@@ -280,6 +293,8 @@ t_max_err set_tt_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
     return 0;
 }
 
+// *********************************************************
+// -(check if device and signal pointers have been set)-----
 static int check_ptrs(t_mapout *x)
 {
     if (!x || !x->dev_obj || !x->sig_ptr) {
@@ -293,28 +308,36 @@ static int check_ptrs(t_mapout *x)
 
 // *********************************************************
 // -(int input)---------------------------------------------
-static void mapout_int(t_mapout *x, long i)
+static void mapout_int(t_mapout *x, long l)
 {
+    void *value = 0;
+
     if (check_ptrs(x))
         return;
 
     if (x->sig_props->length != 1)
         return;
     if (x->sig_props->type == 'i') {
-        object_method(x->dev_obj, gensym("maybe_start_queue"));
-        msig_update(x->sig_ptr, &i, 1, *x->tt_ptr);
+        int i = (int)l;
+        value = &i;
     }
     else if (x->sig_props->type == 'f') {
-        float f = (float)i;
-        object_method(x->dev_obj, gensym("maybe_start_queue"));
-        msig_update(x->sig_ptr, &f, 1, *x->tt_ptr);
+        float f = (float)l;
+        value = &f;
     }
+    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    if (x->is_instance)
+        msig_update_instance(x->sig_ptr, x->instance, value, 1, *x->tt_ptr);
+    else
+        msig_update(x->sig_ptr, value, 1, *x->tt_ptr);
 }
 
 // *********************************************************
 // -(float input)-------------------------------------------
 static void mapout_float(t_mapout *x, double d)
 {
+    void *value = 0;
+    
     if (check_ptrs(x))
         return;
 
@@ -322,91 +345,71 @@ static void mapout_float(t_mapout *x, double d)
         return;
     if (x->sig_props->type == 'f') {
         float f = (float)d;
-        object_method(x->dev_obj, gensym("maybe_start_queue"));
-        msig_update(x->sig_ptr, &f, 1, *x->tt_ptr);
+        value = &f;
     }
     else if (x->sig_props->type == 'i') {
         int i = (int)d;
-        object_method(x->dev_obj, gensym("maybe_start_queue"));
-        msig_update(x->sig_ptr, &i, 1, *x->tt_ptr);
+        value = &i;
     }
+    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    if (x->is_instance)
+        msig_update_instance(x->sig_ptr, x->instance, value, 1, *x->tt_ptr);
+    else
+        msig_update(x->sig_ptr, value, 1, *x->tt_ptr);
 }
 
 // *********************************************************
 // -(list input)--------------------------------------------
 static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
 {
-    if (check_ptrs(x))
+    int i, count, len;
+    void *value = 0;
+
+    if (check_ptrs(x) || !argc)
         return;
 
-    int i = 0, j = 0, id = -1;
-    if (argc) {
-        if (argc == 2 && (argv + 1)->a_type == A_SYM) {
-            if ((argv)->a_type != A_LONG)
-                return;
-            id = (int)atom_getlong(argv);
-            if (strcmp(atom_getsym(argv+1)->s_name, "release") == 0) {
-                object_method(x->dev_obj, gensym("maybe_start_queue"));
-                msig_release_instance(x->sig_ptr, id, *x->tt_ptr);
-            }
-        }
-        else if (argc == x->sig_props->length + 1) {
-            // Special case: signal value may be preceded by instance number
-            if ((argv)->a_type == A_LONG) {
-                id = (int)atom_getlong(argv);
-                j = 1;
-            }
+    if ((count = argc / x->sig_props->length)) {
+        object_post((t_object *)x, "Illegal list length (expected factor of %i)",
+                    x->sig_props->length);
+        return;
+    }
+    len = count * x->sig_props->length;
+
+    if (x->sig_props->type == 'i') {
+        int payload[len];
+        value = &payload;
+        for (i = 0; i < len; i++) {
+            if ((argv+i)->a_type == A_FLOAT)
+                payload[i] = (int)atom_getfloat(argv+i);
+            else if ((argv+i)->a_type == A_LONG)
+                payload[i] = (int)atom_getlong(argv+i);
             else {
-                object_post((t_object *)x, "Instance ID is not int!");
+                object_post((t_object *)x, "Illegal data type in list!");
                 return;
             }
         }
-        // TODO: handle multi-count updates
-        else if (argc != x->sig_props->length)
-            return;
-        
-        if (x->sig_props->type == 'i') {
-            int payload[x->sig_props->length];
-            for (i = 0; i < argc; i++) {
-                if ((argv + i + j)->a_type == A_FLOAT)
-                    payload[i] = (int)atom_getfloat(argv + i + j);
-                else if ((argv + i + j)->a_type == A_LONG)
-                    payload[i] = (int)atom_getlong(argv + i + j);
-                else {
-                    object_post((t_object *)x, "Illegal data type in list!");
-                    return;
-                }
-            }
-            //update signal
-            object_method(x->dev_obj, gensym("maybe_start_queue"));
-            if (id == -1) {
-                msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
-            }
+    }
+    else if (x->sig_props->type == 'f') {
+        float payload[len];
+        value = &payload;
+        for (i = 0; i < len; i++) {
+            if ((argv+i)->a_type == A_FLOAT)
+                payload[i] = atom_getfloat(argv+i);
+            else if ((argv+i)->a_type == A_LONG)
+                payload[i] = (float)atom_getlong(argv+i);
             else {
-                msig_update_instance(x->sig_ptr, id, payload, 1, *x->tt_ptr);
+                object_post((t_object *)x, "Illegal data type in list!");
+                return;
             }
         }
-        else if (x->sig_props->type == 'f') {
-            float payload[x->sig_props->length];
-            for (i = 0; i < argc; i++) {
-                if ((argv + i + j)->a_type == A_FLOAT)
-                    payload[i] = atom_getfloat(argv + i + j);
-                else if ((argv + i + j)->a_type == A_LONG)
-                    payload[i] = (float)atom_getlong(argv + i + j);
-                else {
-                    object_post((t_object *)x, "Illegal data type in list!");
-                    return;
-                }
-            }
-            //update signal
-            object_method(x->dev_obj, gensym("maybe_start_queue"));
-            if (id == -1) {
-                msig_update(x->sig_ptr, payload, 1, *x->tt_ptr);
-            }
-            else {
-                msig_update_instance(x->sig_ptr, id, payload, 1, *x->tt_ptr);
-            }
-        }
+    }
+    //update signal
+    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    if (x->is_instance) {
+        msig_update_instance(x->sig_ptr, x->instance, value, count, *x->tt_ptr);
+    }
+    else {
+        msig_update(x->sig_ptr, value, count, *x->tt_ptr);
     }
 }
 
@@ -421,6 +424,17 @@ static void mapout_query(t_mapout *x)
      *  we can deliver responses only to the object being queried. */
 
     msig_query_remotes(x->sig_ptr, MAPPER_NOW);
+}
+
+// *********************************************************
+// -(release instance)--------------------------------------
+static void mapout_release(t_mapout *x)
+{
+    if (check_ptrs(x) || !x->is_instance)
+        return;
+
+    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    msig_release_instance(x->sig_ptr, (int)x, *x->tt_ptr);
 }
 
 // *********************************************************

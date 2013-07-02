@@ -90,10 +90,7 @@ static void mapdevice_maybe_start_queue(t_mapdevice *x);
 
 static void mapdevice_poll(t_mapdevice *x);
 
-static void mapdevice_float_handler(mapper_signal sig, mapper_db_signal props,
-                                    int instance_id, void *value, int count,
-                                    mapper_timetag_t *tt);
-static void mapdevice_int_handler(mapper_signal sig, mapper_db_signal props,
+static void mapdevice_sig_handler(mapper_signal sig, mapper_db_signal props,
                                   int instance_id, void *value, int count,
                                   mapper_timetag_t *tt);
 static void mapdevice_instance_event_handler(mapper_signal sig,
@@ -408,8 +405,9 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 ptrs->num_objs = 1;
                 ptrs->objs[0] = obj;
                 sig = mdev_add_output(x->device, name, length, type, 0, 0, 0);
-                msig_set_callback(sig, type == 'i' ? mapdevice_int_handler :
-                                  mapdevice_float_handler, ptrs);
+                msig_set_callback(sig, mapdevice_sig_handler, ptrs);
+                msig_set_instance_event_callback(sig, mapdevice_instance_event_handler,
+                                                 IN_ALL, ptrs);
             }
             //output numOutputs
             atom_setlong(x->buffer, mdev_num_outputs(x->device));
@@ -431,8 +429,10 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                 ptrs->objs = (t_object **)malloc(sizeof(t_object *));
                 ptrs->num_objs = 1;
                 ptrs->objs[0] = obj;
-                sig = mdev_add_input(x->device, name, length, type, 0, 0, 0, type == 'i' ?
-                                     mapdevice_int_handler : mapdevice_float_handler, ptrs);
+                sig = mdev_add_input(x->device, name, length, type, 0, 0, 0,
+                                     mapdevice_sig_handler, ptrs);
+                msig_set_instance_event_callback(sig, mapdevice_instance_event_handler,
+                                                 IN_ALL, ptrs);
             }
             //output numInputs
             atom_setlong(x->buffer, mdev_num_inputs(x->device));
@@ -534,72 +534,50 @@ static void mapdevice_print_properties(t_mapdevice *x)
 
 // *********************************************************
 // -(int handler)-------------------------------------------
-static void mapdevice_int_handler(mapper_signal msig, mapper_db_signal props,
+static void mapdevice_sig_handler(mapper_signal msig, mapper_db_signal props,
                                   int instance_id, void *value, int count,
                                   mapper_timetag_t *tt)
 {
     t_mapin_ptrs *ptrs = props->user_data;
     t_mapdevice *x = ptrs->home;
+    t_object *obj = NULL;
+    int i;
 
-    int i, poly = 0;
     if (props->num_instances > 1) {
-        atom_setlong(x->buffer, instance_id);
-        poly = 1;
+        obj = (t_object *)msig_get_instance_data(msig, instance_id);
     }
+
     if (value) {
         int length = props->length;
-        int *v = value;
 
-        if (length > (MAX_LIST-1)) {
-            post("Maximum list length is %i!", MAX_LIST-1);
-            length = MAX_LIST-1;
+        if (length > (MAX_LIST)) {
+            post("Maximum list length is %i!", MAX_LIST);
+            length = MAX_LIST;
         }
 
-        for (i = 0; i < length; i++)
-            atom_setlong(x->buffer + i + poly, v[i]);
-        for (i=0; i<ptrs->num_objs; i++)
-            outlet_list(ptrs->objs[i]->o_outlet, NULL, length + poly, x->buffer);
-    }
-    else if (poly) {
-        atom_set_string(x->buffer+1, "release");
-        atom_set_string(x->buffer+2, "local");
-        for (i=0; i<ptrs->num_objs; i++)
-            outlet_list(ptrs->objs[i]->o_outlet, NULL, 3, x->buffer);
-    }
-}
-
-// *********************************************************
-// -(float handler)-----------------------------------------
-static void mapdevice_float_handler(mapper_signal msig, mapper_db_signal props,
-                                 int instance_id, void *value, int count,
-                                 mapper_timetag_t *time)
-{
-    t_mapin_ptrs *ptrs = props->user_data;
-    t_mapdevice *x = ptrs->home;
-
-    int i, poly = 0;
-    if (props->num_instances > 1) {
-        atom_setlong(x->buffer, instance_id);
-        poly = 1;
-    }
-    if (value) {
-        int length = props->length;
-        float *v = value;
-
-        if (length > (MAX_LIST-1)) {
-            length = MAX_LIST-1;
+        if (props->type == 'i') {
+            int *v = value;
+            for (i = 0; i < length; i++)
+                atom_setlong(x->buffer + i, v[i]);
+        }
+        else if (props->type == 'f') {
+            float *v = value;
+            for (i = 0; i < length; i++)
+                atom_setfloat(x->buffer + i, v[i]);
         }
 
-        for (i = 0; i < length; i++)
-            atom_setfloat(x->buffer + i + poly, v[i]);
-        for (i=0; i<ptrs->num_objs; i++)
-            outlet_list(ptrs->objs[i]->o_outlet, NULL, length + poly, x->buffer);
+        if (obj) {
+            outlet_list(obj->o_outlet, NULL, length, x->buffer);
+        }
+        else {
+            for (i=0; i<ptrs->num_objs; i++)
+                outlet_list(ptrs->objs[i]->o_outlet, NULL, length, x->buffer);
+        }
     }
-    else if (poly) {
-        atom_set_string(x->buffer+1, "release");
-        atom_set_string(x->buffer+2, "local");
-        for (i=0; i<ptrs->num_objs; i++)
-            outlet_list(ptrs->objs[i]->o_outlet, NULL, 3, x->buffer);
+    else if (obj) {
+        atom_set_string(x->buffer, "release");
+        atom_set_string(x->buffer+1, "local");
+        outlet_list(obj->o_outlet, NULL, 2, x->buffer);
     }
 }
 
@@ -614,20 +592,22 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
     t_mapin_ptrs *ptrs = props->user_data;
     t_mapdevice *x = ptrs->home;
 
+    t_object *obj = (t_object *)msig_get_instance_data(sig, instance_id);
+    if (!obj)
+        return;
+
     int i, id, mode;
     atom_setlong(x->buffer, instance_id);
     switch (event) {
         case IN_UPSTREAM_RELEASE:
-            atom_set_string(x->buffer+1, "release");
-            atom_set_string(x->buffer+2, "upstream");
-            for (i=0; i<ptrs->num_objs; i++)
-                outlet_list(ptrs->objs[i]->o_outlet, NULL, 3, x->buffer);
+            atom_set_string(x->buffer, "release");
+            atom_set_string(x->buffer+1, "upstream");
+            outlet_list(obj->o_outlet, NULL, 2, x->buffer);
             break;
         case IN_DOWNSTREAM_RELEASE:
-            atom_set_string(x->buffer+1, "release");
-            atom_set_string(x->buffer+2, "downstream");
-            for (i=0; i<ptrs->num_objs; i++)
-                outlet_list(ptrs->objs[i]->o_outlet, NULL, 3, x->buffer);
+            atom_set_string(x->buffer, "release");
+            atom_set_string(x->buffer+1, "downstream");
+            outlet_list(obj->o_outlet, NULL, 2, x->buffer);
             break;
         case IN_OVERFLOW:
             mode = msig_get_instance_allocation_mode(sig);
@@ -644,6 +624,7 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
                     break;
                 case 0:
                     atom_set_string(x->buffer+1, "overflow");
+                    // send overflow message to all instances
                     for (i=0; i<ptrs->num_objs; i++)
                         outlet_list(ptrs->objs[i]->o_outlet, NULL, 2, x->buffer);
                     break;
