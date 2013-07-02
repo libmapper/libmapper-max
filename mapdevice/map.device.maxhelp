@@ -7,7 +7,7 @@
 			"revision" : 8
 		}
 ,
-		"rect" : [ 100.0, 100.0, 616.0, 443.0 ],
+		"rect" : [ 571.0, 211.0, 616.0, 443.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -66,6 +66,20 @@
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
 									"frgb" : 0.0,
+									"id" : "obj-5",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 75.0, 180.0, 165.0, 20.0 ],
+									"text" : "[map.device @interface en1]"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
+									"frgb" : 0.0,
 									"id" : "obj-8",
 									"linecount" : 2,
 									"maxclass" : "comment",
@@ -94,19 +108,6 @@
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
-									"id" : "obj-4",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"patching_rect" : [ 75.0, 180.0, 157.0, 20.0 ],
-									"text" : "map.device @interface en1"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
 									"frgb" : 0.0,
 									"id" : "obj-3",
 									"linecount" : 6,
@@ -114,7 +115,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 45.0, 75.0, 405.0, 87.0 ],
-									"presentation_rect" : [ 39.0, 71.0, 0.0, 0.0 ],
 									"text" : "By default the map.device object will try to use your computer's ethernet port, then wifi if ethernet is not available, and finally falling back to the local-loopback interfaces if wifi is not available either.\n\nThe default behaviour can be over-ridden by specifying the network interface to use as an argument:"
 								}
 
@@ -321,8 +321,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 30.0, 90.0, 173.0, 20.0 ],
-					"text" : "map.device @alias my_device"
+					"patching_rect" : [ 30.0, 90.0, 133.0, 20.0 ],
+					"text" : "map.device my_device"
 				}
 
 			}
@@ -468,7 +468,7 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "logolink.maxpat",
-				"bootpath" : "/Users/jocal/Documents/Mappers/mapper-max-pd",
+				"bootpath" : "/Users/jocal/Documents/Mappers/mapper-max-pd/mapdevice",
 				"patcherrelativepath" : "",
 				"type" : "JSON",
 				"implicit" : 1
