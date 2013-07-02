@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		70D8C9DA176BCE6F00076445 /* mapdevice.c in Sources */ = {isa = PBXBuildFile; fileRef = 70D8C9D9176BCE6F00076445 /* mapdevice.c */; };
+		706D6BD3176CEDD800628CE3 /* map.out.c in Sources */ = {isa = PBXBuildFile; fileRef = 706D6BD2176CEDD800628CE3 /* map.out.c */; };
 		8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8D5B49A704867FD3000E48DA /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		70D8C9D9176BCE6F00076445 /* mapdevice.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mapdevice.c; sourceTree = "<group>"; };
-		8D576316048677EA00EA77CD /* mapdevice.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mapdevice.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
+		706D6BD2176CEDD800628CE3 /* map.out.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = map.out.c; sourceTree = "<group>"; };
+		8D576316048677EA00EA77CD /* map.out.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = map.out.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D576317048677EA00EA77CD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -59,7 +59,7 @@
 		08FB77AFFE84173DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				70D8C9D9176BCE6F00076445 /* mapdevice.c */,
+				706D6BD2176CEDD800628CE3 /* map.out.c */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -67,7 +67,7 @@
 		19C28FB6FE9D52B211CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D576316048677EA00EA77CD /* mapdevice.mxo */,
+				8D576316048677EA00EA77CD /* map.out.mxo */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,9 +85,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		8D57630D048677EA00EA77CD /* mapdevice */ = {
+		8D57630D048677EA00EA77CD /* map.out */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "mapdevice" */;
+			buildConfigurationList = 1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "map.out" */;
 			buildPhases = (
 				70DBCB71122319DD003B0196 /* Headers */,
 				8D57630F048677EA00EA77CD /* Resources */,
@@ -98,10 +98,10 @@
 			);
 			dependencies = (
 			);
-			name = mapdevice;
+			name = map.out;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = maxadmin;
-			productReference = 8D576316048677EA00EA77CD /* mapdevice.mxo */;
+			productReference = 8D576316048677EA00EA77CD /* map.out.mxo */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -110,9 +110,9 @@
 		089C1669FE841209C02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0460;
 			};
-			buildConfigurationList = 1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "mapdevice" */;
+			buildConfigurationList = 1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "map.out" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -126,7 +126,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D57630D048677EA00EA77CD /* mapdevice */,
+				8D57630D048677EA00EA77CD /* map.out */,
 			);
 		};
 /* End PBXProject section */
@@ -147,7 +147,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				70D8C9DA176BCE6F00076445 /* mapdevice.c in Sources */,
+				706D6BD3176CEDD800628CE3 /* map.out.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -170,6 +170,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -186,7 +187,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GENERATE_PKGINFO_FILE = YES;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../libmapper\"",
+					"\"$(SRCROOT)/../../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
 					"\"/Library/Application Support/c74support/max-includes\"",
@@ -202,7 +203,7 @@
 					"-lz",
 					"/usr/local/lib/libmapper-0.dylib",
 				);
-				PRODUCT_NAME = mapdevice;
+				PRODUCT_NAME = map.out;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
@@ -232,7 +233,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "mapdevice" */ = {
+		1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "map.out" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB911B08733D790010E9CD /* maxmsp */,
@@ -240,7 +241,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = maxmsp;
 		};
-		1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "mapdevice" */ = {
+		1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "map.out" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB911F08733D790010E9CD /* maxmsp */,

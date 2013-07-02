@@ -81,7 +81,7 @@ static void *mapin_class;
 int main(void)
 {
     t_class *c;
-    c = class_new("mapin", (method)mapin_new, (method)mapin_free,
+    c = class_new("map.in", (method)mapin_new, (method)mapin_free,
                   (long)sizeof(t_mapin), 0L, A_GIMME, 0);
 
     class_addmethod(c, (method)mapin_int, "int", A_LONG, 0);

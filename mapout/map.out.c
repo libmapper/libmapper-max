@@ -82,7 +82,7 @@ static void *mapout_class;
 int main(void)
 {
     t_class *c;
-    c = class_new("mapout", (method)mapout_new, (method)mapout_free,
+    c = class_new("map.out", (method)mapout_new, (method)mapout_free,
                   (long)sizeof(t_mapout), 0L, A_GIMME, 0);
 
     class_addmethod(c, (method)mapout_int, "int", A_LONG, 0);

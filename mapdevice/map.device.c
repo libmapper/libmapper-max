@@ -11,19 +11,6 @@
 // General License version 2.1 or later.  Please see COPYING for details.
 //
 
-/* TODO:
- *  DONE: mapin object
- *  DONE: handle other signal props
- *  DONE: handle device launched after signals
- *  DONE: handle signal removal
- *  DONE: handle device removal
- *  DONE: handle device relaunch
- *  DONE: test multiple copies of same signal
- *  attach device to top patcher
- *  test launching conflicting devices
- *  test lanching conflicting signal props
- */
-
 // *********************************************************
 // -(Includes)----------------------------------------------
 
@@ -63,12 +50,12 @@ typedef struct _mapdevice
     t_object            *patcher;
 } t_mapdevice;
 
-typedef struct _mapin_ptrs
+typedef struct _map_ptrs
 {
     t_mapdevice *home;
     int         num_objs;
     t_object    **objs;
-} t_mapin_ptrs;
+} t_map_ptrs;
 
 // *********************************************************
 // -(function prototypes)-----------------------------------
@@ -115,7 +102,7 @@ static void *mapdevice_class;
 int main(void)
 {
     t_class *c;
-    c = class_new("mapdevice", (method)mapdevice_new, (method)mapdevice_free,
+    c = class_new("map.device", (method)mapdevice_new, (method)mapdevice_free,
                   (long)sizeof(t_mapdevice), 0L, A_GIMME, 0);
 
     class_addmethod(c, (method)mapdevice_notify, "notify", A_CANT, 0);
@@ -138,6 +125,9 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
     if ((x = object_alloc(mapdevice_class))) {
         x->outlet = listout((t_object *)x);
         x->name = 0;
+
+        if (argv->a_type == A_SYM && atom_get_string(argv)[0] != '@')
+            alias = atom_get_string(argv);
 
         for (i = 0; i < argc-1; i++) {
             if ((argv+i)->a_type == A_SYM) {
@@ -312,7 +302,7 @@ long check_downstream(t_mapdevice *x, t_object *obj)
     t_symbol *cls = object_classname(obj);
 
     // if this is a device object, stop iterating
-    if (cls == gensym("mapdevice"))
+    if (cls == gensym("map.device"))
         return 1;
     else
         return 0;
@@ -322,7 +312,7 @@ long add_downstream(t_mapdevice *x, t_object *obj)
 {
     t_symbol *cls = object_classname(obj);
 
-    if (cls != gensym("mapin") && cls != gensym("mapout"))
+    if (cls != gensym("map.in") && cls != gensym("map.out"))
         return 0;
 
     object_method(obj, gensym("add_to_hashtab"), x->ht);
@@ -369,7 +359,7 @@ int mapdevice_attach(t_mapdevice *x)
     // this way, we can receive notifications from the hashtab as things are added and removed
     object_attach_byptr_register(x, x->ht, CLASS_NOBOX);
 
-    // add downstream mapin and mapout objects to hashtable
+    // add downstream map.in and map.out objects to hashtable
     object_method(x->patcher, gensym("iterate"), add_downstream, (void *)x,
                   PI_DEEP, &result);
 
@@ -388,18 +378,18 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
         char type = object_attr_getchar(obj, gensym("sig_type"));
         long length = object_attr_getlong(obj, gensym("sig_length"));
 
-        if (object_classname(obj) == gensym("mapout")) {
+        if (object_classname(obj) == gensym("map.out")) {
             sig = mdev_get_output_by_name(x->device, name, 0);
             if (sig) {
                 // another max object associated with this signal exists
                 mapper_db_signal props = msig_properties(sig);
-                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+                t_map_ptrs *ptrs = (t_map_ptrs *)props->user_data;
                 ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
                 ptrs->objs[ptrs->num_objs] = obj;
                 ptrs->num_objs++;
             }
             else {
-                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
+                t_map_ptrs *ptrs = (t_map_ptrs *)malloc(sizeof(struct _map_ptrs));
                 ptrs->home = x;
                 ptrs->objs = (t_object **)malloc(sizeof(t_object *));
                 ptrs->num_objs = 1;
@@ -413,18 +403,18 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
             atom_setlong(x->buffer, mdev_num_outputs(x->device));
             outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
         }
-        else if (object_classname(obj) == gensym("mapin")) {
+        else if (object_classname(obj) == gensym("map.in")) {
             sig = mdev_get_input_by_name(x->device, name, 0);
             if (sig) {
                 // another max object associated with this signal exists
                 mapper_db_signal props = msig_properties(sig);
-                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+                t_map_ptrs *ptrs = (t_map_ptrs *)props->user_data;
                 ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
                 ptrs->objs[ptrs->num_objs] = obj;
                 ptrs->num_objs++;
             }
             else {
-                t_mapin_ptrs *ptrs = (t_mapin_ptrs *)malloc(sizeof(struct _mapin_ptrs));
+                t_map_ptrs *ptrs = (t_map_ptrs *)malloc(sizeof(struct _map_ptrs));
                 ptrs->home = x;
                 ptrs->objs = (t_object **)malloc(sizeof(t_object *));
                 ptrs->num_objs = 1;
@@ -459,14 +449,14 @@ static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
     t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
     const char *name = temp->s_name;
 
-    if (object_classname(obj) == gensym("mapout"))
+    if (object_classname(obj) == gensym("map.out"))
         sig = mdev_get_output_by_name(x->device, name, 0);
-    else if (object_classname(obj) == gensym("mapin"))
+    else if (object_classname(obj) == gensym("map.in"))
         sig = mdev_get_input_by_name(x->device, name, 0);
 
     if (sig) {
         props = msig_properties(sig);
-        t_mapin_ptrs *ptrs = (t_mapin_ptrs *)props->user_data;
+        t_map_ptrs *ptrs = (t_map_ptrs *)props->user_data;
         if (ptrs->num_objs == 1) {
             free(ptrs->objs);
             free(ptrs);
@@ -538,7 +528,7 @@ static void mapdevice_sig_handler(mapper_signal msig, mapper_db_signal props,
                                   int instance_id, void *value, int count,
                                   mapper_timetag_t *tt)
 {
-    t_mapin_ptrs *ptrs = props->user_data;
+    t_map_ptrs *ptrs = props->user_data;
     t_mapdevice *x = ptrs->home;
     t_object *obj = NULL;
     int i;
@@ -589,7 +579,7 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
                                              msig_instance_event_t event,
                                              mapper_timetag_t *tt)
 {
-    t_mapin_ptrs *ptrs = props->user_data;
+    t_map_ptrs *ptrs = props->user_data;
     t_mapdevice *x = ptrs->home;
 
     t_object *obj = (t_object *)msig_get_instance_data(sig, instance_id);
