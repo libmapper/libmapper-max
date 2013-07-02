@@ -229,7 +229,8 @@ void parse_extra_properties(t_mapin *x)
             x->is_instance = 1;
             x->instance_id = atom_getlong(x->args+i+1);
             i++;
-            msig_reserve_instance(x->sig_ptr, &x->instance_id, (void *)x);
+            //msig_reserve_instance(x->sig_ptr, &x->instance_id, (void *)x);
+            msig_reserve_instances(x->sig_ptr, 1);
         }
         else if (atom_get_string(x->args+i)[0] == '@') {
             switch ((x->args+i+1)->a_type) {
