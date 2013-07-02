@@ -7,7 +7,7 @@
 			"revision" : 8
 		}
 ,
-		"rect" : [ 100.0, 100.0, 535.0, 445.0 ],
+		"rect" : [ 591.0, 196.0, 535.0, 445.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -85,7 +85,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 195.0, 240.0, 67.0, 18.0 ],
-									"presentation_rect" : [ 200.0, 188.0, 0.0, 0.0 ],
 									"text" : "set /foo $1"
 								}
 
@@ -166,7 +165,6 @@
 					}
 ,
 					"patching_rect" : [ 30.0, 360.0, 130.0, 20.0 ],
-					"presentation_rect" : [ 27.0, 357.0, 0.0, 0.0 ],
 					"saved_object_attributes" : 					{
 						"default_fontface" : 0,
 						"default_fontname" : "Arial",
@@ -1377,10 +1375,10 @@
 				"box" : 				{
 					"id" : "obj-64",
 					"maxclass" : "bpatcher",
-					"name" : "dot.menu.maxpat",
+					"name" : "logolink.maxpat",
 					"numinlets" : 0,
 					"numoutlets" : 0,
-					"patching_rect" : [ 315.0, 285.0, 211.0, 145.0 ]
+					"patching_rect" : [ 375.0, 267.5, 150.0, 155.5 ]
 				}
 
 			}
@@ -1481,9 +1479,9 @@
 			}
  ],
 		"dependency_cache" : [ 			{
-				"name" : "dot.menu.maxpat",
-				"bootpath" : "/Users/jocal/Documents/DOT/branches/v2_max5/toolbox/meta",
-				"patcherrelativepath" : "../../DOT/branches/v2_max5/toolbox/meta",
+				"name" : "logolink.maxpat",
+				"bootpath" : "/Users/jocal/Documents/Mappers/mapper-max-pd",
+				"patcherrelativepath" : "",
 				"type" : "JSON",
 				"implicit" : 1
 			}
