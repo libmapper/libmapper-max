@@ -72,6 +72,8 @@ static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
 static void atom_set_string(t_atom *a, const char *string);
 
+t_symbol *maybe_start_queue_sym;
+
 // *********************************************************
 // -(global class pointer variable)-------------------------
 static void *mapin_class;
@@ -176,6 +178,7 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
             patcher = jpatcher_get_parentpatcher(patcher);
         }
     }
+    maybe_start_queue_sym = gensym("maybe_start_queue");
     return (x);
 }
 
@@ -320,7 +323,7 @@ static void mapin_int(t_mapin *x, long l)
         float f = (float)l;
         value = &f;
     }
-    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         msig_update_instance(x->sig_ptr, x->instance_id, value, 1, *x->tt_ptr);
     else
@@ -346,7 +349,7 @@ static void mapin_float(t_mapin *x, double d)
         int i = (int)d;
         value = &i;
     }
-    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         msig_update_instance(x->sig_ptr, x->instance_id, value, 1, *x->tt_ptr);
     else
@@ -399,7 +402,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         }
     }
     //update signal
-    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance) {
         msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
     }
@@ -415,7 +418,7 @@ static void mapin_release(t_mapin *x)
     if (check_ptrs(x) || !x->is_instance)
         return;
     
-    object_method(x->dev_obj, gensym("maybe_start_queue"));
+    object_method(x->dev_obj, maybe_start_queue_sym);
     msig_release_instance(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
 
