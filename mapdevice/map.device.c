@@ -292,7 +292,6 @@ void mapdevice_attach_obj(t_hashtab_entry *e, void *arg)
 	t_mapdevice *x = (t_mapdevice *)arg;
 	if (x) {
 		// attach to the object to receive its notifications
-        mapdevice_add_signal(x, e->value);
 		object_attach_byptr(x, e->value);
 	}
 }
