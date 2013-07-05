@@ -229,11 +229,16 @@ void parse_extra_properties(t_mapin *x)
         }
         else if (atom_strcmp(x->args+i, "@instance") == 0 &&
                  (x->args+i+1)->a_type == A_LONG) {
+            /* Remove the default signal instance (0) if it exists. Since the user
+             * may have properly added an instance 0, we will check for user_data. */
+            void *data = msig_get_instance_data(x->sig_ptr, 0);
+            if (!data)
+                msig_remove_instance(x->sig_ptr, 0);
+
             x->is_instance = 1;
             x->instance_id = atom_getlong(x->args+i+1);
             i++;
-            //msig_reserve_instance(x->sig_ptr, &x->instance_id, (void *)x);
-            msig_reserve_instances(x->sig_ptr, 1);
+            msig_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
         else if (atom_get_string(x->args+i)[0] == '@') {
             switch ((x->args+i+1)->a_type) {

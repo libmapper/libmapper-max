@@ -44,7 +44,7 @@ typedef struct _mapout
     mapper_timetag_t    *tt_ptr;
     mapper_db_signal    sig_props;
     long                is_instance;
-    int                 instance;
+    int                 instance_id;
     void                *outlet;
     t_symbol            *myobjname;
     t_hashtab           *ht;
@@ -232,11 +232,16 @@ void parse_extra_properties(t_mapout *x)
         }
         else if (atom_strcmp(x->args+i, "@instance") == 0 &&
                  (x->args+i+1)->a_type == A_LONG) {
+            /* Remove the default signal instance (0) if it exists. Since the user
+             * may have properly added an instance 0, we will check for user_data. */
+            void *data = msig_get_instance_data(x->sig_ptr, 0);
+            if (!data)
+                msig_remove_instance(x->sig_ptr, 0);
+
             x->is_instance = 1;
-            x->instance = atom_getlong(x->args+i+1);
+            x->instance_id = atom_getlong(x->args+i+1);
             i++;
-            //msig_reserve_instance(x->sig_ptr, &x->instance, (void *)x);
-            msig_reserve_instances(x->sig_ptr, 1);
+            msig_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
         else if (atom_get_string(x->args+i)[0] == '@') {
             switch ((x->args+i+1)->a_type) {
@@ -330,7 +335,7 @@ static void mapout_int(t_mapout *x, long l)
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
-        msig_update_instance(x->sig_ptr, x->instance, value, 1, *x->tt_ptr);
+        msig_update_instance(x->sig_ptr, x->instance_id, value, 1, *x->tt_ptr);
     else
         msig_update(x->sig_ptr, value, 1, *x->tt_ptr);
 }
@@ -356,7 +361,7 @@ static void mapout_float(t_mapout *x, double d)
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
-        msig_update_instance(x->sig_ptr, x->instance, value, 1, *x->tt_ptr);
+        msig_update_instance(x->sig_ptr, x->instance_id, value, 1, *x->tt_ptr);
     else
         msig_update(x->sig_ptr, value, 1, *x->tt_ptr);
 }
@@ -409,7 +414,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
     //update signal
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance) {
-        msig_update_instance(x->sig_ptr, x->instance, value, count, *x->tt_ptr);
+        msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
     }
     else {
         msig_update(x->sig_ptr, value, count, *x->tt_ptr);
@@ -437,7 +442,7 @@ static void mapout_release(t_mapout *x)
         return;
 
     object_method(x->dev_obj, maybe_start_queue_sym);
-    msig_release_instance(x->sig_ptr, (int)x, *x->tt_ptr);
+    msig_release_instance(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
 
 // *********************************************************
