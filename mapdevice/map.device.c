@@ -540,7 +540,7 @@ static void mapdevice_sig_handler(mapper_signal msig, mapper_db_signal props,
         int length = props->length;
 
         if (length > (MAX_LIST)) {
-            post("Maximum list length is %i!", MAX_LIST);
+            object_post((t_object *)x, "Maximum list length is %i!", MAX_LIST);
             length = MAX_LIST;
         }
 
