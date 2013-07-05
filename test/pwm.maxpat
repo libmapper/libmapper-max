@@ -121,8 +121,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 30.0, 30.0, 137.0, 20.0 ],
-					"text" : "mapdevice @alias pwm"
+					"patching_rect" : [ 30.0, 30.0, 101.0, 20.0 ],
+					"text" : "map.device pwm"
 				}
 
 			}
@@ -173,11 +173,7 @@
 				"implicit" : 1
 			}
 , 			{
-				"name" : "mapdevice.mxo",
-				"type" : "iLaX"
-			}
-, 			{
-				"name" : "mapin.mxo",
+				"name" : "map.device.mxo",
 				"type" : "iLaX"
 			}
  ]
