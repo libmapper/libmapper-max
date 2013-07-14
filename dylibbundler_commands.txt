@@ -1,0 +1,14 @@
+After building externals for OSX:
+
+
+./dylibbundler -cd -b -p '@loader_path/../libs/' -x ../mapper.mxo/Contents/MacOS/mapper -d ../mapper.mxo/Contents/libs/
+
+./dylibbundler -cd -b -p '@loader_path/../libs/' -x ../map.device.mxo/Contents/MacOS/map.device -d ../map.device.mxo/Contents/libs/
+
+./dylibbundler -cd -b -p '@loader_path/../libs/' -x ../map.in.mxo/Contents/MacOS/map.in -d ../map.in.mxo/Contents/libs/
+
+./dylibbundler -cd -b -p '@loader_path/../libs/' -x ../map.out.mxo/Contents/MacOS/map.out -d ../map.out.mxo/Contents/libs/
+
+
+
+Notes: need 32-bit version of liblo and libmapper dylibs
