@@ -82,6 +82,10 @@ void collectDependencies(std::string filename)
     {
         std::cout << "."; fflush(stdout);
         if(lines[n][0] != '\t') continue; // only lines beginning with a tab interest us
+        else if (lines[n][1] == '@') {
+            std::cout << "Skipping path relative to @executable_path"; fflush(stdout);
+            continue;
+        }
         
         addDependency( // trim useless info, keep only library name
                        lines[n].substr(1, lines[n].find(" (") )
