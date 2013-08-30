@@ -7,7 +7,7 @@
 			"revision" : 8
 		}
 ,
-		"rect" : [ 430.0, 44.0, 689.0, 622.0 ],
+		"rect" : [ 430.0, 44.0, 680.0, 614.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -36,7 +36,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 375.0, 30.0, 50.0, 18.0 ],
-					"presentation_rect" : [ 390.0, 40.0, 0.0, 0.0 ],
 					"text" : "release"
 				}
 
@@ -51,7 +50,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 195.0, 30.0, 50.0, 18.0 ],
-					"presentation_rect" : [ 214.0, 48.0, 0.0, 0.0 ],
 					"text" : "release"
 				}
 
@@ -451,13 +449,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-27",
-					"linecount" : 5,
+					"linecount" : 4,
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 375.0, 60.0, 139.0, 74.0 ],
-					"text" : "mapin /gain f @unit normalized @min 0 @max 1 @boundMin clamp @boundMax clamp @instance #0"
+					"patching_rect" : [ 375.0, 60.0, 181.0, 60.0 ],
+					"text" : "map.in /gain f @unit normalized @min 0 @max 1 @boundMin clamp @boundMax clamp @instance #0"
 				}
 
 			}
@@ -472,8 +470,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 195.0, 60.0, 154.0, 47.0 ],
-					"text" : "mapin /duty f @unit normalized @min 0 @max 1 @instance #0"
+					"patching_rect" : [ 195.0, 60.0, 165.0, 47.0 ],
+					"text" : "map.in /duty f @unit normalized @min 0 @max 1 @instance #0"
 				}
 
 			}
@@ -489,7 +487,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
 					"patching_rect" : [ 30.0, 60.0, 150.0, 47.0 ],
-					"text" : "mapin /freq f @unit Hz @min 20 @max 1000 @instance #0"
+					"text" : "map.in /freq f @unit Hz @min 20 @max 1000 @instance #0"
 				}
 
 			}
@@ -1145,7 +1143,7 @@
 			}
  ],
 		"dependency_cache" : [ 			{
-				"name" : "mapin.mxo",
+				"name" : "map.in.mxo",
 				"type" : "iLaX"
 			}
  ]
