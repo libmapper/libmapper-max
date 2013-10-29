@@ -517,7 +517,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
             }
 #endif
             if (prop_int > 1) {
-                msig_reserve_instances(msig, prop_int - 1);
+                msig_reserve_instances(msig, prop_int - 1, 0, 0);
                 msig_set_instance_event_callback(msig,
                     mapperobj_instance_event_handler, IN_ALL, x);
             }
