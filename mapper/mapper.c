@@ -168,7 +168,6 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
     if ((x = (t_mapper *) pd_new(mapperobj_class)) ) {
         x->outlet1 = outlet_new(&x->ob, gensym("list"));
         x->outlet2 = outlet_new(&x->ob, gensym("list"));
-        x->name = strdup("puredata");
 #endif
 
         for (i = 0; i < argc; i++) {
@@ -212,8 +211,12 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
         if (alias) {
             x->name = *alias == '/' ? strdup(alias+1) : strdup(alias);
         }
-        else {
+        else if (!x->name) {
+#ifdef MAXMSP
             x->name = strdup("maxmsp");
+#else
+            x->name = strdup("puredata");
+#endif
         }
 
         x->admin = mapper_admin_new(iface, 0, 0);
