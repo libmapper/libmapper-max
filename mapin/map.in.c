@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <lo/lo.h>
 #ifndef WIN32
   #include <arpa/inet.h>
 #endif
@@ -144,6 +143,8 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 
         x->sig_ptr = 0;
         x->sig_props = 0;
+        x->instance_id = 0;
+        x->is_instance = 0;
 
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
@@ -193,7 +194,7 @@ static void mapin_free(t_mapin *x)
 
 void add_to_hashtab(t_mapin *x, t_hashtab *ht)
 {
-    // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
+    // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so the
     // hashtab knows not to free us when it is freed.
     hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
     x->ht = ht;
@@ -227,20 +228,52 @@ void parse_extra_properties(t_mapin *x)
             i++;
             continue;
         }
-        else if (atom_strcmp(x->args+i, "@instance") == 0 &&
-                 (x->args+i+1)->a_type == A_LONG) {
+        else if (atom_strcmp(x->args+i, "@instance") == 0) {
+            if ((x->args+i+1)->a_type == A_SYM &&
+                atom_strcmp(x->args+i+1, "polyindex") == 0) {
+                /* Check if object is embedded in a poly~ object - if so,
+                 * retrieve the index and use as instance id. */
+                t_object *patcher = NULL;
+                t_max_err err = object_obex_lookup(x, gensym("#P"), &patcher);
+                if (err == MAX_ERR_NONE) {
+                    t_object *assoc = NULL;
+                    object_method(patcher, gensym("getassoc"), &assoc);
+                    if (assoc) {
+                        method m = zgetfn(assoc, gensym("getindex"));
+                        if (m) {
+                            x->instance_id = (long)(*m)(assoc, patcher);
+                        }
+                        else
+                            continue;
+                    }
+                    else
+                        continue;
+                }
+                else
+                    continue;
+            }
+            else if ((x->args+i+1)->a_type == A_LONG) {
+                x->instance_id = atom_getlong(x->args+i+1);
+            }
+            else {
+                continue;
+            }
+            /* Remove the default signal instance (0) if it exists. Since the user
+             * may have properly added an instance 0, we will check for user_data. */
+            void *data = msig_get_instance_data(x->sig_ptr, 0);
+            if (!data)
+                msig_remove_instance(x->sig_ptr, 0);
+
             x->is_instance = 1;
-            x->instance_id = atom_getlong(x->args+i+1);
             i++;
-            //msig_reserve_instance(x->sig_ptr, &x->instance_id, (void *)x);
-            msig_reserve_instances(x->sig_ptr, 1);
+            msig_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
         else if (atom_get_string(x->args+i)[0] == '@') {
             switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
                     const char *value = atom_get_string(x->args+i+1);
                     msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      's', (lo_arg *)value);
+                                      's', (lo_arg *)value, 1);
                     i++;
                     break;
                 }
@@ -248,7 +281,7 @@ void parse_extra_properties(t_mapin *x)
                 {
                     float value = atom_getfloat(x->args+i+1);
                     msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      'f', (lo_arg *)&value);
+                                      'f', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }
@@ -256,7 +289,7 @@ void parse_extra_properties(t_mapin *x)
                 {
                     int value = atom_getlong(x->args+i+1);
                     msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      'i', (lo_arg *)&value);
+                                      'i', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }

@@ -7,7 +7,7 @@
 			"revision" : 8
 		}
 ,
-		"rect" : [ 430.0, 44.0, 680.0, 614.0 ],
+		"rect" : [ 430.0, 44.0, 688.0, 622.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -117,7 +117,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 570.0, 73.5, 96.0, 47.0 ],
+					"patching_rect" : [ 570.0, 60.0, 96.0, 47.0 ],
 					"text" : "Joseph Malloch\nIDMIL 2013\nwww.idmil.org"
 				}
 
@@ -454,8 +454,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 375.0, 60.0, 181.0, 60.0 ],
-					"text" : "map.in /gain f @unit normalized @min 0 @max 1 @boundMin clamp @boundMax clamp @instance #0"
+					"patching_rect" : [ 375.0, 60.0, 180.0, 60.0 ],
+					"text" : "map.in gain f @unit normalized @min 0 @max 1 @boundMin clamp @boundMax clamp @instance polyindex"
 				}
 
 			}
@@ -465,13 +465,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-26",
-					"linecount" : 3,
+					"linecount" : 4,
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 195.0, 60.0, 165.0, 47.0 ],
-					"text" : "map.in /duty f @unit normalized @min 0 @max 1 @instance #0"
+					"patching_rect" : [ 195.0, 60.0, 141.0, 60.0 ],
+					"text" : "map.in duty f @unit normalized @min 0 @max 1 @instance polyindex"
 				}
 
 			}
@@ -486,8 +486,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 30.0, 60.0, 150.0, 47.0 ],
-					"text" : "map.in /freq f @unit Hz @min 20 @max 1000 @instance #0"
+					"patching_rect" : [ 30.0, 60.0, 135.0, 47.0 ],
+					"text" : "map.in freq f @unit Hz @min 20 @max 1000 @instance polyindex"
 				}
 
 			}

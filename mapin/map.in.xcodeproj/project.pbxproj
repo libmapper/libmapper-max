@@ -187,7 +187,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GENERATE_PKGINFO_FILE = YES;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
 					"\"/Library/Application Support/c74support/max-includes\"",
@@ -198,9 +197,7 @@
 				OTHER_LDFLAGS = (
 					"-framework",
 					MaxAPI,
-					/usr/local/lib/liblo.dylib,
 					"-lmx",
-					"-lz",
 					"/usr/local/lib/libmapper-0.dylib",
 				);
 				PRODUCT_NAME = map.in;
