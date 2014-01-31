@@ -273,7 +273,7 @@ void parse_extra_properties(t_mapin *x)
                 case A_SYM: {
                     const char *value = atom_get_string(x->args+i+1);
                     msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      's', (lo_arg *)value);
+                                      's', (lo_arg *)value, 1);
                     i++;
                     break;
                 }
@@ -281,7 +281,7 @@ void parse_extra_properties(t_mapin *x)
                 {
                     float value = atom_getfloat(x->args+i+1);
                     msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      'f', (lo_arg *)&value);
+                                      'f', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }
@@ -289,7 +289,7 @@ void parse_extra_properties(t_mapin *x)
                 {
                     int value = atom_getlong(x->args+i+1);
                     msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      'i', (lo_arg *)&value);
+                                      'i', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }

@@ -181,11 +181,12 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                 continue;
             }
             else if (atom_get_string(argv+i)[0] == '@') {
+                // TODO: allow vector property values
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
                         const char *value = atom_get_string(argv+i+1);
                         mdev_set_property(x->device, atom_get_string(argv+i)+1,
-                                          's', (lo_arg *)value);
+                                          's', (lo_arg *)value, 1);
                         i++;
                         break;
                     }
@@ -193,7 +194,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                     {
                         float value = atom_getfloat(argv+i+1);
                         mdev_set_property(x->device, atom_get_string(argv+i)+1,
-                                          'f', (lo_arg *)&value);
+                                          'f', (lo_arg *)&value, 1);
                         i++;
                         break;
                     }
@@ -201,7 +202,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                     {
                         int value = atom_getlong(argv+i+1);
                         mdev_set_property(x->device, atom_get_string(argv+i)+1,
-                                          'i', (lo_arg *)&value);
+                                          'i', (lo_arg *)&value, 1);
                         i++;
                         break;
                     }
