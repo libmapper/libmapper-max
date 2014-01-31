@@ -46,6 +46,7 @@ typedef struct _mapin
     int                 instance_id;
     void                *outlet;
     t_symbol            *myobjname;
+    t_object            *patcher;
     t_hashtab           *ht;
     long                num_args;
     t_atom              *args;
@@ -62,6 +63,7 @@ static t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv
 static t_max_err set_dev_obj(t_mapin *x, t_object *attr, long argc, t_atom *argv);
 static t_max_err set_tt_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv);
 
+static void mapin_loadbang(t_mapin *x);
 static void mapin_int(t_mapin *x, long i);
 static void mapin_float(t_mapin *x, double f);
 static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv);
@@ -70,6 +72,8 @@ static void mapin_release(t_mapin *x);
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
 static void atom_set_string(t_atom *a, const char *string);
+static int atom_coerce_int(t_atom *a);
+static float atom_coerce_float(t_atom *a);
 
 t_symbol *maybe_start_queue_sym;
 
@@ -85,6 +89,7 @@ int main(void)
     c = class_new("map.in", (method)mapin_new, (method)mapin_free,
                   (long)sizeof(t_mapin), 0L, A_GIMME, 0);
 
+    class_addmethod(c, (method)mapin_loadbang, "loadbang", 0);
     class_addmethod(c, (method)mapin_int, "int", A_LONG, 0);
     class_addmethod(c, (method)mapin_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mapin_list, "list", A_GIMME, 0);
@@ -117,8 +122,6 @@ static void mapin_usage()
 static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 {
     t_mapin *x = NULL;
-    t_object *patcher = NULL;
-    t_hashtab *ht;
 
     long i = 0;
 
@@ -169,15 +172,8 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
         // cache the registered name so we can remove self from hashtab later
         x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
 
-        patcher = (t_object *)gensym("#P")->s_thing;
-        while (patcher) {
-            object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
-            if (ht) {
-                add_to_hashtab(x, ht);
-                break;
-            }
-            patcher = jpatcher_get_parentpatcher(patcher);
-        }
+        x->patcher = (t_object *)gensym("#P")->s_thing;
+        mapin_loadbang(x);
     }
     maybe_start_queue_sym = gensym("maybe_start_queue");
     return (x);
@@ -190,6 +186,24 @@ static void mapin_free(t_mapin *x)
     remove_from_hashtab(x);
     if (x->args)
         free(x->args);
+}
+
+void mapin_loadbang(t_mapin *x)
+{
+    t_hashtab *ht;
+
+    if (!x->patcher)
+    return;
+
+    t_object *patcher = x->patcher;
+    while (patcher) {
+        object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+        if (ht) {
+            add_to_hashtab(x, ht);
+            break;
+        }
+        patcher = jpatcher_get_parentpatcher(patcher);
+    }
 }
 
 void add_to_hashtab(t_mapin *x, t_hashtab *ht)
@@ -268,7 +282,110 @@ void parse_extra_properties(t_mapin *x)
             i++;
             msig_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
+        else if (atom_strcmp(x->args+i, "@minimum") == 0 ||
+                 atom_strcmp(x->args+i, "@min") == 0) {
+            // check number of arguments
+            int length = 1;
+            char type;
+            while (length + i < x->num_args) {
+                type = (x->args+i+length)->a_type;
+                if (type == A_SYM && atom_get_string(x->args+i+length)[0] == '@') {
+                    // reached next property name
+                    break;
+                }
+                if (type != A_LONG && type != A_FLOAT) {
+                    length = 0;
+                    break;
+                }
+                length++;
+            }
+            length--;
+            if (length <= 0 || length != x->sig_length) {
+                post("'%s' property for signal %s requires %i arguments! (got %i)",
+                     atom_get_string(x->args+i), x->sig_name->s_name,
+                     x->sig_length, length);
+                continue;
+            }
+
+            ++i;
+            int j;
+            switch (x->sig_type) {
+                case 'i': {
+                    int val[length];
+                    for (j = 0; j < length; j++, i++) {
+                        val[j] = atom_coerce_int(x->args+i);
+                    }
+                    msig_set_minimum(x->sig_ptr, val);
+                    i--;
+                    break;
+                }
+                case 'f':
+                case 'd': {
+                    float val[length];
+                    for (j = 0; j < length; j++, i++) {
+                        val[j] = atom_coerce_float(x->args+i);
+                    }
+                    msig_set_minimum(x->sig_ptr, val);
+                    i--;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        else if (atom_strcmp(x->args+i, "@maximum") == 0 ||
+                 atom_strcmp(x->args+i, "@max") == 0) {
+            // check number of arguments
+            int length = 1;
+            char type;
+            while (length + i < x->num_args) {
+                type = (x->args+i+length)->a_type;
+                if (type == A_SYM && atom_get_string(x->args+i+length)[0] == '@') {
+                    // reached next property name
+                    break;
+                }
+                if (type != A_LONG && type != A_FLOAT) {
+                    length = 0;
+                    break;
+                }
+                length++;
+            }
+            length--;
+            if (length <= 0 || length != x->sig_length) {
+                post("'%s' property for signal %s requires %i arguments! (got %i)",
+                     atom_get_string(x->args+i), x->sig_name->s_name,
+                     x->sig_length, length);
+                continue;
+            }
+
+            ++i;
+            int j;
+            switch (x->sig_type) {
+                case 'i': {
+                    int val[length];
+                    for (j = 0; j < length; j++, i++) {
+                        val[j] = atom_coerce_int(x->args+i);
+                    }
+                    msig_set_maximum(x->sig_ptr, val);
+                    i--;
+                    break;
+                }
+                case 'f':
+                case 'd': {
+                    float val[length];
+                    for (j = 0; j < length; j++, i++) {
+                        val[j] = atom_coerce_float(x->args+i);
+                    }
+                    msig_set_maximum(x->sig_ptr, val);
+                    i--;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
         else if (atom_get_string(x->args+i)[0] == '@') {
+            // TODO: allow vector property values
             switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
                     const char *value = atom_get_string(x->args+i+1);
@@ -393,23 +510,23 @@ static void mapin_float(t_mapin *x, double d)
 // -(set list input)----------------------------------------
 static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i = 0, count, len;
+    int i = 0, count;
     void *value;
 
     if (check_ptrs(x) || !argc)
         return;
 
-    if ((count = argc / x->sig_props->length)) {
+    if (argc < x->sig_props->length || (argc % x->sig_props->length) != 0) {
         object_post((t_object *)x, "Illegal list length (expected factor of %i)",
                     x->sig_props->length);
         return;
     }
-    len = count * x->sig_props->length;
-    
+    count = argc / x->sig_props->length;
+
     if (x->sig_props->type == 'i') {
-        int payload[len];
+        int payload[argc];
         value = &payload;
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < argc; i++) {
             if ((argv+i)->a_type == A_FLOAT)
                 payload[i] = (int)atom_getfloat(argv+i);
             else if ((argv+i)->a_type == A_LONG)
@@ -419,11 +536,19 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                 return;
             }
         }
+        //update signal
+        object_method(x->dev_obj, maybe_start_queue_sym);
+        if (x->is_instance) {
+            msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
+        }
+        else {
+            msig_update(x->sig_ptr, value, count, *x->tt_ptr);
+        }
     }
     else if (x->sig_props->type == 'f') {
-        float payload[len];
+        float payload[argc];
         value = &payload;
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < argc; i++) {
             if ((argv+i)->a_type == A_FLOAT)
                 payload[i] = atom_getfloat(argv+i);
             else if ((argv+i)->a_type == A_LONG)
@@ -433,14 +558,14 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                 return;
             }
         }
-    }
-    //update signal
-    object_method(x->dev_obj, maybe_start_queue_sym);
-    if (x->is_instance) {
-        msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
-    }
-    else {
-        msig_update(x->sig_ptr, value, count, *x->tt_ptr);
+        //update signal
+        object_method(x->dev_obj, maybe_start_queue_sym);
+        if (x->is_instance) {
+            msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
+        }
+        else {
+            msig_update(x->sig_ptr, value, count, *x->tt_ptr);
+        }
     }
 }
 
@@ -450,7 +575,7 @@ static void mapin_release(t_mapin *x)
 {
     if (check_ptrs(x) || !x->is_instance)
         return;
-    
+
     object_method(x->dev_obj, maybe_start_queue_sym);
     msig_release_instance(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
@@ -473,4 +598,24 @@ static const char *atom_get_string(t_atom *a)
 static void atom_set_string(t_atom *a, const char *string)
 {
     atom_setsym(a, gensym((char *)string));
+}
+
+static int atom_coerce_int(t_atom *a)
+{
+    if (a->a_type == A_LONG)
+    return (int)atom_getlong(a);
+    else if (a->a_type == A_FLOAT)
+    return (int)atom_getfloat(a);
+    else
+    return 0;
+}
+
+static float atom_coerce_float(t_atom *a)
+{
+    if (a->a_type == A_LONG)
+    return (float)atom_getlong(a);
+    else if (a->a_type == A_FLOAT)
+    return atom_getfloat(a);
+    else
+    return 0.f;
 }

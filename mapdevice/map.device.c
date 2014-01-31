@@ -171,6 +171,8 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
         }
 
+        post("map.device object created... waiting for inputs and outputs.");
+
         // add other declared properties
         for (i = 0; i < argc; i++) {
             if (i > argc - 2) // need 2 arguments for key and value
