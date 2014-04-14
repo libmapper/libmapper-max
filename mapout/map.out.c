@@ -51,6 +51,7 @@ typedef struct _mapout
     t_hashtab           *ht;
     long                num_args;
     t_atom              *args;
+    long                connect_state;
 } t_mapout;
 
 // *********************************************************
@@ -151,6 +152,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
         x->sig_props = 0;
         x->instance_id = 0;
         x->is_instance = 0;
+        x->connect_state = 0;
 
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
@@ -211,10 +213,16 @@ void mapout_loadbang(t_mapout *x)
 
 void add_to_hashtab(t_mapout *x, t_hashtab *ht)
 {
+    if (x->connect_state) {
+        // already registered
+        return;
+    }
+
     // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so that the
     // hashtab knows not to free us when it is freed.
     hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
     x->ht = ht;
+    x->connect_state = 1;
 }
 
 void remove_from_hashtab(t_mapout *x)
@@ -226,6 +234,7 @@ void remove_from_hashtab(t_mapout *x)
     x->dev_obj = 0;
     x->sig_ptr = 0;
     x->sig_props = 0;
+    x->connect_state = 0;
 }
 
 // *********************************************************
