@@ -171,6 +171,8 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
         }
 
+        post("libmapper version %s – visit libmapper.org for more information.",
+             mapper_admin_libversion(x->admin));
         post("map.device object created... waiting for inputs and outputs.");
 
         // add other declared properties
