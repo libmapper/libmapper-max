@@ -248,7 +248,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                     case A_SYM: {
                         const char *value = maxpd_atom_get_string(argv+i+1);
                         mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1,
-                                          's', (lo_arg *)value);
+                                          's', (lo_arg *)value, 1);
                         i++;
                         break;
                     }
@@ -256,7 +256,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                     {
                         float value = maxpd_atom_get_float(argv+i+1);
                         mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1,
-                                          'f', (lo_arg *)&value);
+                                          'f', (lo_arg *)&value, 1);
                         i++;
                         break;
                     }
@@ -265,7 +265,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                     {
                         int value = atom_getlong(argv+i+1);
                         mdev_set_property(x->device, maxpd_atom_get_string(argv+i)+1,
-                                          'i', (lo_arg *)&value);
+                                          'i', (lo_arg *)&value, 1);
                         i++;
                         break;
                     }
@@ -538,7 +538,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 case A_SYM: {
                     const char *value = maxpd_atom_get_string(argv+i+1);
                     msig_set_property(msig, maxpd_atom_get_string(argv+i)+1,
-                                      's', (lo_arg *)value);
+                                      's', (lo_arg *)value, 1);
                     i++;
                     break;
                 }
@@ -546,7 +546,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 {
                     float value = maxpd_atom_get_float(argv+i+1);
                     msig_set_property(msig, maxpd_atom_get_string(argv+i)+1,
-                                      'f', (lo_arg *)&value);
+                                      'f', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }
@@ -555,7 +555,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 {
                     int value = atom_getlong(argv+i+1);
                     msig_set_property(msig, maxpd_atom_get_string(argv+i)+1,
-                                      'i', (lo_arg *)&value);
+                                      'i', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }
