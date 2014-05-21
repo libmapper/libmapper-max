@@ -299,7 +299,7 @@ void parse_extra_properties(t_mapout *x)
         else if (atom_strcmp(x->args+i, "@minimum") == 0 ||
                  atom_strcmp(x->args+i, "@min") == 0) {
             // check number of arguments
-            int length = 1;
+            int length = 1, scalar_min = 0;
             char type;
             while (length + i < x->num_args) {
                 type = (x->args+i+length)->a_type;
@@ -314,11 +314,16 @@ void parse_extra_properties(t_mapout *x)
                 length++;
             }
             length--;
-            if (length <= 0 || length != x->sig_length) {
-                post("'%s' property for signal %s requires %i arguments! (got %i)",
-                     atom_get_string(x->args+i), x->sig_name->s_name,
-                     x->sig_length, length);
-                continue;
+            if (length != x->sig_length) {
+                // we will allow using scalars to set min of entire vector
+                if (length == 1)
+                    scalar_min = 1;
+                else {
+                    post("'%s' property for signal %s requires %i arguments! (got %i)",
+                         atom_get_string(x->args+i), x->sig_name->s_name,
+                         x->sig_length, length);
+                    continue;
+                }
             }
 
             ++i;
@@ -327,7 +332,7 @@ void parse_extra_properties(t_mapout *x)
                 case 'i': {
                     int val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_int(x->args+i);
+                        val[j] = atom_coerce_int(x->args + i * scalar_min);
                     }
                     msig_set_minimum(x->sig_ptr, val);
                     i--;
@@ -337,7 +342,7 @@ void parse_extra_properties(t_mapout *x)
                 case 'd': {
                     float val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_float(x->args+i);
+                        val[j] = atom_coerce_float(x->args + i * scalar_min);
                     }
                     msig_set_minimum(x->sig_ptr, val);
                     i--;
@@ -350,7 +355,7 @@ void parse_extra_properties(t_mapout *x)
         else if (atom_strcmp(x->args+i, "@maximum") == 0 ||
                  atom_strcmp(x->args+i, "@max") == 0) {
             // check number of arguments
-            int length = 1;
+            int length = 1, scalar_max = 0;
             char type;
             while (length + i < x->num_args) {
                 type = (x->args+i+length)->a_type;
@@ -365,11 +370,16 @@ void parse_extra_properties(t_mapout *x)
                 length++;
             }
             length--;
-            if (length <= 0 || length != x->sig_length) {
-                post("'%s' property for signal %s requires %i arguments! (got %i)",
-                     atom_get_string(x->args+i), x->sig_name->s_name,
-                     x->sig_length, length);
-                continue;
+            if (length != x->sig_length) {
+                // we will allow using scalars to set max of entire vector
+                if (length == 1)
+                    scalar_max = 1;
+                else {
+                    post("'%s' property for signal %s requires %i arguments! (got %i)",
+                         atom_get_string(x->args+i), x->sig_name->s_name,
+                         x->sig_length, length);
+                    continue;
+                }
             }
 
             ++i;
@@ -378,7 +388,7 @@ void parse_extra_properties(t_mapout *x)
                 case 'i': {
                     int val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_int(x->args+i);
+                        val[j] = atom_coerce_int(x->args + i * scalar_max);
                     }
                     msig_set_maximum(x->sig_ptr, val);
                     i--;
@@ -388,7 +398,7 @@ void parse_extra_properties(t_mapout *x)
                 case 'd': {
                     float val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_float(x->args+i);
+                        val[j] = atom_coerce_float(x->args + i * scalar_max);
                     }
                     msig_set_maximum(x->sig_ptr, val);
                     i--;
