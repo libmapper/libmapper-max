@@ -332,7 +332,12 @@ void parse_extra_properties(t_mapout *x)
                 case 'i': {
                     int val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_int(x->args + i * scalar_min);
+                        val[j] = atom_coerce_int(x->args + i);
+                    }
+                    if (scalar_min) {
+                        for (j = 1; j < x->sig_length; j++) {
+                            val[j] = val[0];
+                        }
                     }
                     msig_set_minimum(x->sig_ptr, val);
                     i--;
@@ -342,7 +347,12 @@ void parse_extra_properties(t_mapout *x)
                 case 'd': {
                     float val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_float(x->args + i * scalar_min);
+                        val[j] = atom_coerce_float(x->args + i);
+                    }
+                    if (scalar_min) {
+                        for (j = 1; j < x->sig_length; j++) {
+                            val[j] = val[0];
+                        }
                     }
                     msig_set_minimum(x->sig_ptr, val);
                     i--;
@@ -388,7 +398,12 @@ void parse_extra_properties(t_mapout *x)
                 case 'i': {
                     int val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_int(x->args + i * scalar_max);
+                        val[j] = atom_coerce_int(x->args + i);
+                    }
+                    if (scalar_max) {
+                        for (j = 1; j < x->sig_length; j++) {
+                            val[j] = val[0];
+                        }
                     }
                     msig_set_maximum(x->sig_ptr, val);
                     i--;
@@ -398,7 +413,12 @@ void parse_extra_properties(t_mapout *x)
                 case 'd': {
                     float val[length];
                     for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_float(x->args + i * scalar_max);
+                        val[j] = atom_coerce_float(x->args + i);
+                    }
+                    if (scalar_max) {
+                        for (j = 1; j < x->sig_length; j++) {
+                            val[j] = val[0];
+                        }
                     }
                     msig_set_maximum(x->sig_ptr, val);
                     i--;
