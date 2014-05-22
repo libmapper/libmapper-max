@@ -153,6 +153,10 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
 
         if (argc >= 3 && (argv+2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv+2);
+            if (x->sig_length > 100) {
+                post("vector lengths > 100 not currently supported.");
+                return 0;
+            }
             i = 3;
         }
         else {
@@ -325,7 +329,7 @@ void parse_extra_properties(t_mapin *x)
             int j;
             switch (x->sig_type) {
                 case 'i': {
-                    int val[length];
+                    int val[x->sig_length];
                     for (j = 0; j < length; j++, i++) {
                         val[j] = atom_coerce_int(x->args + i);
                     }
@@ -340,7 +344,7 @@ void parse_extra_properties(t_mapin *x)
                 }
                 case 'f':
                 case 'd': {
-                    float val[length];
+                    float val[x->sig_length];
                     for (j = 0; j < length; j++, i++) {
                         val[j] = atom_coerce_float(x->args + i);
                     }
@@ -391,7 +395,7 @@ void parse_extra_properties(t_mapin *x)
             int j;
             switch (x->sig_type) {
                 case 'i': {
-                    int val[length];
+                    int val[x->sig_length];
                     for (j = 0; j < length; j++, i++) {
                         val[j] = atom_coerce_int(x->args + i);
                     }
@@ -406,7 +410,7 @@ void parse_extra_properties(t_mapin *x)
                 }
                 case 'f':
                 case 'd': {
-                    float val[length];
+                    float val[x->sig_length];
                     for (j = 0; j < length; j++, i++) {
                         val[j] = atom_coerce_float(x->args + i);
                     }

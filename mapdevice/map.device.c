@@ -526,6 +526,16 @@ static void mapdevice_print_properties(t_mapdevice *x)
     }
 }
 
+static void outlet_data(void *outlet, char type, short length, t_atom *atoms)
+{
+    if (length > 1)
+        outlet_list(outlet, NULL, length, atoms);
+    else if (type == 'i')
+        outlet_int(outlet, atom_getlong(atoms));
+    else
+        outlet_float(outlet, atom_getfloat(atoms));
+}
+
 // *********************************************************
 // -(int handler)-------------------------------------------
 static void mapdevice_sig_handler(mapper_signal msig, mapper_db_signal props,
@@ -561,11 +571,11 @@ static void mapdevice_sig_handler(mapper_signal msig, mapper_db_signal props,
         }
 
         if (obj) {
-            outlet_list(obj->o_outlet, NULL, length, x->buffer);
+            outlet_data(obj->o_outlet, props->type, length, x->buffer);
         }
         else {
             for (i=0; i<ptrs->num_objs; i++)
-                outlet_list(ptrs->objs[i]->o_outlet, NULL, length, x->buffer);
+                outlet_data(ptrs->objs[i]->o_outlet, props->type, length, x->buffer);
         }
     }
     else if (obj) {
