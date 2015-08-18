@@ -41,7 +41,6 @@ typedef struct _mapin
     mapper_device       dev_obj;
     mapper_signal       sig_ptr;
     mapper_timetag_t    *tt_ptr;
-    mapper_db_signal    sig_props;
     long                is_instance;
     int                 instance_id;
     void                *outlet;
@@ -51,6 +50,8 @@ typedef struct _mapin
     long                num_args;
     t_atom              *args;
     long                connect_state;
+    int                 length;
+    char                type;
 } t_mapin;
 
 // *********************************************************
@@ -146,7 +147,7 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
 
         x->sig_ptr = 0;
-        x->sig_props = 0;
+        x->length = 0;
         x->instance_id = 0;
         x->is_instance = 0;
         x->connect_state = 0;
@@ -234,7 +235,7 @@ void remove_from_hashtab(t_mapin *x)
     }
     x->dev_obj = 0;
     x->sig_ptr = 0;
-    x->sig_props = 0;
+    x->length = 0;
     x->connect_state = 0;
 }
 
@@ -287,13 +288,13 @@ void parse_extra_properties(t_mapin *x)
             }
             /* Remove the default signal instance (0) if it exists. Since the user
              * may have properly added an instance 0, we will check for user_data. */
-            void *data = msig_get_instance_data(x->sig_ptr, 0);
+            void *data = mapper_signal_instance_user_data(x->sig_ptr, 0);
             if (!data)
-                msig_remove_instance(x->sig_ptr, 0);
+                mapper_signal_remove_instance(x->sig_ptr, 0);
 
             x->is_instance = 1;
             i++;
-            msig_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
+            mapper_signal_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
         else if (atom_strcmp(x->args+i, "@minimum") == 0 ||
                  atom_strcmp(x->args+i, "@min") == 0) {
@@ -338,7 +339,7 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    msig_set_minimum(x->sig_ptr, val);
+                    mapper_signal_set_minimum(x->sig_ptr, val);
                     i--;
                     break;
                 }
@@ -353,7 +354,7 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    msig_set_minimum(x->sig_ptr, val);
+                    mapper_signal_set_minimum(x->sig_ptr, val);
                     i--;
                     break;
                 }
@@ -404,7 +405,7 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    msig_set_maximum(x->sig_ptr, val);
+                    mapper_signal_set_maximum(x->sig_ptr, val);
                     i--;
                     break;
                 }
@@ -419,7 +420,7 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    msig_set_maximum(x->sig_ptr, val);
+                    mapper_signal_set_maximum(x->sig_ptr, val);
                     i--;
                     break;
                 }
@@ -432,24 +433,27 @@ void parse_extra_properties(t_mapin *x)
             switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
                     const char *value = atom_get_string(x->args+i+1);
-                    msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      's', (lo_arg *)value, 1);
+                    mapper_signal_set_property(x->sig_ptr,
+                                               atom_get_string(x->args+i)+1,
+                                               's', (lo_arg *)value, 1);
                     i++;
                     break;
                 }
                 case A_FLOAT:
                 {
                     float value = atom_getfloat(x->args+i+1);
-                    msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      'f', (lo_arg *)&value, 1);
+                    mapper_signal_set_property(x->sig_ptr,
+                                               atom_get_string(x->args+i)+1,
+                                               'f', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }
                 case A_LONG:
                 {
                     int value = atom_getlong(x->args+i+1);
-                    msig_set_property(x->sig_ptr, atom_get_string(x->args+i)+1,
-                                      'i', (lo_arg *)&value, 1);
+                    mapper_signal_set_property(x->sig_ptr,
+                                               atom_get_string(x->args+i)+1,
+                                               'i', (lo_arg *)&value, 1);
                     i++;
                     break;
                 }
@@ -491,8 +495,9 @@ static int check_ptrs(t_mapin *x)
     if (!x || !x->dev_obj || !x->sig_ptr) {
         return 1;
     }
-    else if (!x->sig_props) {
-        x->sig_props = msig_properties(x->sig_ptr);
+    else if (!x->length) {
+        x->length = mapper_signal_length(x->sig_ptr);
+        x->type = mapper_signal_type(x->sig_ptr);
     }
     return 0;
 }
@@ -506,21 +511,22 @@ static void mapin_int(t_mapin *x, long l)
     if (check_ptrs(x))
         return;
 
-    if (x->sig_props->length != 1)
+    if (x->length != 1)
         return;
-    if (x->sig_props->type == 'i') {
+    if (x->type == 'i') {
         int i = (int)l;
         value = &i;
     }
-    else if (x->sig_props->type == 'f') {
+    else if (x->type == 'f') {
         float f = (float)l;
         value = &f;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
-        msig_update_instance(x->sig_ptr, x->instance_id, value, 1, *x->tt_ptr);
+        mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+                                      value, 1, *x->tt_ptr);
     else
-        msig_update(x->sig_ptr, value, 1, *x->tt_ptr);
+        mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
 }
 
 // *********************************************************
@@ -532,21 +538,22 @@ static void mapin_float(t_mapin *x, double d)
     if (check_ptrs(x))
         return;
 
-    if (x->sig_props->length != 1)
+    if (x->length != 1)
         return;
-    if (x->sig_props->type == 'f') {
+    if (x->type == 'f') {
         float f = (float)d;
         value = &f;
     }
-    else if (x->sig_props->type == 'i') {
+    else if (x->type == 'i') {
         int i = (int)d;
         value = &i;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
-        msig_update_instance(x->sig_ptr, x->instance_id, value, 1, *x->tt_ptr);
+        mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+                                      value, 1, *x->tt_ptr);
     else
-        msig_update(x->sig_ptr, value, 1, *x->tt_ptr);
+        mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
 }
 
 // *********************************************************
@@ -559,14 +566,14 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
     if (check_ptrs(x) || !argc)
         return;
 
-    if (argc < x->sig_props->length || (argc % x->sig_props->length) != 0) {
+    if (argc < x->length || (argc % x->length) != 0) {
         object_post((t_object *)x, "Illegal list length (expected factor of %i)",
-                    x->sig_props->length);
+                    x->length);
         return;
     }
-    count = argc / x->sig_props->length;
+    count = argc / x->length;
 
-    if (x->sig_props->type == 'i') {
+    if (x->type == 'i') {
         int payload[argc];
         value = &payload;
         for (i = 0; i < argc; i++) {
@@ -582,13 +589,14 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
-            msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
+            mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+                                          value, count, *x->tt_ptr);
         }
         else {
-            msig_update(x->sig_ptr, value, count, *x->tt_ptr);
+            mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
     }
-    else if (x->sig_props->type == 'f') {
+    else if (x->type == 'f') {
         float payload[argc];
         value = &payload;
         for (i = 0; i < argc; i++) {
@@ -604,10 +612,11 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
-            msig_update_instance(x->sig_ptr, x->instance_id, value, count, *x->tt_ptr);
+            mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+                                          value, count, *x->tt_ptr);
         }
         else {
-            msig_update(x->sig_ptr, value, count, *x->tt_ptr);
+            mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
     }
 }
@@ -620,7 +629,7 @@ static void mapin_release(t_mapin *x)
         return;
 
     object_method(x->dev_obj, maybe_start_queue_sym);
-    msig_release_instance(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    mapper_signal_release_instance(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
 
 // *********************************************************
