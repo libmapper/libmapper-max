@@ -464,7 +464,7 @@ static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
         if (ptrs->num_objs == 1) {
             free(ptrs->objs);
             free(ptrs);
-            if (props->is_output)
+            if (props->direction & DI_OUTGOING)
                 mdev_remove_output(x->device, sig);
             else
                 mdev_remove_input(x->device, sig);

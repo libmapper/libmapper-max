@@ -173,7 +173,7 @@
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(LOCAL_LIBRARY_DIR)/Application Support/c74support/max-includes\"",
+					"/Applications/MaxSDK-5.1.7/c74support/max-includes",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -189,7 +189,7 @@
 					"\"$(SRCROOT)/../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
-					"\"/Library/Application Support/c74support/max-includes\"",
+					"/Applications/MaxSDK-5.1.7/c74support/max-includes",
 				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "";
