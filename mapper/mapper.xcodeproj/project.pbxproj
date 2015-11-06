@@ -173,13 +173,13 @@
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(LOCAL_LIBRARY_DIR)/Application Support/c74support/max-includes\"",
+					"/Applications/MaxSDK-7.0.3/source/c74support/max-includes",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREFIX_HEADER = "/Applications/MaxSDK-5.1.7/c74support/max-includes/macho-prefix.pch";
+				GCC_PREFIX_HEADER = "/Applications/MaxSDK-7.0.3/source/c74support/max-includes/macho-prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "MAXMSP=1";
 				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -189,7 +189,7 @@
 					"\"$(SRCROOT)/../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
-					"\"/Library/Application Support/c74support/max-includes\"",
+					"/Applications/MaxSDK-7.0.3/source/c74support/max-includes",
 				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "";
