@@ -248,7 +248,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                         const char *value = maxpd_atom_get_string(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    maxpd_atom_get_string(argv+i)+1,
-                                                   's', (lo_arg *)value, 1);
+                                                   1, 's', value);
                         i++;
                         break;
                     }
@@ -257,7 +257,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                         float value = maxpd_atom_get_float(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    maxpd_atom_get_string(argv+i)+1,
-                                                   'f', (lo_arg *)&value, 1);
+                                                   1, 'f', &value);
                         i++;
                         break;
                     }
@@ -267,7 +267,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                         int value = atom_getlong(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    maxpd_atom_get_string(argv+i)+1,
-                                                   'i', (lo_arg *)&value, 1);
+                                                   1, 'i', &value);
                         i++;
                         break;
                     }
@@ -533,7 +533,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 case A_SYM: {
                     const char *value = maxpd_atom_get_string(argv+i+1);
                     mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               's', (lo_arg *)value, 1);
+                                               1, 's', value);
                     i++;
                     break;
                 }
@@ -541,7 +541,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 {
                     float value = maxpd_atom_get_float(argv+i+1);
                     mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               'f', (lo_arg *)&value, 1);
+                                               1, 'f', &value);
                     i++;
                     break;
                 }
@@ -550,7 +550,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 {
                     int value = atom_getlong(argv+i+1);
                     mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               'i', (lo_arg *)&value, 1);
+                                               1, 'i', &value);
                     i++;
                     break;
                 }
@@ -1101,18 +1101,21 @@ static void mapperobj_register_signals(t_mapper *x) {
                                                       (int)sig_length,
                                                       sig_type_char, sig_units,
                                                       0, 0,
-                                                      sig_type_char == 'i' ? mapperobj_int_handler
+                                                      sig_type_char == 'i'
+                                                      ? mapperobj_int_handler
                                                       : mapperobj_float_handler, x);
 
             if (temp_sig) {
                 if (range_known[0]) {
                     mapper_signal_set_minimum(temp_sig,
-                                              sig_type_char == 'i' ? (void *)&sig_min_int
+                                              sig_type_char == 'i'
+                                              ? (void *)&sig_min_int
                                               : (void *)&sig_min_float);
                 }
                 if (range_known[1]) {
                     mapper_signal_set_maximum(temp_sig,
-                                              sig_type_char == 'i' ? (void *)&sig_max_int
+                                              sig_type_char == 'i'
+                                              ? (void *)&sig_max_int
                                               : (void *)&sig_max_float);
                 }
             }
@@ -1185,12 +1188,14 @@ static void mapperobj_register_signals(t_mapper *x) {
             if (temp_sig) {
                 if (range_known[0]) {
                     mapper_signal_set_minimum(temp_sig,
-                                              sig_type_char == 'i' ? (void *)&sig_min_int
+                                              sig_type_char == 'i'
+                                              ? (void *)&sig_min_int
                                               : (void *)&sig_min_float);
                 }
                 if (range_known[1]) {
                     mapper_signal_set_maximum(temp_sig,
-                                              sig_type_char == 'i' ? (void *)&sig_max_int
+                                              sig_type_char == 'i'
+                                              ? (void *)&sig_max_int
                                               : (void *)&sig_max_float);
                 }
             }

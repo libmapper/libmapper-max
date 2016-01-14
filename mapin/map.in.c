@@ -344,8 +344,7 @@ void parse_extra_properties(t_mapin *x)
                     i--;
                     break;
                 }
-                case 'f':
-                case 'd': {
+                case 'f': {
                     float val[x->sig_length];
                     for (j = 0; j < length; j++, i++) {
                         val[j] = atom_coerce_float(x->args + i);
@@ -410,8 +409,7 @@ void parse_extra_properties(t_mapin *x)
                     i--;
                     break;
                 }
-                case 'f':
-                case 'd': {
+                case 'f': {
                     float val[x->sig_length];
                     for (j = 0; j < length; j++, i++) {
                         val[j] = atom_coerce_float(x->args + i);
@@ -436,7 +434,7 @@ void parse_extra_properties(t_mapin *x)
                     const char *value = atom_get_string(x->args+i+1);
                     mapper_signal_set_property(x->sig_ptr,
                                                atom_get_string(x->args+i)+1,
-                                               's', (lo_arg *)value, 1);
+                                               1, 's', value);
                     i++;
                     break;
                 }
@@ -445,7 +443,7 @@ void parse_extra_properties(t_mapin *x)
                     float value = atom_getfloat(x->args+i+1);
                     mapper_signal_set_property(x->sig_ptr,
                                                atom_get_string(x->args+i)+1,
-                                               'f', (lo_arg *)&value, 1);
+                                               1, 'f', &value);
                     i++;
                     break;
                 }
@@ -454,7 +452,7 @@ void parse_extra_properties(t_mapin *x)
                     int value = atom_getlong(x->args+i+1);
                     mapper_signal_set_property(x->sig_ptr,
                                                atom_get_string(x->args+i)+1,
-                                               'i', (lo_arg *)&value, 1);
+                                               1, 'i', &value);
                     i++;
                     break;
                 }

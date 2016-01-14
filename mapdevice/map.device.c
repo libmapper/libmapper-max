@@ -192,7 +192,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                         const char *value = atom_get_string(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    atom_get_string(argv+i)+1,
-                                                   's', (lo_arg *)value, 1);
+                                                   1, 's', value);
                         i++;
                         break;
                     }
@@ -201,7 +201,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                         float value = atom_getfloat(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    atom_get_string(argv+i)+1,
-                                                   'f', (lo_arg *)&value, 1);
+                                                   1, 'f', &value);
                         i++;
                         break;
                     }
@@ -210,7 +210,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                         int value = atom_getlong(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    atom_get_string(argv+i)+1,
-                                                   'i', (lo_arg *)&value, 1);
+                                                   1, 'i', &value);
                         i++;
                         break;
                     }
