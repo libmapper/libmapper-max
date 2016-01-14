@@ -42,7 +42,7 @@ typedef struct _mapin
     mapper_signal       sig_ptr;
     mapper_timetag_t    *tt_ptr;
     long                is_instance;
-    int                 instance_id;
+    mapper_id           instance_id;
     void                *outlet;
     t_symbol            *myobjname;
     t_object            *patcher;
@@ -523,7 +523,7 @@ static void mapin_int(t_mapin *x, long l)
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
-        mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+        mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
@@ -550,7 +550,7 @@ static void mapin_float(t_mapin *x, double d)
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
-        mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+        mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
@@ -589,7 +589,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
-            mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+            mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                           value, count, *x->tt_ptr);
         }
         else {
@@ -612,7 +612,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
-            mapper_signal_update_instance(x->sig_ptr, x->instance_id,
+            mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                           value, count, *x->tt_ptr);
         }
         else {
@@ -629,7 +629,7 @@ static void mapin_release(t_mapin *x)
         return;
 
     object_method(x->dev_obj, maybe_start_queue_sym);
-    mapper_signal_release_instance(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
 
 // *********************************************************
