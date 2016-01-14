@@ -166,10 +166,11 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
         }
 
         // we need to cache any arguments to add later
+        x->args = 0;
         x->num_args = argc - i;
         if (x->num_args) {
-            long alloced;
-            char result;
+            long alloced = 0;
+            char result = 0;
             atom_alloc_array(x->num_args, &alloced, &x->args, &result);
             if (!result || !alloced)
                 return 0;
@@ -192,7 +193,7 @@ static void mapin_free(t_mapin *x)
 {
     remove_from_hashtab(x);
     if (x->args)
-        free(x->args);
+        sysmem_freeptr(x->args);
 }
 
 void mapin_loadbang(t_mapin *x)
