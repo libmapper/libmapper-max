@@ -53,7 +53,7 @@ typedef struct _mapper
     void *clock;          // pointer to clock object
     char *name;
     mapper_network network;
-    mapper_db db;
+    mapper_database db;
     mapper_device device;
     mapper_timetag_t timetag;
     int updated;
@@ -86,7 +86,8 @@ static void mapperobj_int_handler(mapper_signal sig, mapper_id instance,
                                   const void *value, int count,
                                   mapper_timetag_t *tt);
 static void mapperobj_instance_event_handler(mapper_signal sig, mapper_id instance,
-                                             int event, mapper_timetag_t *tt);
+                                             mapper_instance_event event,
+                                             mapper_timetag_t *tt);
 
 static void mapperobj_print_properties(t_mapper *x);
 
@@ -217,6 +218,9 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
 #endif
         }
 
+        post("libmapper version %s – visit libmapper.org for more information.",
+             mapper_version());
+
         x->network = mapper_network_new(iface, 0, 0);
         if (!x->network) {
             post("Error initializing libmapper admin.");
@@ -228,7 +232,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
             post("Error initializing libmapper device.");
             return 0;
         }
-        x->db = mapper_device_db(x->device);
+        x->db = mapper_device_database(x->device);
 
         // add other declared properties
         for (i = 0; i < argc; i++) {
@@ -514,7 +518,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
             if (prop_int > 1) {
                 mapper_signal_reserve_instances(sig, prop_int - 1, 0, 0);
                 mapper_signal_set_instance_event_callback(sig,
-                    mapperobj_instance_event_handler, MAPPER_INSTANCE_ALL, x);
+                    mapperobj_instance_event_handler, MAPPER_INSTANCE_ALL);
             }
         }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
@@ -917,7 +921,7 @@ static void mapperobj_float_handler(mapper_signal sig, mapper_id instance,
 // -(instance management handler)----------------------
 static void mapperobj_instance_event_handler(mapper_signal sig,
                                              mapper_id instance,
-                                             int event,
+                                             mapper_instance_event event,
                                              mapper_timetag_t *tt)
 {
     int mode;
@@ -977,7 +981,7 @@ static void mapperobj_read_definition (t_mapper *x)
     t_symbol *sym_name = gensym("name");
     const char *my_name = 0;
     short path;
-    long filetype = 'JSON', outtype;
+    unsigned int filetype = 'JSON', outtype;
 
     // TODO: add ".json" to end of string if missing (or pick new filetype!)
 

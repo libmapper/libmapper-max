@@ -42,7 +42,7 @@ typedef struct _mapdevice
     void                *clock;
     char                *name;
     mapper_network      network;
-    mapper_db           db;
+    mapper_database     db;
     mapper_device       device;
     mapper_timetag_t    timetag;
     int                 updated;
@@ -83,7 +83,7 @@ static void mapdevice_sig_handler(mapper_signal sig, mapper_id instance,
                                   mapper_timetag_t *tt);
 static void mapdevice_instance_event_handler(mapper_signal sig,
                                              mapper_id instance,
-                                             int event,
+                                             mapper_instance_event event,
                                              mapper_timetag_t *tt);
 
 static void mapdevice_print_properties(t_mapdevice *x);
@@ -163,7 +163,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             object_post((t_object *)x, "error initializing libmapper device.");
             return 0;
         }
-        x->db = mapper_device_db(x->device);
+        x->db = mapper_device_database(x->device);
 
         if (mapdevice_attach(x)) {
             mapper_device_free(x->device);
@@ -173,7 +173,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
         }
 
         post("libmapper version %s – visit libmapper.org for more information.",
-             mapper_libversion());
+             mapper_version());
         post("map.device object created... waiting for inputs and outputs.");
 
         // add other declared properties
@@ -412,7 +412,7 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
                                            0, 0, 0, mapdevice_sig_handler, ptrs);
             mapper_signal_set_instance_event_callback(sig,
                                                       mapdevice_instance_event_handler,
-                                                      MAPPER_INSTANCE_ALL, ptrs);
+                                                      MAPPER_INSTANCE_ALL);
         }
         //output new numOutputs/numInputs
         atom_setlong(x->buffer, mapper_device_num_signals(x->device, dir));
@@ -568,7 +568,7 @@ static void mapdevice_sig_handler(mapper_signal sig, mapper_id instance,
 // -(instance management handler)----------------------
 static void mapdevice_instance_event_handler(mapper_signal sig,
                                              mapper_id instance,
-                                             int event,
+                                             mapper_instance_event event,
                                              mapper_timetag_t *tt)
 {
     t_map_ptrs *ptrs = mapper_signal_user_data(sig);
