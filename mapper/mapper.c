@@ -849,8 +849,8 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 // *********************************************************
 // -(int handler)-------------------------------------------
 static void mapperobj_int_handler(mapper_signal msig, mapper_db_signal props,
-                               int instance_id, void *value, int count,
-                               mapper_timetag_t *tt)
+                                  int instance_id, void *value, int count,
+                                  mapper_timetag_t *tt)
 {
     t_mapper *x = props->user_data;
     int poly = 0;
@@ -883,8 +883,8 @@ static void mapperobj_int_handler(mapper_signal msig, mapper_db_signal props,
 // *********************************************************
 // -(float handler)-----------------------------------------
 static void mapperobj_float_handler(mapper_signal msig, mapper_db_signal props,
-                                 int instance_id, void *value, int count,
-                                 mapper_timetag_t *time)
+                                    int instance_id, void *value, int count,
+                                    mapper_timetag_t *time)
 {
     t_mapper *x = props->user_data;
     int poly = 0;

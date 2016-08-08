@@ -502,6 +502,8 @@ static int check_ptrs(t_mapin *x)
 // -(set int input)-----------------------------------------
 static void mapin_int(t_mapin *x, long l)
 {
+    int i;
+    float f;
     void *value = 0;
 
     if (check_ptrs(x))
@@ -510,11 +512,11 @@ static void mapin_int(t_mapin *x, long l)
     if (x->sig_props->length != 1)
         return;
     if (x->sig_props->type == 'i') {
-        int i = (int)l;
+        i = (int)l;
         value = &i;
     }
     else if (x->sig_props->type == 'f') {
-        float f = (float)l;
+        f = (float)l;
         value = &f;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
@@ -528,6 +530,8 @@ static void mapin_int(t_mapin *x, long l)
 // -(set float input)---------------------------------------
 static void mapin_float(t_mapin *x, double d)
 {
+    int i;
+    float f;
     void *value = 0;
 
     if (check_ptrs(x))
@@ -536,11 +540,11 @@ static void mapin_float(t_mapin *x, double d)
     if (x->sig_props->length != 1)
         return;
     if (x->sig_props->type == 'f') {
-        float f = (float)d;
+        f = (float)d;
         value = &f;
     }
     else if (x->sig_props->type == 'i') {
-        int i = (int)d;
+        i = (int)d;
         value = &i;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
