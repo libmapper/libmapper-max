@@ -515,6 +515,8 @@ static int check_ptrs(t_mapout *x)
 // -(int input)---------------------------------------------
 static void mapout_int(t_mapout *x, long l)
 {
+    int i;
+    float f;
     void *value = 0;
 
     if (check_ptrs(x))
@@ -523,11 +525,11 @@ static void mapout_int(t_mapout *x, long l)
     if (x->length != 1)
         return;
     if (x->type == 'i') {
-        int i = (int)l;
+        i = (int)l;
         value = &i;
     }
     else if (x->type == 'f') {
-        float f = (float)l;
+        f = (float)l;
         value = &f;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
@@ -542,6 +544,8 @@ static void mapout_int(t_mapout *x, long l)
 // -(float input)-------------------------------------------
 static void mapout_float(t_mapout *x, double d)
 {
+    int i;
+    float f;
     void *value = 0;
 
     if (check_ptrs(x))
@@ -550,11 +554,11 @@ static void mapout_float(t_mapout *x, double d)
     if (x->length != 1)
         return;
     if (x->type == 'f') {
-        float f = (float)d;
+        f = (float)d;
         value = &f;
     }
     else if (x->type == 'i') {
-        int i = (int)d;
+        i = (int)d;
         value = &i;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
