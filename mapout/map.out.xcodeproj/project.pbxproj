@@ -201,7 +201,7 @@
 					/usr/local/lib/liblo.dylib,
 					"-lmx",
 					"-lz",
-					"/usr/local/lib/libmapper-0.dylib",
+					/usr/local/lib/libmapper.dylib,
 				);
 				PRODUCT_NAME = map.out;
 				SDKROOT = macosx;

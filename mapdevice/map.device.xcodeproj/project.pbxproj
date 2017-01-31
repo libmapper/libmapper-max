@@ -189,7 +189,7 @@
 					"\"$(SRCROOT)/../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
-					"/Applications/MaxSDK-7.0.3/source/c74support/max-includes",
+					"/Applications/MaxSDK-7.1.0/source/c74support/max-includes",
 				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "";
@@ -200,7 +200,7 @@
 					/usr/local/lib/liblo.dylib,
 					"-lmx",
 					"-lz",
-					"/usr/local/lib/libmapper-0.dylib",
+					/usr/local/lib/libmapper.dylib,
 				);
 				PRODUCT_NAME = map.device;
 				SDKROOT = macosx;

@@ -252,7 +252,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                         const char *value = maxpd_atom_get_string(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    maxpd_atom_get_string(argv+i)+1,
-                                                   1, 's', value);
+                                                   1, 's', value, 1);
                         i++;
                         break;
                     }
@@ -261,7 +261,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                         float value = maxpd_atom_get_float(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    maxpd_atom_get_string(argv+i)+1,
-                                                   1, 'f', &value);
+                                                   1, 'f', &value, 1);
                         i++;
                         break;
                     }
@@ -271,7 +271,7 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                         int value = atom_getlong(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    maxpd_atom_get_string(argv+i)+1,
-                                                   1, 'i', &value);
+                                                   1, 'i', &value, 1);
                         i++;
                         break;
                     }
@@ -449,7 +449,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
         return;
     }
 
-    sig = mapper_device_add_signal(x->device, dir, sig_name, sig_length,
+    sig = mapper_device_add_signal(x->device, dir, 1, sig_name, sig_length,
                                    sig_type, sig_units, 0, 0,
                                    sig_type == 'i' ? mapperobj_int_handler
                                    : mapperobj_float_handler, x);
@@ -537,7 +537,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 case A_SYM: {
                     const char *value = maxpd_atom_get_string(argv+i+1);
                     mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               1, 's', value);
+                                               1, 's', value, 1);
                     i++;
                     break;
                 }
@@ -545,7 +545,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 {
                     float value = maxpd_atom_get_float(argv+i+1);
                     mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               1, 'f', &value);
+                                               1, 'f', &value, 1);
                     i++;
                     break;
                 }
@@ -554,7 +554,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 {
                     int value = atom_getlong(argv+i+1);
                     mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               1, 'i', &value);
+                                               1, 'i', &value, 1);
                     i++;
                     break;
                 }
@@ -1258,7 +1258,7 @@ static void mapperobj_learn(t_mapper *x, t_symbol *s,
 static void maybe_start_queue(t_mapper *x)
 {
     if (!x->updated) {
-        mapper_device_now(x->device, &x->timetag);
+        mapper_timetag_now(&x->timetag);
         mapper_device_start_queue(x->device, x->timetag);
         x->updated = 1;
     }

@@ -198,7 +198,7 @@
 					"-framework",
 					MaxAPI,
 					"-lmx",
-					"/usr/local/lib/libmapper-0.dylib",
+					/usr/local/lib/libmapper.dylib,
 				);
 				PRODUCT_NAME = map.in;
 				SDKROOT = macosx;

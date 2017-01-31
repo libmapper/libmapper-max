@@ -192,7 +192,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                         const char *value = atom_get_string(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    atom_get_string(argv+i)+1,
-                                                   1, 's', value);
+                                                   1, 's', value, 1);
                         i++;
                         break;
                     }
@@ -201,7 +201,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                         float value = atom_getfloat(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    atom_get_string(argv+i)+1,
-                                                   1, 'f', &value);
+                                                   1, 'f', &value, 1);
                         i++;
                         break;
                     }
@@ -210,7 +210,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                         int value = atom_getlong(argv+i+1);
                         mapper_device_set_property(x->device,
                                                    atom_get_string(argv+i)+1,
-                                                   1, 'i', &value);
+                                                   1, 'i', &value, 1);
                         i++;
                         break;
                     }
@@ -408,7 +408,7 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
             ptrs->objs = (t_object **)malloc(sizeof(t_object *));
             ptrs->num_objs = 1;
             ptrs->objs[0] = obj;
-            sig = mapper_device_add_signal(x->device, dir, name, length, type,
+            sig = mapper_device_add_signal(x->device, dir, 1, name, length, type,
                                            0, 0, 0, mapdevice_sig_handler, ptrs);
             mapper_signal_set_instance_event_callback(sig,
                                                       mapdevice_instance_event_handler,
@@ -624,7 +624,7 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
 static void mapdevice_maybe_start_queue(t_mapdevice *x)
 {
     if (!x->updated) {
-        mapper_device_now(x->device, &x->timetag);
+        mapper_timetag_now(&x->timetag);
         mapper_device_start_queue(x->device, x->timetag);
         x->updated = 1;
     }

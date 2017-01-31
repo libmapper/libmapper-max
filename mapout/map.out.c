@@ -442,7 +442,7 @@ void parse_extra_properties(t_mapout *x)
                     const char *value = atom_get_string(x->args+i+1);
                     mapper_signal_set_property(x->sig_ptr,
                                                atom_get_string(x->args+i)+1,
-                                               1, 's', value);
+                                               1, 's', value, 1);
                     i++;
                     break;
                 }
@@ -451,7 +451,7 @@ void parse_extra_properties(t_mapout *x)
                     float value = atom_getfloat(x->args+i+1);
                     mapper_signal_set_property(x->sig_ptr,
                                                atom_get_string(x->args+i)+1,
-                                               1, 'f', &value);
+                                               1, 'f', &value, 1);
                     i++;
                     break;
                 }
@@ -460,7 +460,7 @@ void parse_extra_properties(t_mapout *x)
                     int value = atom_getlong(x->args+i+1);
                     mapper_signal_set_property(x->sig_ptr,
                                                atom_get_string(x->args+i)+1,
-                                               1, 'i', &value);
+                                               1, 'i', &value, 1);
                     i++;
                     break;
                 }
