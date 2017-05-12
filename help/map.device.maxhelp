@@ -2,9 +2,11 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 6,
-			"minor" : 0,
-			"revision" : 8
+			"major" : 7,
+			"minor" : 3,
+			"revision" : 3,
+			"architecture" : "x86",
+			"modernui" : 1
 		}
 ,
 		"rect" : [ 100.0, 100.0, 609.0, 637.0 ],
@@ -13,28 +15,38 @@
 		"default_fontsize" : 12.0,
 		"default_fontface" : 0,
 		"default_fontname" : "Arial",
-		"gridonopen" : 0,
+		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 0,
+		"gridsnaponopen" : 1,
+		"objectsnaponopen" : 1,
 		"statusbarvisible" : 2,
 		"toolbarvisible" : 1,
+		"lefttoolbarpinned" : 0,
+		"toptoolbarpinned" : 0,
+		"righttoolbarpinned" : 0,
+		"bottomtoolbarpinned" : 0,
+		"toolbars_unpinned_last_save" : 0,
+		"tallnewobj" : 0,
 		"boxanimatetime" : 200,
-		"imprint" : 0,
 		"enablehscroll" : 1,
 		"enablevscroll" : 1,
 		"devicewidth" : 0.0,
 		"description" : "",
 		"digest" : "",
 		"tags" : "",
+		"style" : "",
+		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-13",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
-					"numoutlets" : 0,
-					"patching_rect" : [ 45.0, 405.0, 217.0, 20.0 ],
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "list" ],
+					"patching_rect" : [ 45.0, 405.0, 217.0, 22.0 ],
+					"style" : "",
 					"text" : "map.device my_device @interface en1"
 				}
 
@@ -43,13 +55,13 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-4",
 					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 475.0, 340.0, 33.0 ],
+					"style" : "",
 					"text" : "Any other properties you wish to attach to your device can also be specified as properties in the form @<key> <value>"
 				}
 
@@ -59,12 +71,12 @@
 					"fontface" : 1,
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-7",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 450.0, 163.0, 20.0 ],
+					"style" : "",
 					"text" : "Other properties:"
 				}
 
@@ -73,13 +85,13 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-11",
 					"linecount" : 7,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 295.0, 336.0, 100.0 ],
+					"style" : "",
 					"text" : "By default the map.device object will try to use your computer's ethernet port, then wifi if ethernet is not available, and finally falling back to the local-loopback interfaces if wifi is not available either.\n\nThe default behaviour can be over-ridden by specifying the network interface to use as an argument:"
 				}
 
@@ -89,12 +101,12 @@
 					"fontface" : 1,
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-12",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 270.0, 163.0, 20.0 ],
+					"style" : "",
 					"text" : "Network interfaces:"
 				}
 
@@ -103,12 +115,12 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-18",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 555.0, 60.0, 20.0 ],
+					"style" : "",
 					"text" : "see also:"
 				}
 
@@ -122,7 +134,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 90.0, 584.5, 54.0, 18.0 ],
+					"patching_rect" : [ 90.0, 584.5, 54.0, 22.0 ],
+					"style" : "",
 					"text" : "map.out"
 				}
 
@@ -137,7 +150,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 643.0, 59.0, 20.0 ],
+					"patching_rect" : [ 30.0, 643.0, 59.0, 22.0 ],
+					"style" : "",
 					"text" : "pcontrol"
 				}
 
@@ -152,7 +166,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 613.0, 86.0, 20.0 ],
+					"patching_rect" : [ 30.0, 613.0, 86.0, 22.0 ],
+					"style" : "",
 					"text" : "prepend help"
 				}
 
@@ -166,7 +181,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 585.0, 47.0, 18.0 ],
+					"patching_rect" : [ 30.0, 585.0, 47.0, 22.0 ],
+					"style" : "",
 					"text" : "map.in"
 				}
 
@@ -180,7 +196,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 375.0, 180.0, 113.0, 20.0 ],
+					"patching_rect" : [ 375.0, 180.0, 113.0, 22.0 ],
+					"style" : "",
 					"text" : "loadmess refer info"
 				}
 
@@ -190,6 +207,7 @@
 					"automouse" : 0,
 					"cols" : 1,
 					"colwidth" : 90,
+					"fontface" : 0,
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"hscroll" : 0,
@@ -217,7 +235,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 375.0, 120.0, 85.0, 20.0 ],
+					"patching_rect" : [ 375.0, 120.0, 85.0, 22.0 ],
+					"style" : "",
 					"text" : "prepend store"
 				}
 
@@ -231,11 +250,12 @@
 					"numinlets" : 1,
 					"numoutlets" : 4,
 					"outlettype" : [ "", "", "", "" ],
-					"patching_rect" : [ 375.0, 150.0, 61.0, 20.0 ],
+					"patching_rect" : [ 375.0, 150.0, 61.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"embed" : 0
 					}
 ,
+					"style" : "",
 					"text" : "coll info 1"
 				}
 
@@ -244,13 +264,13 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-8",
 					"linecount" : 12,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 90.0, 317.0, 167.0 ],
+					"style" : "",
 					"text" : "The map.device object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata\n\nAdd inputs and outputs to your device using the map.in and map.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
 				}
 
@@ -265,7 +285,8 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 375.0, 90.0, 133.0, 20.0 ],
+					"patching_rect" : [ 375.0, 90.0, 133.0, 22.0 ],
+					"style" : "",
 					"text" : "map.device my_device"
 				}
 
@@ -274,25 +295,33 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-3",
 					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 365.0, 525.0, 85.0, 47.0 ],
+					"style" : "",
 					"text" : "For more information click here ->"
 				}
 
 			}
 , 			{
 				"box" : 				{
+					"bgmode" : 0,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
 					"id" : "obj-64",
+					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
 					"name" : "logolink.maxpat",
 					"numinlets" : 0,
 					"numoutlets" : 0,
-					"patching_rect" : [ 450.0, 462.5, 150.0, 155.5 ]
+					"offset" : [ 0.0, 0.0 ],
+					"patching_rect" : [ 450.0, 462.5, 150.0, 155.5 ],
+					"viewvisibility" : 1
 				}
 
 			}
@@ -300,12 +329,12 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 14.0,
-					"frgb" : 0.0,
 					"id" : "obj-16",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 45.0, 484.0, 22.0 ],
+					"style" : "",
 					"text" : "A MaxMSP wrapper for a libmapper device"
 				}
 
@@ -315,12 +344,12 @@
 					"fontface" : 3,
 					"fontname" : "Arial",
 					"fontsize" : 20.871338,
-					"frgb" : 0.0,
 					"id" : "obj-22",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 15.0, 485.0, 30.0 ],
+					"style" : "",
 					"text" : "map.device",
 					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ],
 					"varname" : "autohelp_top_title"
@@ -329,12 +358,16 @@
 			}
 , 			{
 				"box" : 				{
+					"angle" : 0.0,
 					"bgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 					"id" : "obj-60",
 					"maxclass" : "panel",
+					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 576.0, 15.0, 4.0, 570.0 ]
+					"patching_rect" : [ 576.0, 15.0, 4.0, 512.0 ],
+					"proportion" : 0.39,
+					"style" : ""
 				}
 
 			}
@@ -350,6 +383,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 15.0, 565.0, 30.0 ],
+					"proportion" : 0.39,
+					"style" : "",
 					"varname" : "autohelp_top_panel[1]"
 				}
 
@@ -412,12 +447,22 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "logolink.maxpat",
-				"bootpath" : "/Users/jocal/Documents/Mappers/mapper-max-pd/mapdevice",
-				"patcherrelativepath" : "",
+				"bootpath" : "~/Documents/Mappers/mapper-max-pd/help",
 				"type" : "JSON",
 				"implicit" : 1
 			}
- ]
+, 			{
+				"name" : "libmapper_logo_black_512px.png",
+				"bootpath" : "~/Desktop/libmapper-logo",
+				"type" : "PNG ",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "map.device.mxo",
+				"type" : "iLaX"
+			}
+ ],
+		"autosave" : 0
 	}
 
 }

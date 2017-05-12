@@ -1,0 +1,22 @@
+libmapper bindings for MaxMSP
+=============================
+
+Max objects for libmapper devices and signals. Help patches are included for documentation.
+
+The `mapper` object (found in the folder "old_bindings") encapsulates the functionality of a libmapper device and works as a central hub in your patch by sending and receiving labeled messages from the libmapper network.
+
+There are now another set of bindings (in the folder "new_bindings") which attempt to provide a more Max-like interface to the libmapper ecosystem. The `map.device` object creates a libmapper device as before, but it communicates with an arbitrary number of `map.in` and `map.out` objects in your patch (and subpatchers) which can be used essentially as networked replacements for the internal `inlet` and `outlet` objects. Please load the help patches for more documentation and examples of use.
+
+Please direct any questions to the libmapper mailing list:
+http://groups.google.com/group/dot_mapper
+
+This software is licensed with the GPLv3; see the attached file
+COPYING for details, which should be included in this download.
+
+----------
+Joseph Malloch 2013–2017
+Input Devices and Music Interaction Laboratory, McGill University.
+
+http://libmapper.org
+http://idmil.org
+http://josephmalloch.com
