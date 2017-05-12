@@ -1,0 +1,8 @@
+.DS_Store
+*.o
+mapper/build
+mapdevice/build
+mapout/build
+mapin/build
+*.mxo
+*.pd_darwin
