@@ -39,7 +39,7 @@ cp ./mapper/tester.json ./mapper-osx-max-pd/old_bindings/
 cp ./help/mapper.maxhelp ./mapper-osx-max-pd/old_bindings/
 cp ./mapper/mapper.pd_darwin ./mapper-osx-max-pd/old_bindings/
 cp ./help/mapper.help.pd ./mapper-osx-max-pd/old_bindings/
-cp ./oscmulticast/oscmulticast.mxo ./mapper-osx-max-pd/old_bindings/
+cp -r ./oscmulticast/oscmulticast.mxo ./mapper-osx-max-pd/old_bindings/
 
 mv ./mapdevice/build/maxmsp/map.device.mxo ./mapper-osx-max-pd/new_bindings/
 cp ./help/map.device.maxhelp ./mapper-osx-max-pd/new_bindings/
