@@ -490,10 +490,6 @@ static void mapdevice_print_properties(t_mapdevice *x)
         atom_setlong(x->buffer, mapper_device_port(x->device));
         outlet_anything(x->outlet, gensym("port"), 1, x->buffer);
 
-        //output ordinal
-        atom_setlong(x->buffer, mapper_device_ordinal(x->device));
-        outlet_anything(x->outlet, gensym("ordinal"), 1, x->buffer);
-
         //output numInputs
         atom_setlong(x->buffer, mapper_device_num_signals(x->device,
                                                           MAPPER_DIR_INCOMING));

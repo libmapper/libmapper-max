@@ -2,7 +2,6 @@
 #X text 20 12 mapper;
 #X text 22 27 A pd wrapper for libmapper/Digital Orchestra Tools;
 #X text 20 353 For more information visit;
-#X text 21 368 www.idmil.org/software/libmapper;
 #X obj 30 79 r mapper;
 #N canvas 437 491 450 300 adding_signals 0;
 #X text 19 15 Input and ouput signals can be added to the device by
@@ -144,10 +143,11 @@ in the network \, and mapping connections can be created \, edited
 #X floatatom 346 173 5 0 0 3 numOutputs - -;
 #X symbolatom 130 172 0 0 0 3 IP - -;
 #X obj 30 108 mapper @alias my_device;
-#X connect 4 0 15 0;
-#X connect 9 0 10 0;
-#X connect 9 1 14 0;
-#X connect 9 2 11 0;
-#X connect 9 3 12 0;
-#X connect 9 4 13 0;
-#X connect 15 1 9 0;
+#X text 21 368 www.libmapper.org;
+#X connect 3 0 14 0;
+#X connect 8 0 9 0;
+#X connect 8 1 13 0;
+#X connect 8 2 10 0;
+#X connect 8 3 11 0;
+#X connect 8 4 12 0;
+#X connect 14 1 8 0;
