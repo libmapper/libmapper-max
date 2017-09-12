@@ -37,6 +37,12 @@
 #define INTERVAL 1
 #define MAX_LIST 256
 
+#ifdef MAXMSP
+#define POST(x, ...) { object_post((t_object *)x, __VA_ARGS__); }
+#else
+#define POST(x, ...) { post(__VA_ARGS__); }
+#endif
+
 // *********************************************************
 // -(object struct)-----------------------------------------
 typedef struct _mapper
@@ -218,21 +224,23 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
 #endif
         }
 
-        post("libmapper version %s – visit libmapper.org for more information.",
+        POST(x, "libmapper version %s – visit libmapper.org for more information.",
              mapper_version());
 
         x->network = mapper_network_new(iface, 0, 0);
         if (!x->network) {
-            post("Error initializing libmapper admin.");
+            POST(x, "Error initializing libmapper network.");
             return 0;
         }
 
         x->device = mapper_device_new(x->name, 0, x->network);
         if (!x->device) {
-            post("Error initializing libmapper device.");
+            POST(x, "Error initializing libmapper device.");
             return 0;
         }
         x->db = mapper_device_database(x->device);
+        POST(x, "Using network interface %s.",
+             mapper_network_interface(x->network));
 
         // add other declared properties
         for (i = 0; i < argc; i++) {
@@ -392,7 +400,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
     mapper_direction dir;
 
     if (argc < 4) {
-        post("not enough arguments for 'add' message.");
+        POST(x, "Not enough arguments for 'add' message.");
         return;
     }
 
@@ -441,11 +449,11 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
         }
     }
     if (!sig_type) {
-        post("signal has no declared type!");
+        POST(x, "Signal has no declared type!");
         return;
     }
     if (sig_length < 1) {
-        post("signals cannot have length < 1!");
+        POST(x, "Signals cannot have length < 1!");
         return;
     }
 
@@ -454,7 +462,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                                    sig_type == 'i' ? mapperobj_int_handler
                                    : mapperobj_float_handler, x);
     if (!sig) {
-        post("error adding signal!");
+        POST(x, "Error adding signal!");
         return;
     }
 
@@ -585,7 +593,7 @@ static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
         return;
     }
     if (argv->a_type != A_SYM || (argv+1)->a_type != A_SYM) {
-        post("Unable to parse remove message!");
+        POST(x, "Unable to parse remove message!");
         return;
     }
     direction = strdup(maxpd_atom_get_string(argv));
@@ -614,38 +622,32 @@ static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
 static void mapperobj_clear_signals(t_mapper *x, t_symbol *s,
                                     int argc, t_atom *argv)
 {
-    int clear_inputs = 0, clear_outputs = 0;
+    mapper_direction dir = 0;
 
     if (!argc)
-        clear_inputs = clear_outputs = 1;
+        dir = MAPPER_DIR_ANY;
     else if (maxpd_atom_strcmp(argv, "inputs") == 0)
-        clear_inputs = 1;
+        dir |= MAPPER_DIR_INCOMING;
     else if (maxpd_atom_strcmp(argv, "outputs") == 0)
-        clear_outputs = 1;
+        dir |= MAPPER_DIR_OUTGOING;
     else
         return;
 
     mapper_signal *sigs;
-    if (clear_inputs) {
-        post("clearing inputs");
-        sigs = mapper_device_signals(x->device, MAPPER_DIR_INCOMING);
-        while (sigs) {
-            mapper_signal sig = *sigs;
-            sigs = mapper_signal_query_next(sigs);
-            mapper_device_remove_signal(x->device, sig);
-        }
+    POST(x, "Clearing signals");
+    sigs = mapper_device_signals(x->device, dir);
+    while (sigs) {
+        mapper_signal sig = *sigs;
+        sigs = mapper_signal_query_next(sigs);
+        mapper_device_remove_signal(x->device, sig);
+    }
+
+    if (dir & MAPPER_DIR_INCOMING) {
         maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
                                                                 MAPPER_DIR_INCOMING));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
-    if (clear_outputs) {
-        post("clearing outputs");
-        sigs = mapper_device_signals(x->device, MAPPER_DIR_OUTGOING);
-        while (sigs) {
-            mapper_signal sig = *sigs;
-            sigs = mapper_signal_query_next(sigs);
-            mapper_device_remove_signal(x->device, sig);
-        }
+    if (dir & MAPPER_DIR_OUTGOING) {
         maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
                                                                 MAPPER_DIR_OUTGOING));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
@@ -675,7 +677,7 @@ static void mapperobj_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     mapper_signal sig = mapper_device_signal_by_name(x->device,
                                                      maxpd_atom_get_string(argv));
     if (!sig) {
-        post("Error setting value: signal named \"%s\" does not exist!",
+        POST(x, "Error setting value: signal named \"%s\" does not exist!",
              maxpd_atom_get_string(argv));
         return;
     }
@@ -704,7 +706,7 @@ static void mapperobj_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
     // get signal properties
     if (length != argc - 1) {
-        post("Error: vector length (%i) does not match signal definition (%i)!",
+        POST(x, "Error: vector length (%i) does not match signal definition (%i)!",
              argc - 1, length);
         return;
     }
@@ -795,7 +797,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
             }
 #endif
             else {
-                post("Instance ID is not int or float!");
+                POST(x, "Instance ID is not int or float!");
                 return;
             }
         }
@@ -872,7 +874,7 @@ static void mapperobj_int_handler(mapper_signal sig, mapper_id instance,
         int *v = (int*)value;
 
         if (length > (MAX_LIST-1)) {
-            post("Maximum list length is %i!", MAX_LIST-1);
+            POST(x, "Maximum list length is %i!", MAX_LIST-1);
             length = MAX_LIST-1;
         }
 
@@ -906,7 +908,7 @@ static void mapperobj_float_handler(mapper_signal sig, mapper_id instance,
         float *v = (float*)value;
 
         if (length > (MAX_LIST-1)) {
-            post("Maximum list length is %i!", MAX_LIST-1);
+            POST(x, "Maximum list length is %i!", MAX_LIST-1);
             length = MAX_LIST-1;
         }
 
@@ -986,7 +988,7 @@ static void mapperobj_read_definition (t_mapper *x)
     // TODO: add ".json" to end of string if missing (or pick new filetype!)
 
     if (locatefile_extended(x->definition, &path, &outtype, &filetype, 1) == 0) {
-        post("located file %s", x->definition);
+        POST(x, "Located file %s", x->definition);
         if (dictionary_read(x->definition, path, &(x->d)) == 0) {
             //check that first key is "device"
             if (dictionary_entryisdictionary(x->d, sym_device)) {
@@ -1000,11 +1002,11 @@ static void mapperobj_read_definition (t_mapper *x)
             }
         }
         else {
-            post("Could not parse file %s", x->definition);
+            POST(x, "Could not parse file %s", x->definition);
         }
     }
     else {
-        post("Could not locate file %s", x->definition);
+        POST(x, "Could not locate file %s", x->definition);
     }
 }
 #endif // MAXMSP
@@ -1097,7 +1099,8 @@ static void mapperobj_register_signals(t_mapper *x) {
             else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
                 sig_type_char = 'f';
             else {
-                post("Skipping registration of signal %s (unknown type).", sig_name);
+                POST(x, "Skipping registration of signal %s (unknown type).",
+                     sig_name);
                 continue;
             }
 
@@ -1180,7 +1183,8 @@ static void mapperobj_register_signals(t_mapper *x) {
             else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
                 sig_type_char = 'f';
             else {
-                post("Skipping registration of signal %s (unknown type).", sig_name);
+                POST("Skipping registration of signal %s (unknown type).",
+                     sig_name);
                 continue;
             }
 
@@ -1216,9 +1220,7 @@ static void mapperobj_poll(t_mapper *x)
     while(count-- && mapper_device_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mapper_device_ready(x->device)) {
-            post("registered device %s on network interface %s",
-                 mapper_device_name(x->device),
-                 mapper_network_interface(x->network));
+            POST(x, "Joining mapping network as '%s'", mapper_device_name(x->device));
             x->ready = 1;
             mapperobj_print_properties(x);
         }
@@ -1247,10 +1249,12 @@ static void mapperobj_learn(t_mapper *x, t_symbol *s,
 #endif
         if (mode != x->learn_mode) {
             x->learn_mode = mode;
-            if (mode == 0)
-                post("Learning mode off.");
-            else
-                post("Learning mode on.");
+            if (mode == 0) {
+                POST(x, "Learning mode off.");
+            }
+            else {
+                POST(x, "Learning mode on.");
+            }
         }
     }
 }

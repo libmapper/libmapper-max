@@ -202,6 +202,7 @@
 					"-lz",
 					/usr/local/lib/libmapper.dylib,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.map.device;
 				PRODUCT_NAME = map.device;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;

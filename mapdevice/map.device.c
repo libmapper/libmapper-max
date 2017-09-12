@@ -154,7 +154,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
 
         x->network = mapper_network_new(iface, 0, 0);
         if (!x->network) {
-            object_post((t_object *)x, "error initializing libmapper admin.");
+            object_post((t_object *)x, "error initializing libmapper network.");
             return 0;
         }
 
@@ -172,9 +172,10 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
         }
 
-        post("libmapper version %s – visit libmapper.org for more information.",
-             mapper_version());
-        post("map.device object created... waiting for inputs and outputs.");
+        object_post((t_object *)x, "Using libmapper version %s – visit libmapper.org for more information.",
+                    mapper_version());
+        object_post((t_object *)x, "Connecting to network interface %s...",
+                    mapper_network_interface(x->network));
 
         // add other declared properties
         for (i = 0; i < argc; i++) {
@@ -634,8 +635,10 @@ static void mapdevice_poll(t_mapdevice *x)
     while(count-- && mapper_device_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mapper_device_ready(x->device)) {
-            object_post((t_object *)x, "registered device %s on network interface %s",
-                 mapper_device_name(x->device), mapper_network_interface(x->network));
+            object_post((t_object *)x, "Joining mapping network as '%s'",
+                        mapper_device_name(x->device));
+            if (!mapper_device_num_signals(x->device, MAPPER_DIR_ANY))
+                object_post((t_object *)x, "Waiting for inputs and outputs...");
             x->ready = 1;
             mapdevice_print_properties(x);
         }

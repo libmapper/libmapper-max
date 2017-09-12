@@ -200,6 +200,7 @@
 					"-lmx",
 					/usr/local/lib/libmapper.dylib,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.map.in;
 				PRODUCT_NAME = map.in;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
