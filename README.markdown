@@ -26,6 +26,8 @@ To build, you will first need to install [libmapper][1] and [liblo][2] from thei
 respective repositories. An installation of liblo <= v0.26 is not sufficient, as
 libmapper depends on new functionality in the library.
 
+On OSX you can build all the binaries by running the script `package-osx.sh` from the command-line.
+
 Joseph Malloch 2011
 [Input Devices and Music Interaction Laboratory][3], McGill University.
 
