@@ -188,7 +188,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GENERATE_PKGINFO_FILE = YES;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
 					"$(C74SUPPORT)/max-includes",
@@ -215,40 +214,6 @@
 			};
 			name = maxmsp;
 		};
-		1DEB911C08733D790010E9CD /* puredata */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				C74SUPPORT = "/Applications/MaxSDK-7.1.0/source/c74support";
-				C74_SYM_LINKER_FLAGS = "@$(C74SUPPORT)/max-includes/c74_linker_flags.txt";
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				EXECUTABLE_EXTENSION = pd_darwin;
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
-				GCC_MODEL_TUNING = G5;
-				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../liblo\"",
-					"\"$(SRCROOT)/../libmapper\"/**",
-				);
-				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "";
-				MACH_O_TYPE = mh_dylib;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				OTHER_LDFLAGS = (
-					/usr/local/lib/liblo.dylib,
-					"-undefined",
-					dynamic_lookup,
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.mapper;
-				PRODUCT_NAME = mapper;
-				SDKROOT = macosx;
-				SKIP_INSTALL = NO;
-				WRAPPER_EXTENSION = "";
-			};
-			name = puredata;
-		};
 		1DEB911F08733D790010E9CD /* maxmsp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -264,17 +229,6 @@
 			};
 			name = maxmsp;
 		};
-		1DEB912008733D790010E9CD /* puredata */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH)";
-				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_WARN_ABOUT_RETURN_TYPE = NO;
-				GCC_WARN_UNUSED_VARIABLE = NO;
-				SDKROOT = macosx;
-			};
-			name = puredata;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -282,7 +236,6 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB911B08733D790010E9CD /* maxmsp */,
-				1DEB911C08733D790010E9CD /* puredata */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = maxmsp;
@@ -291,7 +244,6 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB911F08733D790010E9CD /* maxmsp */,
-				1DEB912008733D790010E9CD /* puredata */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = maxmsp;

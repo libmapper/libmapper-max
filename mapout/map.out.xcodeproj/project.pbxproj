@@ -189,7 +189,6 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GENERATE_PKGINFO_FILE = YES;
 				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../../libmapper\"",
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
 					"$(C74SUPPORT)/max-includes",
