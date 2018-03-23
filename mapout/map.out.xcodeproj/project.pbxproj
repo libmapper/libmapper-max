@@ -170,7 +170,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				C74SUPPORT = "/Applications/MaxSDK-7.1.0/source/c74support";
+				C74SUPPORT = "/Applications/max-sdk-7.3.3/source/c74support";
 				C74_SYM_LINKER_FLAGS = "@$(C74SUPPORT)/max-includes/c74_linker_flags.txt";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
