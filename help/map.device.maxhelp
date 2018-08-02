@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 7,
 			"minor" : 3,
-			"revision" : 3,
+			"revision" : 5,
 			"architecture" : "x86",
 			"modernui" : 1
 		}
@@ -49,7 +49,7 @@
 						"appversion" : 						{
 							"major" : 7,
 							"minor" : 3,
-							"revision" : 3,
+							"revision" : 5,
 							"architecture" : "x86",
 							"modernui" : 1
 						}
@@ -265,7 +265,7 @@
 , 			{
 				"box" : 				{
 					"automouse" : 0,
-					"cols" : 2,
+					"cols" : 1,
 					"colwidth" : 90,
 					"fontface" : 0,
 					"fontname" : "Arial",
@@ -278,7 +278,7 @@
 					"numoutlets" : 4,
 					"outlettype" : [ "list", "", "", "" ],
 					"patching_rect" : [ 30.0, 210.0, 180.0, 183.0 ],
-					"rows" : 7,
+					"rows" : 1,
 					"selmode" : 0,
 					"selsync" : 0,
 					"vscroll" : 0,
@@ -342,9 +342,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-6",
 					"maxclass" : "newobj",
-					"numinlets" : 1,
+					"numinlets" : 0,
 					"numoutlets" : 1,
-					"outlettype" : [ "list" ],
+					"outlettype" : [ "" ],
 					"patching_rect" : [ 30.0, 90.0, 133.0, 22.0 ],
 					"style" : "",
 					"text" : "map.device my_device"
@@ -453,7 +453,6 @@
 		"lines" : [ 			{
 				"patchline" : 				{
 					"destination" : [ "obj-9", 0 ],
-					"disabled" : 0,
 					"hidden" : 1,
 					"source" : [ "obj-10", 0 ]
 				}
@@ -462,7 +461,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-9", 0 ],
-					"disabled" : 0,
 					"hidden" : 1,
 					"source" : [ "obj-15", 0 ]
 				}
@@ -471,8 +469,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-20", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
 					"source" : [ "obj-21", 0 ]
 				}
 
@@ -480,8 +476,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-23", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
 					"source" : [ "obj-24", 0 ]
 				}
 
@@ -489,8 +483,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-21", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
 					"source" : [ "obj-6", 0 ]
 				}
 
@@ -498,7 +490,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-14", 0 ],
-					"disabled" : 0,
 					"hidden" : 1,
 					"source" : [ "obj-9", 0 ]
 				}
@@ -507,19 +498,9 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "logolink.maxpat",
-				"bootpath" : "~/Documents/Mappers/mapper-max-pd/help",
+				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
-			}
-, 			{
-				"name" : "libmapper_logo_black_512px.png",
-				"bootpath" : "~/Desktop/libmapper-logo",
-				"type" : "PNG ",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "map.device.mxo",
-				"type" : "iLaX"
 			}
  ],
 		"autosave" : 0
