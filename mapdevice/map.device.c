@@ -221,7 +221,6 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             }
         }
 
-        mapdevice_print_properties(x);
         x->ready = 0;
         x->updated = 0;
 
@@ -640,7 +639,7 @@ static void mapdevice_poll(t_mapdevice *x)
             if (!mapper_device_num_signals(x->device, MAPPER_DIR_ANY))
                 object_post((t_object *)x, "Waiting for inputs and outputs...");
             x->ready = 1;
-            mapdevice_print_properties(x);
+            defer_low((t_object *)x, (method)mapdevice_print_properties, NULL, 0, NULL);
         }
     }
     else if (x->updated) {

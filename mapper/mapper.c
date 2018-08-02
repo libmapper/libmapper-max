@@ -290,7 +290,6 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
             }
         }
 
-        mapperobj_print_properties(x);
         x->ready = 0;
         x->updated = 0;
         x->learn_mode = learn;
@@ -1222,7 +1221,7 @@ static void mapperobj_poll(t_mapper *x)
         if (mapper_device_ready(x->device)) {
             POST(x, "Joining mapping network as '%s'", mapper_device_name(x->device));
             x->ready = 1;
-            mapperobj_print_properties(x);
+            defer_low((t_object *)x, (method)mapperobj_print_properties, NULL, 0, NULL);
         }
     }
     else if (x->updated) {
