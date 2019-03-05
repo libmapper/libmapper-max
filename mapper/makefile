@@ -110,8 +110,8 @@ LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper)
 LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper)
 
 .c.pd_darwin:
-	$(CC) -arch i386 $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -o $*.o -c $*.c $(LIBMAPPER_CFLAGS)
-	$(CC) -arch i386 -bundle -undefined suppress -flat_namespace \
+	$(CC) -arch i386 -arch x86_64 $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -o $*.o -c $*.c $(LIBMAPPER_CFLAGS)
+	$(CC) -arch i386 -arch x86_64 -bundle -undefined suppress -flat_namespace \
 	    -o $*.pd_darwin $*.o $(LIBMAPPER_LIBS)
 	rm -f $*.o
 

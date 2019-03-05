@@ -6,3 +6,5 @@ mapout/build
 mapin/build
 *.mxo
 *.pd_darwin
+mapper-osx-max-pd*
+oscmulticast

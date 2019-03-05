@@ -39,7 +39,6 @@ cp ./mapper/tester.json ./mapper-osx-max-pd/old_bindings/
 cp ./help/mapper.maxhelp ./mapper-osx-max-pd/old_bindings/
 cp ./mapper/mapper.pd_darwin ./mapper-osx-max-pd/old_bindings/
 cp ./help/mapper.help.pd ./mapper-osx-max-pd/old_bindings/
-cp -r ./oscmulticast/oscmulticast.mxo ./mapper-osx-max-pd/old_bindings/
 
 mv ./mapdevice/build/maxmsp/map.device.mxo ./mapper-osx-max-pd/new_bindings/
 cp ./help/map.device.maxhelp ./mapper-osx-max-pd/new_bindings/
@@ -62,5 +61,9 @@ echo copying dylibs...
 ./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/map.in.mxo/Contents/MacOS/map.in -d ./mapper-osx-max-pd/new_bindings/map.in.mxo/Contents/libs/
 
 ./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/map.out.mxo/Contents/MacOS/map.out -d ./mapper-osx-max-pd/new_bindings/map.out.mxo/Contents/libs/
+
+./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/oscmulticast/oscmulticast.mxo/Contents/MacOS/oscmulticast -d ./mapper-osx-max-pd/oscmulticast/oscmulticast.mxo/Contents/libs/
+
+cp -r ./mapper-osx-max-pd/oscmulticast/oscmulticast.mxo ./mapper-osx-max-pd/old_bindings/
 
 echo Done.

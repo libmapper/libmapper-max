@@ -1,6 +1,6 @@
 # libmapper bindings for MaxMSP and Pure Data
 
-Max and Pure Data (Pd) objects instantiating libmapper devices. Help patches are included for documentation.
+Max and Pure Data (Pd) objects instantiating [libmapper][1] devices. Help patches are included for documentation.
 
 The `mapper` object can be used with both Max and Pd - it encapsulates the functionality of a libmapper device and works as a central hub in your patch by sending and receiving labeled messages from the libmapper network.
 
