@@ -17,7 +17,7 @@
 #include "ext.h"            // standard Max include, always required
 #include "ext_obex.h"       // required for new style Max object
 #include "jpatcher_api.h"
-#include <mapper/mapper.h>
+#include <mpr/mpr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,11 +38,11 @@ typedef struct _mapin
     t_symbol            *sig_name;
     long                sig_length;
     char                sig_type;
-    mapper_device       dev_obj;
-    mapper_signal       sig_ptr;
-    mapper_timetag_t    *tt_ptr;
+    mpr_dev             dev_obj;
+    mpr_sig             sig_ptr;
+    mpr_time            tt_ptr;
     long                is_instance;
-    mapper_id           instance_id;
+    mpr_id              instance_id;
     void                *outlet;
     t_symbol            *myobjname;
     t_object            *patcher;
@@ -205,7 +205,7 @@ void mapin_loadbang(t_mapin *x)
 
     t_object *patcher = x->patcher;
     while (patcher) {
-        object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+        object_obex_lookup(patcher, gensym("mprhash"), (t_object **)&ht);
         if (ht) {
             add_to_hashtab(x, ht);
             break;
@@ -289,13 +289,13 @@ void parse_extra_properties(t_mapin *x)
             }
             /* Remove the default signal instance (0) if it exists. Since the user
              * may have properly added an instance 0, we will check for user_data. */
-            void *data = mapper_signal_instance_user_data(x->sig_ptr, 0);
+            void *data = mpr_sig_get_inst_data(x->sig_ptr, 0);
             if (!data)
-                mapper_signal_remove_instance(x->sig_ptr, 0);
+                mpr_sig_remove_inst(x->sig_ptr, 0);
 
             x->is_instance = 1;
             i++;
-            mapper_signal_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
+            mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
         else if (atom_strcmp(x->args+i, "@minimum") == 0 ||
                  atom_strcmp(x->args+i, "@min") == 0) {
@@ -340,7 +340,8 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_minimum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MIN, NULL,
+                                     x->sig_length, MPR_INT32, val, 1);
                     i--;
                     break;
                 }
@@ -354,7 +355,8 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_minimum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MIN, NULL,
+                                     x->sig_length, MPR_FLT, val, 1);
                     i--;
                     break;
                 }
@@ -405,7 +407,8 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_maximum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MAX, NULL,
+                                     x->sig_length, MPR_INT32, val, 1);
                     i--;
                     break;
                 }
@@ -419,7 +422,8 @@ void parse_extra_properties(t_mapin *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_maximum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MAX, NULL,
+                                     x->sig_length, MPR_FLT, val, 1);
                     i--;
                     break;
                 }
@@ -432,27 +436,27 @@ void parse_extra_properties(t_mapin *x)
             switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
                     const char *value = atom_get_string(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 's', value, 1);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN,
+                                     atom_get_string(x->args+i)+1, 1, MPR_STR,
+                                     value, 1);
                     i++;
                     break;
                 }
                 case A_FLOAT:
                 {
                     float value = atom_getfloat(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 'f', &value, 1);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN,
+                                     atom_get_string(x->args+i)+1, 1, MPR_FLT,
+                                     &value, 1);
                     i++;
                     break;
                 }
                 case A_LONG:
                 {
                     int value = atom_getlong(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 'i', &value, 1);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN,
+                                     atom_get_string(x->args+i)+1, 1, MPR_INT32,
+                                     &value, 1);
                     i++;
                     break;
                 }
@@ -475,7 +479,7 @@ t_max_err set_dev_obj(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 // -(set the signal pointer)--------------------------------
 t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->sig_ptr = (mapper_signal)argv->a_w.w_obj;
+    x->sig_ptr = (mpr_sig)argv->a_w.w_obj;
     if (x->sig_ptr)
         parse_extra_properties(x);
     return 0;
@@ -485,7 +489,7 @@ t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 // -(set the device pointer)--------------------------------
 t_max_err set_tt_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->tt_ptr = (mapper_timetag_t *)argv->a_w.w_obj;
+    x->tt_ptr = (mpr_time)argv->a_w.w_obj;
     return 0;
 }
 
@@ -495,8 +499,8 @@ static int check_ptrs(t_mapin *x)
         return 1;
     }
     else if (!x->length) {
-        x->length = mapper_signal_length(x->sig_ptr);
-        x->type = mapper_signal_type(x->sig_ptr);
+        x->length = mpr_obj_get_prop_i32(x->sig_ptr, MPR_PROP_LEN, NULL);
+        x->type = mpr_obj_get_prop_i32(x->sig_ptr, MPR_PROP_TYPE, NULL);
     }
     return 0;
 }
@@ -505,65 +509,29 @@ static int check_ptrs(t_mapin *x)
 // -(set int input)-----------------------------------------
 static void mapin_int(t_mapin *x, long l)
 {
-    int i;
-    float f;
-    void *value = 0;
-
     if (check_ptrs(x))
         return;
 
-    if (x->length != 1)
-        return;
-    if (x->type == 'i') {
-        i = (int)l;
-        value = &i;
-    }
-    else if (x->type == 'f') {
-        f = (float)l;
-        value = &f;
-    }
     object_method(x->dev_obj, maybe_start_queue_sym);
-    if (x->is_instance)
-        mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                      value, 1, *x->tt_ptr);
-    else
-        mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l, *x->tt_ptr);
 }
 
 // *********************************************************
 // -(set float input)---------------------------------------
 static void mapin_float(t_mapin *x, double d)
 {
-    int i;
-    float f;
-    void *value = 0;
-
     if (check_ptrs(x))
         return;
 
-    if (x->length != 1)
-        return;
-    if (x->type == 'f') {
-        f = (float)d;
-        value = &f;
-    }
-    else if (x->type == 'i') {
-        i = (int)d;
-        value = &i;
-    }
     object_method(x->dev_obj, maybe_start_queue_sym);
-    if (x->is_instance)
-        mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                      value, 1, *x->tt_ptr);
-    else
-        mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d, *x->tt_ptr);
 }
 
 // *********************************************************
 // -(set list input)----------------------------------------
 static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i = 0, count;
+    int i;
     void *value;
 
     if (check_ptrs(x) || !argc)
@@ -574,7 +542,6 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
                     x->length);
         return;
     }
-    count = argc / x->length;
 
     if (x->type == 'i') {
         int payload[argc];
@@ -591,13 +558,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         }
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
-        if (x->is_instance) {
-            mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                          value, count, *x->tt_ptr);
-        }
-        else {
-            mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
-        }
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, value, *x->tt_ptr);
     }
     else if (x->type == 'f') {
         float payload[argc];
@@ -614,13 +575,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         }
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
-        if (x->is_instance) {
-            mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                          value, count, *x->tt_ptr);
-        }
-        else {
-            mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
-        }
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, value, *x->tt_ptr);
     }
 }
 
@@ -632,7 +587,7 @@ static void mapin_release(t_mapin *x)
         return;
 
     object_method(x->dev_obj, maybe_start_queue_sym);
-    mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    mpr_sig_release_inst(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
 
 // *********************************************************

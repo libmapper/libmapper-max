@@ -22,7 +22,7 @@
     #include "m_pd.h"
     #define A_SYM A_SYMBOL
 #endif
-#include <mapper/mapper.h>
+#include <mpr/mpr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,10 +58,9 @@ typedef struct _mapper
     void *outlet2;
     void *clock;          // pointer to clock object
     char *name;
-    mapper_network network;
-    mapper_database db;
-    mapper_device device;
-    mapper_timetag_t timetag;
+    mpr_graph graph;
+    mpr_dev device;
+    mpr_time_t timetag;
     int updated;
     int ready;
     int learn_mode;
@@ -85,15 +84,9 @@ static void mapperobj_clear_signals(t_mapper *x, t_symbol *s, int argc, t_atom *
 
 static void mapperobj_poll(t_mapper *x);
 
-static void mapperobj_float_handler(mapper_signal sig, mapper_id instance,
-                                    const void *value, int count,
-                                    mapper_timetag_t *tt);
-static void mapperobj_int_handler(mapper_signal sig, mapper_id instance,
-                                  const void *value, int count,
-                                  mapper_timetag_t *tt);
-static void mapperobj_instance_event_handler(mapper_signal sig, mapper_id instance,
-                                             mapper_instance_event event,
-                                             mapper_timetag_t *tt);
+static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
+                                  int len, mpr_type type, const void *val,
+                                  mpr_time_t *time);
 
 static void mapperobj_print_properties(t_mapper *x);
 
@@ -225,22 +218,17 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
         }
 
         POST(x, "libmapper version %s – visit libmapper.org for more information.",
-             mapper_version());
+             mpr_version());
 
-        x->network = mapper_network_new(iface, 0, 0);
-        if (!x->network) {
-            POST(x, "Error initializing libmapper network.");
-            return 0;
-        }
-
-        x->device = mapper_device_new(x->name, 0, x->network);
+        x->device = mpr_dev_new(x->name, 0);
         if (!x->device) {
             POST(x, "Error initializing libmapper device.");
             return 0;
         }
-        x->db = mapper_device_database(x->device);
-        POST(x, "Using network interface %s.",
-             mapper_network_interface(x->network));
+        x->graph = mpr_obj_get_graph(x->device);
+        if (iface)
+            mpr_graph_set_interface(x->graph, iface);
+        POST(x, "Using network interface %s.", mpr_graph_get_interface(x->graph));
 
         // add other declared properties
         for (i = 0; i < argc; i++) {
@@ -258,18 +246,18 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
                         const char *value = maxpd_atom_get_string(argv+i+1);
-                        mapper_device_set_property(x->device,
-                                                   maxpd_atom_get_string(argv+i)+1,
-                                                   1, 's', value, 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
+                                         maxpd_atom_get_string(argv+i)+1, 1,
+                                         MPR_STR, value, 1);
                         i++;
                         break;
                     }
                     case A_FLOAT:
                     {
                         float value = maxpd_atom_get_float(argv+i+1);
-                        mapper_device_set_property(x->device,
-                                                   maxpd_atom_get_string(argv+i)+1,
-                                                   1, 'f', &value, 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
+                                         maxpd_atom_get_string(argv+i)+1, 1,
+                                         MPR_FLT, &value, 1);
                         i++;
                         break;
                     }
@@ -277,9 +265,9 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
                     case A_LONG:
                     {
                         int value = atom_getlong(argv+i+1);
-                        mapper_device_set_property(x->device,
-                                                   maxpd_atom_get_string(argv+i)+1,
-                                                   1, 'i', &value, 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
+                                         maxpd_atom_get_string(argv+i)+1, 1,
+                                         MPR_INT32, &value, 1);
                         i++;
                         break;
                     }
@@ -318,10 +306,7 @@ static void mapperobj_free(t_mapper *x)
 #endif
 
     if (x->device) {
-        mapper_device_free(x->device);
-    }
-    if (x->network) {
-        mapper_network_free(x->network);
+        mpr_dev_free(x->device);
     }
     if (x->name) {
         free(x->name);
@@ -334,34 +319,31 @@ static void mapperobj_print_properties(t_mapper *x)
 {
     if (x->ready) {
         //output name
-        maxpd_atom_set_string(x->buffer, mapper_device_name(x->device));
+        maxpd_atom_set_string(x->buffer, mpr_obj_get_prop_str(x->device, MPR_PROP_NAME, NULL));
         outlet_anything(x->outlet2, gensym("name"), 1, x->buffer);
 
         //output interface
-        maxpd_atom_set_string(x->buffer, mapper_network_interface(x->network));
+        maxpd_atom_set_string(x->buffer, mpr_graph_get_interface(x->graph));
         outlet_anything(x->outlet2, gensym("interface"), 1, x->buffer);
 
         //output IP
-        const struct in_addr *ip = mapper_network_ip4(x->network);
-        maxpd_atom_set_string(x->buffer, inet_ntoa(*ip));
+        maxpd_atom_set_string(x->buffer, mpr_graph_get_address(x->graph));
         outlet_anything(x->outlet2, gensym("IP"), 1, x->buffer);
 
         //output port
-        maxpd_atom_set_int(x->buffer, mapper_device_port(x->device));
+        maxpd_atom_set_int(x->buffer, mpr_obj_get_prop_i32(x->device, MPR_PROP_PORT, NULL));
         outlet_anything(x->outlet2, gensym("port"), 1, x->buffer);
 
         //output ordinal
-        maxpd_atom_set_int(x->buffer, mapper_device_ordinal(x->device));
+        maxpd_atom_set_int(x->buffer, mpr_obj_get_prop_i32(x->device, MPR_PROP_ORDINAL, NULL));
         outlet_anything(x->outlet2, gensym("ordinal"), 1, x->buffer);
 
         //output numInputs
-        maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
-                                                                MAPPER_DIR_INCOMING));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
 
         //output numOutputs
-        maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
-                                                                MAPPER_DIR_OUTGOING));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 }
@@ -393,10 +375,9 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
     const char *sig_name = 0, *sig_units = 0;
     char sig_type = 0;
     int sig_length = 1, prop_int = 0;
-    float prop_float;
     long i;
-    mapper_signal sig = 0;
-    mapper_direction dir;
+    mpr_sig sig = 0;
+    mpr_dir dir;
 
     if (argc < 4) {
         POST(x, "Not enough arguments for 'add' message.");
@@ -407,9 +388,9 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
         return;
 
     if (maxpd_atom_strcmp(argv, "input") == 0)
-        dir = MAPPER_DIR_INCOMING;
+        dir = MPR_DIR_IN;
     else if (maxpd_atom_strcmp(argv, "output") == 0)
-        dir = MAPPER_DIR_OUTGOING;
+        dir = MPR_DIR_OUT;
     else
         return;
 
@@ -456,10 +437,9 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
         return;
     }
 
-    sig = mapper_device_add_signal(x->device, dir, 1, sig_name, sig_length,
-                                   sig_type, sig_units, 0, 0,
-                                   sig_type == 'i' ? mapperobj_int_handler
-                                   : mapperobj_float_handler, x);
+    sig = mpr_sig_new(x->device, dir, sig_name, sig_length, sig_type, sig_units,
+                      0, 0, 0, mapperobj_sig_handler, MPR_SIG_ALL);
+    mpr_obj_set_prop(sig, MPR_PROP_DATA, NULL, 1, MPR_PTR, x, 0);
     if (!sig) {
         POST(x, "Error adding signal!");
         return;
@@ -477,36 +457,28 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
         }
         if (maxpd_atom_strcmp(argv+i, "@min") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
-                prop_float = maxpd_atom_get_float(argv+i+1);
-                prop_int = (int)prop_float;
-                mapper_signal_set_minimum(sig, sig_type == 'i' ? (void *)&prop_int
-                                          : (void *)&prop_float);
+                float val = maxpd_atom_get_float(argv+i+1);
+                mpr_obj_set_prop(sig, MPR_PROP_MIN, NULL, 1, MPR_FLT, &val, 1);
                 i++;
             }
 #ifdef MAXMSP
             else if ((argv + i + 1)->a_type == A_LONG) {
-                prop_int = (int)atom_getlong(argv+i+1);
-                prop_float = (float)prop_int;
-                mapper_signal_set_minimum(sig, sig_type == 'i' ? (void *)&prop_int
-                                          : (void *)&prop_float);
+                int val = (int)atom_getlong(argv+i+1);
+                mpr_obj_set_prop(sig, MPR_PROP_MIN, NULL, 1, MPR_INT32, &val, 1);
                 i++;
             }
 #endif
         }
         else if (maxpd_atom_strcmp(argv+i, "@max") == 0) {
             if ((argv+i+1)->a_type == A_FLOAT) {
-                prop_float = maxpd_atom_get_float(argv+i+1);
-                prop_int = (int)prop_float;
-                mapper_signal_set_maximum(sig, sig_type == 'i' ? (void *)&prop_int
-                                          : (void *)&prop_float);
+                float val = maxpd_atom_get_float(argv+i+1);
+                mpr_obj_set_prop(sig, MPR_PROP_MAX, NULL, 1, MPR_FLT, &val, 1);
                 i++;
             }
 #ifdef MAXMSP
             else if ((argv + i + 1)->a_type == A_LONG) {
-                prop_int = (int)atom_getlong(argv+i+1);
-                prop_float = (float)prop_int;
-                mapper_signal_set_maximum(sig, sig_type == 'i' ? (void *)&prop_int
-                                          : (void *)&prop_float);
+                int val = (int)atom_getlong(argv+i+1);
+                mpr_obj_set_prop(sig, MPR_PROP_MAX, NULL, 1, MPR_INT32, &val, 1);
                 i++;
             }
 #endif
@@ -523,19 +495,19 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
             }
 #endif
             if (prop_int > 1) {
-                mapper_signal_reserve_instances(sig, prop_int - 1, 0, 0);
-                mapper_signal_set_instance_event_callback(sig,
-                    mapperobj_instance_event_handler, MAPPER_INSTANCE_ALL);
+                mpr_sig_reserve_inst(sig, prop_int - 1, 0, 0);
             }
         }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
+                int stl = MPR_STEAL_NONE;
                 if (maxpd_atom_strcmp(argv+i+1, "newest") == 0) {
-                    mapper_signal_set_instance_stealing_mode(sig, MAPPER_STEAL_NEWEST);
+                    stl = MPR_STEAL_NEWEST;
                 }
                 if (maxpd_atom_strcmp(argv+i+1, "oldest") == 0) {
-                    mapper_signal_set_instance_stealing_mode(sig, MAPPER_STEAL_OLDEST);
+                    stl = MPR_STEAL_OLDEST;
                 }
+                mpr_obj_set_prop(sig, MPR_PROP_STEAL_MODE, NULL, 1, MPR_INT32, &stl, 1);
                 i++;
             }
         }
@@ -543,16 +515,18 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
             switch ((argv+i+1)->a_type) {
                 case A_SYM: {
                     const char *value = maxpd_atom_get_string(argv+i+1);
-                    mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               1, 's', value, 1);
+                    mpr_obj_set_prop(sig, MPR_PROP_UNKNOWN,
+                                     maxpd_atom_get_string(argv+i)+1, 1,
+                                     MPR_STR, value, 1);
                     i++;
                     break;
                 }
                 case A_FLOAT:
                 {
                     float value = maxpd_atom_get_float(argv+i+1);
-                    mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               1, 'f', &value, 1);
+                    mpr_obj_set_prop(sig, MPR_PROP_UNKNOWN,
+                                     maxpd_atom_get_string(argv+i)+1, 1,
+                                     MPR_FLT, &value, 1);
                     i++;
                     break;
                 }
@@ -560,8 +534,9 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 case A_LONG:
                 {
                     int value = atom_getlong(argv+i+1);
-                    mapper_signal_set_property(sig, maxpd_atom_get_string(argv+i)+1,
-                                               1, 'i', &value, 1);
+                    mpr_obj_set_prop(sig, MPR_PROP_UNKNOWN,
+                                     maxpd_atom_get_string(argv+i)+1, 1,
+                                     MPR_INT32, &value, 1);
                     i++;
                     break;
                 }
@@ -573,8 +548,8 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
     }
 
     // Update status outlet
-    maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device, dir));
-    if (dir == MAPPER_DIR_OUTGOING)
+    maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, dir)));
+    if (dir == MPR_DIR_OUT)
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     else
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
@@ -585,7 +560,6 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
 static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
                                     int argc, t_atom *argv)
 {
-    mapper_signal sig;
     char *sig_name = NULL, *direction = NULL;
 
     if (argc < 2) {
@@ -598,21 +572,17 @@ static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
     direction = strdup(maxpd_atom_get_string(argv));
     sig_name = strdup(maxpd_atom_get_string(argv+1));
 
+    mpr_list sigs = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
+    sigs = mpr_list_filter(sigs, MPR_PROP_NAME, NULL, 1, MPR_STR, sig_name, MPR_OP_EQ);
+    if (sigs && *sigs)
+        mpr_sig_free(*sigs);
     if (strcmp(direction, "output") == 0) {
-        if ((sig = mapper_device_signal_by_name(x->device, sig_name))) {
-            mapper_device_remove_signal(x->device, sig);
-            maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
-                                                                    MAPPER_DIR_OUTGOING));
-            outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
-        }
+        maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
+        outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
     else if (strcmp(direction, "input") == 0) {
-        if ((sig = mapper_device_signal_by_name(x->device, sig_name))) {
-            mapper_device_remove_signal(x->device, sig);
-            maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
-                                                                    MAPPER_DIR_INCOMING));
-            outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
-        }
+        maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
+        outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
 }
 
@@ -621,34 +591,32 @@ static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
 static void mapperobj_clear_signals(t_mapper *x, t_symbol *s,
                                     int argc, t_atom *argv)
 {
-    mapper_direction dir = 0;
+    mpr_dir dir = 0;
 
     if (!argc)
-        dir = MAPPER_DIR_ANY;
+        dir = MPR_DIR_ANY;
     else if (maxpd_atom_strcmp(argv, "inputs") == 0)
-        dir |= MAPPER_DIR_INCOMING;
+        dir |= MPR_DIR_IN;
     else if (maxpd_atom_strcmp(argv, "outputs") == 0)
-        dir |= MAPPER_DIR_OUTGOING;
+        dir |= MPR_DIR_OUT;
     else
         return;
 
-    mapper_signal *sigs;
+    mpr_list sigs;
     POST(x, "Clearing signals");
-    sigs = mapper_device_signals(x->device, dir);
+    sigs = mpr_dev_get_sigs(x->device, dir);
     while (sigs) {
-        mapper_signal sig = *sigs;
-        sigs = mapper_signal_query_next(sigs);
-        mapper_device_remove_signal(x->device, sig);
+        mpr_sig sig = *sigs;
+        sigs = mpr_list_next(sigs);
+        mpr_sig_free(sig);
     }
 
-    if (dir & MAPPER_DIR_INCOMING) {
-        maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
-                                                                MAPPER_DIR_INCOMING));
+    if (dir & MPR_DIR_IN) {
+        maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
-    if (dir & MAPPER_DIR_OUTGOING) {
-        maxpd_atom_set_int(x->buffer, mapper_device_num_signals(x->device,
-                                                                MAPPER_DIR_OUTGOING));
+    if (dir & MPR_DIR_OUT) {
+        maxpd_atom_set_int(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 }
@@ -663,83 +631,8 @@ static void mapperobj_set(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
      * is used by libmapper for (e.g.) retreiving information for training
      * implicit mapping algorithms. */
 
-    int i;
-
-    if (!argc)
-        return;
-    if (!x->ready)
-        return;
-    if (argv->a_type != A_SYM)
-        return;
-
-    // find matching input signal
-    mapper_signal sig = mapper_device_signal_by_name(x->device,
-                                                     maxpd_atom_get_string(argv));
-    if (!sig) {
-        POST(x, "Error setting value: signal named \"%s\" does not exist!",
-             maxpd_atom_get_string(argv));
-        return;
-    }
-
-    // check if input instance release
-    if ((argc == 3) && ((argv+2)->a_type == A_SYM)) {
-        if (strcmp(maxpd_atom_get_string(argv+2), "release") != 0)
-            return;
-        if ((argv+1)->a_type == A_FLOAT) {
-            maybe_start_queue(x);
-            mapper_signal_instance_release(sig, (int)atom_getfloat(argv+1),
-                                           x->timetag);
-        }
-#ifdef MAXMSP
-        else if ((argv+1)->a_type == A_LONG) {
-            maybe_start_queue(x);
-            mapper_signal_instance_release(sig, (int)atom_getlong(argv+1),
-                                           x->timetag);
-        }
-#endif
-        return;
-    }
-
-    int length = mapper_signal_length(sig);
-    char type = mapper_signal_type(sig);
-
-    // get signal properties
-    if (length != argc - 1) {
-        POST(x, "Error: vector length (%i) does not match signal definition (%i)!",
-             argc - 1, length);
-        return;
-    }
-    if (type == 'i') {
-        int payload[length];
-        for (i = 1; i < argc; i++) {
-            if ((argv + i)->a_type == A_FLOAT)
-                payload[i-1] = (int)atom_getfloat(argv + i);
-#ifdef MAXMSP
-            else if ((argv + i)->a_type == A_LONG)
-                payload[i-1] = (int)atom_getlong(argv + i);
-#endif
-        }
-        //update signal
-        maybe_start_queue(x);
-        mapper_signal_update(sig, payload, 1, x->timetag);
-    }
-    else if (type == 'f') {
-        float payload[length];
-        for (i = 1; i < argc; i++) {
-            if ((argv + i)->a_type == A_FLOAT)
-                payload[i-1] = atom_getfloat(argv + i);
-#ifdef MAXMSP
-            else if ((argv + i)->a_type == A_LONG)
-                payload[i-1] = (float)atom_getlong(argv + i);
-#endif
-        }
-        //update signal
-        maybe_start_queue(x);
-        mapper_signal_update(sig, payload, 1, x->timetag);
-    }
-    else {
-        return;
-    }
+    // forward to 'anything' handler
+    mapperobj_anything(x, s, argc, argv);
 }
 
 // *********************************************************
@@ -749,221 +642,180 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     if (!x->ready)
         return;
 
-    int i = 0, j = 0, id = -1;
-    if (argc) {
-        //find signal
-        mapper_signal sig;
-        if (!(sig = mapper_device_signal_by_name(x->device, s->s_name))) {
-            if (x->learn_mode) {
-                // register as new signal
-                if (argv->a_type == A_FLOAT) {
-                    sig = mapper_device_add_output_signal(x->device, s->s_name,
-                                                          argc, 'f', 0, 0, 0);
-                }
-#ifdef MAXMSP
-                else if (argv->a_type == A_LONG) {
-                    sig = mapper_device_add_output_signal(x->device, s->s_name,
-                                                          argc, 'i', 0, 0, 0);
-                }
-#endif
-                else {
-                    return;
-                }
-                //output updated numOutputs
-                maxpd_atom_set_float(x->buffer,
-                                     mapper_device_num_signals(x->device,
-                                                               MAPPER_DIR_OUTGOING));
-                outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
+    int i = 0, j = 0, id, *id_ptr = NULL;
+    if (!argc)
+        return;
+
+    //find signal
+    mpr_sig sig = NULL;
+    mpr_list sigs = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
+    sigs = mpr_list_filter(sigs, MPR_PROP_NAME, NULL, 1, MPR_STR, s->s_name, MPR_OP_EQ);
+    if (sigs && *sigs)
+        sig = *sigs;
+
+    if (!sig) {
+        if (x->learn_mode) {
+            // register as new signal
+            if (argv->a_type == A_FLOAT) {
+                sig = mpr_sig_new(x->device, MPR_DIR_OUT, s->s_name, argc,
+                                  MPR_FLT, 0, 0, 0, 0, 0, 0);
             }
+#ifdef MAXMSP
+            else if (argv->a_type == A_LONG) {
+                sig = mpr_sig_new(x->device, MPR_DIR_OUT, s->s_name, argc,
+                                  MPR_INT32, 0, 0, 0, 0, 0, 0);
+            }
+#endif
             else {
                 return;
             }
-        }
-
-        int length = mapper_signal_length(sig);
-        char type = mapper_signal_type(sig);
-
-        if (argc == length + 1) {
-            // Special case: signal value may be preceded by instance number
-            if ((argv)->a_type == A_FLOAT) {
-                id = (int)maxpd_atom_get_float(argv);
-                j = 1;
-            }
-#ifdef MAXMSP
-            else if ((argv)->a_type == A_LONG) {
-                id = (int)atom_getlong(argv);
-                j = 1;
-            }
-#endif
-            else {
-                POST(x, "Instance ID is not int or float!");
-                return;
-            }
-        }
-        if (argc == 2 && (argv + 1)->a_type == A_SYM) {
-            if ((argv)->a_type == A_FLOAT) {
-                id = (int)atom_getfloat(argv);
-            }
-#ifdef MAXMSP
-            else if ((argv)->a_type == A_LONG) {
-                id = (int)atom_getlong(argv);
-            }
-#endif
-            if (maxpd_atom_strcmp(argv+1, "release") == 0)
-                mapper_signal_instance_release(sig, id, x->timetag);
-        }
-        else if (type == 'i') {
-            int payload[length];
-            for (i = 0; i < argc; i++) {
-                if ((argv + i + j)->a_type == A_FLOAT)
-                    payload[i] = (int)atom_getfloat(argv + i + j);
-#ifdef MAXMSP
-                else if ((argv + i + j)->a_type == A_LONG)
-                    payload[i] = (int)atom_getlong(argv + i + j);
-#endif
-            }
-            //update signal
-            maybe_start_queue(x);
-            if (id == -1) {
-                mapper_signal_update(sig, payload, 1, x->timetag);
-            }
-            else {
-                mapper_signal_instance_update(sig, id, payload, 1, x->timetag);
-            }
-        }
-        else if (type == 'f') {
-            float payload[length];
-            for (i = 0; i < argc; i++) {
-                if ((argv + i + j)->a_type == A_FLOAT)
-                    payload[i] = atom_getfloat(argv + i + j);
-#ifdef MAXMSP
-                else if ((argv + i + j)->a_type == A_LONG)
-                    payload[i] = (float)atom_getlong(argv + i + j);
-#endif
-            }
-            //update signal
-            maybe_start_queue(x);
-            if (id == -1) {
-                mapper_signal_update(sig, payload, 1, x->timetag);
-            }
-            else {
-                mapper_signal_instance_update(sig, id, payload, 1, x->timetag);
-            }
+            //output updated numOutputs
+            maxpd_atom_set_float(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
+            outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
         }
         else {
             return;
         }
     }
-}
 
-// *********************************************************
-// -(int handler)-------------------------------------------
-static void mapperobj_int_handler(mapper_signal sig, mapper_id instance,
-                                  const void *value, int count,
-                                  mapper_timetag_t *tt)
-{
-    t_mapper *x = mapper_signal_user_data(sig);
-    int poly = 0;
-    if (mapper_signal_num_instances(sig) > 1) {
-        maxpd_atom_set_int(x->buffer, instance);
-        poly = 1;
-    }
-    if (value) {
-        int i, length = mapper_signal_length(sig);
-        int *v = (int*)value;
+    int len = mpr_obj_get_prop_i32(sig, MPR_PROP_LEN, NULL);
+    char type = mpr_obj_get_prop_i32(sig, MPR_PROP_TYPE, NULL);
 
-        if (length > (MAX_LIST-1)) {
-            POST(x, "Maximum list length is %i!", MAX_LIST-1);
-            length = MAX_LIST-1;
+    if (argc == len + 1) {
+        // Special case: signal value may be preceded by instance number
+        if ((argv)->a_type == A_FLOAT) {
+            id = (int)maxpd_atom_get_float(argv);
+            id_ptr = &id;
+            j = 1;
         }
-
-        for (i = 0; i < length; i++)
-            maxpd_atom_set_int(x->buffer + i + poly, v[i]);
-        outlet_anything(x->outlet1, gensym((char *)mapper_signal_name(sig)),
-                        length + poly, x->buffer);
-    }
-    else if (poly) {
-        maxpd_atom_set_string(x->buffer+1, "release");
-        maxpd_atom_set_string(x->buffer+2, "local");
-        outlet_anything(x->outlet1, gensym((char *)mapper_signal_name(sig)),
-                        3, x->buffer);
-    }
-}
-
-// *********************************************************
-// -(float handler)-----------------------------------------
-static void mapperobj_float_handler(mapper_signal sig, mapper_id instance,
-                                    const void *value, int count,
-                                    mapper_timetag_t *time)
-{
-    t_mapper *x = mapper_signal_user_data(sig);
-    int poly = 0;
-    if (mapper_signal_num_instances(sig) > 1) {
-        maxpd_atom_set_int(x->buffer, instance);
-        poly = 1;
-    }
-    if (value) {
-        int i, length = mapper_signal_length(sig);
-        float *v = (float*)value;
-
-        if (length > (MAX_LIST-1)) {
-            POST(x, "Maximum list length is %i!", MAX_LIST-1);
-            length = MAX_LIST-1;
+#ifdef MAXMSP
+        else if ((argv)->a_type == A_LONG) {
+            id = (int)atom_getlong(argv);
+            id_ptr = &id;
+            j = 1;
         }
-
-        for (i = 0; i < length; i++)
-            maxpd_atom_set_float(x->buffer + i + poly, v[i]);
-        outlet_anything(x->outlet1, gensym((char *)mapper_signal_name(sig)),
-                        length + poly, x->buffer);
+#endif
+        else {
+            POST(x, "Instance ID is not int or float!");
+            return;
+        }
+    }
+    if (argc == 2 && (argv + 1)->a_type == A_SYM) {
+        if ((argv)->a_type == A_FLOAT) {
+            id = (int)atom_getfloat(argv);
+        }
+#ifdef MAXMSP
+        else if ((argv)->a_type == A_LONG) {
+            id = (int)atom_getlong(argv);
+        }
+#endif
+        if (maxpd_atom_strcmp(argv+1, "release") == 0)
+            mpr_sig_release_inst(sig, id, x->timetag);
+    }
+    else if (type == 'i') {
+        int payload[len];
+        for (i = 0; i < argc; i++) {
+            if ((argv + i + j)->a_type == A_FLOAT)
+                payload[i] = (int)atom_getfloat(argv + i + j);
+#ifdef MAXMSP
+            else if ((argv + i + j)->a_type == A_LONG)
+                payload[i] = (int)atom_getlong(argv + i + j);
+#endif
+        }
+        //update signal
+        maybe_start_queue(x);
+        mpr_sig_set_value(sig, id_ptr, len, MPR_INT32, payload, x->timetag);
+    }
+    else if (type == 'f') {
+        float payload[len];
+        for (i = 0; i < argc; i++) {
+            if ((argv + i + j)->a_type == A_FLOAT)
+                payload[i] = atom_getfloat(argv + i + j);
+#ifdef MAXMSP
+            else if ((argv + i + j)->a_type == A_LONG)
+                payload[i] = (float)atom_getlong(argv + i + j);
+#endif
+        }
+        //update signal
+        maybe_start_queue(x);
+        mpr_sig_set_value(sig, id_ptr, len, MPR_FLT, payload, x->timetag);
+    }
+    else {
+        return;
     }
 }
 
 // *********************************************************
-// -(instance management handler)----------------------
-static void mapperobj_instance_event_handler(mapper_signal sig,
-                                             mapper_id instance,
-                                             mapper_instance_event event,
-                                             mapper_timetag_t *tt)
+// -(sig handler)-------------------------------------------
+static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
+                                  int len, mpr_type type, const void *val,
+                                  mpr_time_t *time)
 {
-    int mode;
-    t_mapper *x = mapper_signal_user_data(sig);
-    maxpd_atom_set_int(x->buffer, instance);
-    switch (event) {
-        case MAPPER_UPSTREAM_RELEASE:
+    t_mapper *x = mpr_obj_get_prop_ptr(sig, MPR_PROP_DATA, NULL);
+    t_symbol *name = gensym(mpr_obj_get_prop_str(sig, MPR_PROP_NAME, NULL));
+
+    switch (evt) {
+        case MPR_SIG_UPDATE: {
+            int poly = 0;
+            if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
+                maxpd_atom_set_int(x->buffer, inst);
+                poly = 1;
+            }
+            if (val) {
+                int i;
+                int *v = (int*)val;
+
+                if (len > (MAX_LIST-1)) {
+                    POST(x, "Maximum list length is %i!", MAX_LIST-1);
+                    len = MAX_LIST-1;
+                }
+
+                for (i = 0; i < len; i++)
+                    maxpd_atom_set_int(x->buffer + i + poly, v[i]);
+                outlet_anything(x->outlet1, name, len + poly, x->buffer);
+            }
+            else if (poly) {
+                maxpd_atom_set_string(x->buffer+1, "release");
+                maxpd_atom_set_string(x->buffer+2, "local");
+                outlet_anything(x->outlet1, name, 3, x->buffer);
+            }
+            break;
+        }
+        case MPR_SIG_REL_UPSTRM:
+            maxpd_atom_set_int(x->buffer, inst);
             maxpd_atom_set_string(x->buffer+1, "release");
             maxpd_atom_set_string(x->buffer+2, "upstream");
-            outlet_anything(x->outlet1, gensym((char *)mapper_signal_name(sig)),
-                            3, x->buffer);
+            outlet_anything(x->outlet1, name, 3, x->buffer);
             break;
-        case MAPPER_DOWNSTREAM_RELEASE:
+        case MPR_SIG_REL_DNSTRM:
+            maxpd_atom_set_int(x->buffer, inst);
             maxpd_atom_set_string(x->buffer+1, "release");
             maxpd_atom_set_string(x->buffer+2, "downstream");
-            outlet_anything(x->outlet1, gensym((char *)mapper_signal_name(sig)),
-                            3, x->buffer);
+            outlet_anything(x->outlet1, name, 3, x->buffer);
             break;
-        case MAPPER_INSTANCE_OVERFLOW:
-            mode = mapper_signal_instance_stealing_mode(sig);
+        case MPR_SIG_INST_OFLW: {
+            maxpd_atom_set_int(x->buffer, inst);
+            int mode = mpr_obj_get_prop_i32(sig, MPR_PROP_STEAL_MODE, NULL);
             switch (mode) {
-                case MAPPER_STEAL_OLDEST:
-                    instance = mapper_signal_oldest_active_instance(sig);
-                    if (instance)
-                        mapper_signal_instance_release(sig, instance, *tt);
+                case MPR_STEAL_OLDEST:
+                    inst = mpr_sig_get_oldest_inst_id(sig);
+                    if (inst)
+                        mpr_sig_release_inst(sig, inst, *time);
                     break;
-                case MAPPER_STEAL_NEWEST:
-                    instance = mapper_signal_newest_active_instance(sig);
-                    if (instance)
-                        mapper_signal_instance_release(sig, instance, *tt);
+                case MPR_STEAL_NEWEST:
+                    inst = mpr_sig_get_newest_inst_id(sig);
+                    if (inst)
+                        mpr_sig_release_inst(sig, inst, *time);
                     break;
                 case 0:
                     maxpd_atom_set_string(x->buffer+1, "overflow");
-                    outlet_anything(x->outlet1,
-                                    gensym((char *)mapper_signal_name(sig)),
-                                    2, x->buffer);
+                    outlet_anything(x->outlet1, name, 2, x->buffer);
                     break;
                 default:
                     break;
             }
             break;
+        }
         default:
             break;
     }
@@ -1027,14 +879,12 @@ static void mapperobj_register_signals(t_mapper *x) {
     t_symbol *sym_maximum = gensym("maximum");
     t_symbol *sym_length = gensym("length");
 
-    const char *sig_name, *sig_units, *sig_type;
-    char sig_type_char = 0;
-    double sig_min_double, sig_max_double;
-    float sig_min_float, sig_max_float;
-    long sig_min_long, sig_max_long, sig_length;
-    int sig_min_int, sig_max_int;
+    const char *sig_name, *sig_units, *sig_type_str;
+    mpr_type sig_type = 0;
+    double val_d;
+    long long val_l, sig_length;
 
-    mapper_signal temp_sig;
+    mpr_sig temp_sig;
     short range_known[2];
 
     if (!x->d)
@@ -1060,7 +910,7 @@ static void mapperobj_register_signals(t_mapper *x) {
                                      &sig_name) != MAX_ERR_NONE)
                 continue;
             if (dictionary_getstring((t_dictionary *)temp, sym_type,
-                                     &sig_type) != MAX_ERR_NONE)
+                                     &sig_type_str) != MAX_ERR_NONE)
                 continue;
             if (dictionary_getlong((t_dictionary *)temp, sym_length,
                                    &sig_length) != MAX_ERR_NONE)
@@ -1069,61 +919,45 @@ static void mapperobj_register_signals(t_mapper *x) {
                                      &sig_units) != MAX_ERR_NONE)
                 sig_units = 0;
 
-            if (dictionary_getfloat((t_dictionary *)temp, sym_minimum,
-                                    &sig_min_double) == MAX_ERR_NONE) {
-                sig_min_float = (float)sig_min_double;
-                sig_min_int = (int)sig_min_double;
-                range_known[0] = 1;
-            }
-            else if (dictionary_getlong((t_dictionary *)temp, sym_minimum,
-                                        &sig_min_long) == MAX_ERR_NONE) {
-                sig_min_float = (float)sig_min_long;
-                sig_min_int = (int)sig_min_long;
-                range_known[0] = 1;
-            }
-            if (dictionary_getfloat((t_dictionary *)temp, sym_maximum,
-                                    &sig_max_double) == MAX_ERR_NONE) {
-                sig_max_float = (float)sig_max_double;
-                sig_max_int = (int)sig_max_double;
-                range_known[1] = 1;
-            }
-            else if (dictionary_getlong((t_dictionary *)temp, sym_maximum,
-                                        &sig_max_long) == MAX_ERR_NONE) {
-                sig_max_float = (float)sig_max_long;
-                sig_max_int = (int)sig_max_long;
-                range_known[1] = 1;
-            }
-            if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
-                sig_type_char = 'i';
-            else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
-                sig_type_char = 'f';
+            if ((strcmp(sig_type_str, "int") == 0) || (strcmp(sig_type_str, "i") == 0))
+                sig_type = MPR_INT32;
+            else if ((strcmp(sig_type_str, "float") == 0) || (strcmp(sig_type_str, "f") == 0))
+                sig_type = MPR_FLT;
             else {
                 POST(x, "Skipping registration of signal %s (unknown type).",
                      sig_name);
                 continue;
             }
 
-            temp_sig = mapper_device_add_input_signal(x->device, sig_name,
-                                                      (int)sig_length,
-                                                      sig_type_char, sig_units,
-                                                      0, 0,
-                                                      sig_type_char == 'i'
-                                                      ? mapperobj_int_handler
-                                                      : mapperobj_float_handler, x);
+            temp_sig = mpr_sig_new(x->device, MPR_DIR_IN, sig_name,
+                                   (int)sig_length, sig_type, sig_units,
+                                   0, 0, 0, mapperobj_sig_handler, MPR_SIG_ALL);
+            mpr_obj_set_prop(temp_sig, MPR_PROP_DATA, NULL, 1, MPR_PTR, x, 0);
 
-            if (temp_sig) {
-                if (range_known[0]) {
-                    mapper_signal_set_minimum(temp_sig,
-                                              sig_type_char == 'i'
-                                              ? (void *)&sig_min_int
-                                              : (void *)&sig_min_float);
-                }
-                if (range_known[1]) {
-                    mapper_signal_set_maximum(temp_sig,
-                                              sig_type_char == 'i'
-                                              ? (void *)&sig_max_int
-                                              : (void *)&sig_max_float);
-                }
+            if (!temp_sig)
+                continue;
+
+            if (dictionary_getfloat((t_dictionary *)temp, sym_minimum,
+                                    &val_d) == MAX_ERR_NONE) {
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MIN, NULL, 1, MPR_DBL,
+                                 &val_d, 1);
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_minimum,
+                                        &val_l) == MAX_ERR_NONE) {
+                int val_i = (int)val_l;
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MIN, NULL, 1, MPR_INT32,
+                                 &val_i, 1);
+            }
+            if (dictionary_getfloat((t_dictionary *)temp, sym_maximum,
+                                    &val_d) == MAX_ERR_NONE) {
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MAX, NULL, 1, MPR_DBL,
+                                 &val_d, 1);
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_maximum,
+                                        &val_l) == MAX_ERR_NONE) {
+                int val_i = (int)val_l;
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MAX, NULL, 1, MPR_INT32,
+                                 &val_i, 1);
             }
         }
     }
@@ -1144,7 +978,7 @@ static void mapperobj_register_signals(t_mapper *x) {
                                      &sig_name) != MAX_ERR_NONE)
                 continue;
             if (dictionary_getstring((t_dictionary *)temp, sym_type,
-                                     &sig_type) != MAX_ERR_NONE)
+                                     &sig_type_str) != MAX_ERR_NONE)
                 continue;
             if (dictionary_getlong((t_dictionary *)temp, sym_length,
                                    &sig_length) != MAX_ERR_NONE)
@@ -1153,58 +987,44 @@ static void mapperobj_register_signals(t_mapper *x) {
                                      &sig_units) != MAX_ERR_NONE)
                 sig_units = 0;
 
-            if (dictionary_getfloat((t_dictionary *)temp, sym_minimum,
-                                    &sig_min_double) == MAX_ERR_NONE) {
-                sig_min_float = (float)sig_min_double;
-                sig_min_int = (int)sig_min_double;
-                range_known[0] = 1;
-            }
-            else if (dictionary_getlong((t_dictionary *)temp, sym_minimum,
-                                        &sig_min_long) == MAX_ERR_NONE) {
-                sig_min_float = (float)sig_min_long;
-                sig_min_int = (int)sig_min_long;
-                range_known[0] = 1;
-            }
-            if (dictionary_getfloat((t_dictionary *)temp, sym_maximum,
-                                    &sig_max_double) == MAX_ERR_NONE) {
-                sig_max_float = (float)sig_max_double;
-                sig_max_int = (int)sig_max_double;
-                range_known[1] = 1;
-            }
-            else if (dictionary_getlong((t_dictionary *)temp, sym_maximum,
-                                        &sig_max_long) == MAX_ERR_NONE) {
-                sig_max_float = (float)sig_max_long;
-                sig_max_int = (int)sig_max_long;
-                range_known[1] = 1;
-            }
-            if ((strcmp(sig_type, "int") == 0) || (strcmp(sig_type, "i") == 0))
-                sig_type_char = 'i';
-            else if ((strcmp(sig_type, "float") == 0) || (strcmp(sig_type, "f") == 0))
-                sig_type_char = 'f';
+            if ((strcmp(sig_type_str, "int") == 0) || (strcmp(sig_type_str, "i") == 0))
+                sig_type = MPR_INT32;
+            else if ((strcmp(sig_type_str, "float") == 0) || (strcmp(sig_type_str, "f") == 0))
+                sig_type = MPR_FLT;
             else {
                 POST("Skipping registration of signal %s (unknown type).",
                      sig_name);
                 continue;
             }
 
-            temp_sig = mapper_device_add_output_signal(x->device, sig_name,
-                                                       (int)sig_length,
-                                                       sig_type_char, sig_units,
-                                                       0, 0);
+            temp_sig = mpr_sig_new(x->device, MPR_DIR_OUT, sig_name,
+                                   (int)sig_length, sig_type, sig_units,
+                                   0, 0, 0, 0, 0);
 
-            if (temp_sig) {
-                if (range_known[0]) {
-                    mapper_signal_set_minimum(temp_sig,
-                                              sig_type_char == 'i'
-                                              ? (void *)&sig_min_int
-                                              : (void *)&sig_min_float);
-                }
-                if (range_known[1]) {
-                    mapper_signal_set_maximum(temp_sig,
-                                              sig_type_char == 'i'
-                                              ? (void *)&sig_max_int
-                                              : (void *)&sig_max_float);
-                }
+            if (!temp_sig)
+                continue;
+
+            if (dictionary_getfloat((t_dictionary *)temp, sym_minimum,
+                                    &val_d) == MAX_ERR_NONE) {
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MIN, NULL, 1, MPR_DBL,
+                                 &val_d, 1);
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_minimum,
+                                        &val_l) == MAX_ERR_NONE) {
+                int val_i = (int)val_l;
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MIN, NULL, 1, MPR_INT32,
+                                 &val_i, 1);
+            }
+            if (dictionary_getfloat((t_dictionary *)temp, sym_maximum,
+                                    &val_d) == MAX_ERR_NONE) {
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MAX, NULL, 1, MPR_DBL,
+                                 &val_d, 1);
+            }
+            else if (dictionary_getlong((t_dictionary *)temp, sym_maximum,
+                                        &val_l) == MAX_ERR_NONE) {
+                int val_i = (int)val_l;
+                mpr_obj_set_prop(temp_sig, MPR_PROP_MAX, NULL, 1, MPR_INT32,
+                                 &val_i, 1);
             }
         }
     }
@@ -1216,10 +1036,11 @@ static void mapperobj_register_signals(t_mapper *x) {
 static void mapperobj_poll(t_mapper *x)
 {
     int count = 10;
-    while(count-- && mapper_device_poll(x->device, 0)) {};
+    while(count-- && mpr_dev_poll(x->device, 0)) {};
     if (!x->ready) {
-        if (mapper_device_ready(x->device)) {
-            POST(x, "Joining mapping network as '%s'", mapper_device_name(x->device));
+        if (mpr_dev_ready(x->device)) {
+            POST(x, "Joining mapping network as '%s'",
+                 mpr_obj_get_prop_str(x->device, MPR_PROP_NAME, NULL));
             x->ready = 1;
 #ifdef MAXMSP
             defer_low((t_object *)x, (method)mapperobj_print_properties, NULL, 0, NULL);
@@ -1229,7 +1050,7 @@ static void mapperobj_poll(t_mapper *x)
         }
     }
     else if (x->updated) {
-        mapper_device_send_queue(x->device, x->timetag);
+        mpr_dev_send_queue(x->device, x->timetag);
         x->updated = 0;
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
@@ -1265,8 +1086,8 @@ static void mapperobj_learn(t_mapper *x, t_symbol *s,
 static void maybe_start_queue(t_mapper *x)
 {
     if (!x->updated) {
-        mapper_timetag_now(&x->timetag);
-        mapper_device_start_queue(x->device, x->timetag);
+        mpr_time_now(&x->timetag);
+        mpr_dev_start_queue(x->device, x->timetag);
         x->updated = 1;
     }
 }

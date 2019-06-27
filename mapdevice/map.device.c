@@ -1,7 +1,7 @@
 //
 // mapdevice.c
 // a maxmsp and puredata external encapsulating the functionality of a
-// libmapper "device", allowing name and metadata to be set
+// libmpr "device", allowing name and metadata to be set
 // http://www.libmapper.org
 // Joseph Malloch, IDMIL 2013
 //
@@ -17,7 +17,7 @@
 #include "ext.h"            // standard Max include, always required
 #include "ext_obex.h"       // required for new style Max object
 #include "jpatcher_api.h"
-#include <mapper/mapper.h>
+#include <mpr/mpr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,10 +41,9 @@ typedef struct _mapdevice
     t_hashtab           *ht;
     void                *clock;
     char                *name;
-    mapper_network      network;
-    mapper_database     db;
-    mapper_device       device;
-    mapper_timetag_t    timetag;
+    mpr_graph           graph;
+    mpr_dev             device;
+    mpr_time_t          timetag;
     int                 updated;
     int                 ready;
     t_atom              buffer[MAX_LIST];
@@ -78,13 +77,9 @@ static void mapdevice_maybe_start_queue(t_mapdevice *x);
 
 static void mapdevice_poll(t_mapdevice *x);
 
-static void mapdevice_sig_handler(mapper_signal sig, mapper_id instance,
-                                  const void *value, int count,
-                                  mapper_timetag_t *tt);
-static void mapdevice_instance_event_handler(mapper_signal sig,
-                                             mapper_id instance,
-                                             mapper_instance_event event,
-                                             mapper_timetag_t *tt);
+static void mapdevice_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
+                                  int length, mpr_type type, const void *value,
+                                  mpr_time_t *time);
 
 static void mapdevice_print_properties(t_mapdevice *x);
 
@@ -152,30 +147,25 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
             x->name = strdup("maxmsp");
         }
 
-        x->network = mapper_network_new(iface, 0, 0);
-        if (!x->network) {
-            object_post((t_object *)x, "error initializing libmapper network.");
-            return 0;
-        }
-
-        x->device = mapper_device_new(x->name, 0, x->network);
+        x->device = mpr_dev_new(x->name, 0);
         if (!x->device) {
-            object_post((t_object *)x, "error initializing libmapper device.");
+            object_post((t_object *)x, "error initializing libmpr device.");
             return 0;
         }
-        x->db = mapper_device_database(x->device);
+        x->graph = mpr_obj_get_graph(x->device);
+        if (iface)
+            mpr_graph_set_interface(x->graph, iface);
 
         if (mapdevice_attach(x)) {
-            mapper_device_free(x->device);
-            mapper_network_free(x->network);
+            mpr_dev_free(x->device);
             free(x->name);
             return 0;
         }
 
-        object_post((t_object *)x, "Using libmapper version %s – visit libmapper.org for more information.",
-                    mapper_version());
+        object_post((t_object *)x, "Using libmpr version %s – visit libmapper.org for more information.",
+                    mpr_version());
         object_post((t_object *)x, "Connecting to network interface %s...",
-                    mapper_network_interface(x->network));
+                    mpr_graph_get_interface(x->graph));
 
         // add other declared properties
         for (i = 0; i < argc; i++) {
@@ -191,27 +181,27 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                 switch ((argv+i+1)->a_type) {
                     case A_SYM: {
                         const char *value = atom_get_string(argv+i+1);
-                        mapper_device_set_property(x->device,
-                                                   atom_get_string(argv+i)+1,
-                                                   1, 's', value, 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
+                                         atom_get_string(argv+i)+1, 1, 's',
+                                         value, 1);
                         i++;
                         break;
                     }
                     case A_FLOAT:
                     {
                         float value = atom_getfloat(argv+i+1);
-                        mapper_device_set_property(x->device,
-                                                   atom_get_string(argv+i)+1,
-                                                   1, 'f', &value, 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
+                                         atom_get_string(argv+i)+1, 1, 'f',
+                                         &value, 1);
                         i++;
                         break;
                     }
                     case A_LONG:
                     {
                         int value = atom_getlong(argv+i+1);
-                        mapper_device_set_property(x->device,
-                                                   atom_get_string(argv+i)+1,
-                                                   1, 'i', &value, 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
+                                         atom_get_string(argv+i)+1, 1, 'i',
+                                         &value, 1);
                         i++;
                         break;
                     }
@@ -240,10 +230,7 @@ static void mapdevice_free(t_mapdevice *x)
     clock_unset(x->clock);      // Remove clock routine from the scheduler
     clock_free(x->clock);       // Frees memeory used by clock
     if (x->device) {
-        mapper_device_free(x->device);
-    }
-    if (x->network) {
-        mapper_network_free(x->network);
+        mpr_dev_free(x->device);
     }
     if (x->name) {
         free(x->name);
@@ -292,7 +279,7 @@ void mapdevice_detach(t_mapdevice *x)
         hashtab_methodall(x->ht, gensym("remove_from_hashtab"));
 		object_detach_byptr(x, x->ht); // detach from the hashtable
         hashtab_chuck(x->ht);
-        object_obex_store(x->patcher, gensym("mapperhash"), NULL);
+        object_obex_store(x->patcher, gensym("mprhash"), NULL);
 	}
 }
 
@@ -341,7 +328,7 @@ int mapdevice_attach(t_mapdevice *x)
 
     // walk up the patcher hierarchy checking if there is an upstream mapdevice object
     while (patcher) {
-        object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+        object_obex_lookup(patcher, gensym("mprhash"), (t_object **)&ht);
         if (ht) {
             object_post((t_object *)x, "error: found mapdevice object in parent patcher!");
             return 1;
@@ -360,8 +347,8 @@ int mapdevice_attach(t_mapdevice *x)
     x->ht = hashtab_new(0);
     // objects stored in the obex will be freed when the obex's owner is freed
     // in this case, when the patcher object is freed. so we don't need to
-    // manage the memory associated with the "mapperhash".
-    object_obex_store(x->patcher, gensym("mapperhash"), (t_object *)x->ht);
+    // manage the memory associated with the "mprhash".
+    object_obex_store(x->patcher, gensym("mprhash"), (t_object *)x->ht);
 
     // attach to the hashtab, registering it if necessary
     // this way, we can receive notifications from the hashtab as things are added and removed
@@ -379,25 +366,26 @@ int mapdevice_attach(t_mapdevice *x)
 
 static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
 {
-    mapper_signal sig = NULL;
+    mpr_sig sig = NULL;
     if (obj) {
         t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
         const char *name = temp->s_name;
         char type = object_attr_getchar(obj, gensym("sig_type"));
         long length = object_attr_getlong(obj, gensym("sig_length"));
-        mapper_direction dir = 0;
+        mpr_dir dir = 0;
 
         if (object_classname(obj) == gensym("map.out"))
-            dir = MAPPER_DIR_OUTGOING;
+            dir = MPR_DIR_OUT;
         else if (object_classname(obj) == gensym("map.in"))
-            dir = MAPPER_DIR_INCOMING;
+            dir = MPR_DIR_IN;
         else
             return;
 
-        sig = mapper_device_signal_by_name(x->device, name);
-        if (sig) {
+        mpr_list list = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
+        list = mpr_list_filter(list, MPR_PROP_NAME, NULL, 1, MPR_STR, name, MPR_OP_EQ);
+        if (list && (sig = *list)) {
             // another max object associated with this signal exists
-            t_map_ptrs *ptrs = (t_map_ptrs *)mapper_signal_user_data(sig);
+            t_map_ptrs *ptrs = (t_map_ptrs *)mpr_obj_get_prop_ptr(sig, MPR_PROP_DATA, NULL);
             ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
             ptrs->objs[ptrs->num_objs] = obj;
             ptrs->num_objs++;
@@ -408,15 +396,13 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
             ptrs->objs = (t_object **)malloc(sizeof(t_object *));
             ptrs->num_objs = 1;
             ptrs->objs[0] = obj;
-            sig = mapper_device_add_signal(x->device, dir, 1, name, length, type,
-                                           0, 0, 0, mapdevice_sig_handler, ptrs);
-            mapper_signal_set_instance_event_callback(sig,
-                                                      mapdevice_instance_event_handler,
-                                                      MAPPER_INSTANCE_ALL);
+            sig = mpr_sig_new(x->device, dir, name, length, type, 0, 0, 0,
+                              NULL, mapdevice_sig_handler, MPR_SIG_ALL);
+            mpr_obj_set_prop(sig, MPR_PROP_DATA, NULL, 1, MPR_PTR, ptrs, 0);
         }
         //output new numOutputs/numInputs
-        atom_setlong(x->buffer, mapper_device_num_signals(x->device, dir));
-        if (dir == MAPPER_DIR_OUTGOING)
+        atom_setlong(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, dir)));
+        if (dir == MPR_DIR_OUT)
             outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
         else
             outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
@@ -432,20 +418,26 @@ static void mapdevice_add_signal(t_mapdevice *x, t_object *obj)
 
 static void mapdevice_remove_signal(t_mapdevice *x, t_object *obj)
 {
-    mapper_signal sig = 0;
+    mpr_sig sig = 0;
     if (!obj)
         return;
     t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
     const char *name = temp->s_name;
 
-    sig = mapper_device_signal_by_name(x->device, name);
+    mpr_list list = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
+    list = mpr_list_filter(list, MPR_PROP_NAME, NULL, 1, MPR_STR, name, MPR_OP_EQ);
+    if (!list) {
+        object_post((t_object *)x, "error: signal named %s not found!", name);
+        return;
+    }
+    sig = *list;
 
     if (sig) {
-        t_map_ptrs *ptrs = (t_map_ptrs *)mapper_signal_user_data(sig);
+        t_map_ptrs *ptrs = (t_map_ptrs *)mpr_obj_get_prop_ptr(sig, MPR_PROP_DATA, NULL);
         if (ptrs->num_objs == 1) {
             free(ptrs->objs);
             free(ptrs);
-            mapper_device_remove_signal(x->device, sig);
+            mpr_sig_free(sig);
         }
         else {
             // need to realloc obj ptr memory
@@ -474,30 +466,27 @@ static void mapdevice_print_properties(t_mapdevice *x)
 {
     if (x->ready) {
         //output name
-        atom_set_string(x->buffer, mapper_device_name(x->device));
+        atom_set_string(x->buffer, mpr_obj_get_prop_str(x->device, MPR_PROP_NAME, NULL));
         outlet_anything(x->outlet, gensym("name"), 1, x->buffer);
 
         //output interface
-        atom_set_string(x->buffer, mapper_network_interface(x->network));
+        atom_set_string(x->buffer, mpr_graph_get_interface(x->graph));
         outlet_anything(x->outlet, gensym("interface"), 1, x->buffer);
 
         //output IP
-        const struct in_addr *ip = mapper_network_ip4(x->network);
-        atom_set_string(x->buffer, inet_ntoa(*ip));
+        atom_set_string(x->buffer, mpr_graph_get_address(x->graph));
         outlet_anything(x->outlet, gensym("IP"), 1, x->buffer);
 
         //output port
-        atom_setlong(x->buffer, mapper_device_port(x->device));
+        atom_setlong(x->buffer, mpr_obj_get_prop_i32(x->device, MPR_PROP_PORT, NULL));
         outlet_anything(x->outlet, gensym("port"), 1, x->buffer);
 
         //output numInputs
-        atom_setlong(x->buffer, mapper_device_num_signals(x->device,
-                                                          MAPPER_DIR_INCOMING));
+        atom_setlong(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
         outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
 
         //output numOutputs
-        atom_setlong(x->buffer, mapper_device_num_signals(x->device,
-                                                          MAPPER_DIR_OUTGOING));
+        atom_setlong(x->buffer, mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
     }
 }
@@ -514,95 +503,80 @@ static void outlet_data(void *outlet, char type, short length, t_atom *atoms)
 
 // *********************************************************
 // -(int handler)-------------------------------------------
-static void mapdevice_sig_handler(mapper_signal sig, mapper_id instance,
-                                  const void *value, int count,
-                                  mapper_timetag_t *tt)
+static void mapdevice_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
+                                  int len, mpr_type type, const void *val,
+                                  mpr_time_t *time)
 {
-    t_map_ptrs *ptrs = mapper_signal_user_data(sig);
+    t_map_ptrs *ptrs = mpr_obj_get_prop_ptr(sig, MPR_PROP_DATA, NULL);
     t_mapdevice *x = ptrs->home;
     t_object *obj = NULL;
-    int i, length = mapper_signal_length(sig);
-    char type = mapper_signal_type(sig);
+    int i;
 
-    if (mapper_signal_num_instances(sig) > 1) {
-        obj = (t_object *)mapper_signal_instance_user_data(sig, instance);
+    if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
+        obj = (t_object *)mpr_sig_get_inst_data(sig, inst);
     }
 
-    if (value) {
-        if (length > (MAX_LIST)) {
-            object_post((t_object *)x, "Maximum list length is %i!", MAX_LIST);
-            length = MAX_LIST;
-        }
+    switch (evt) {
+        case MPR_SIG_UPDATE: {
+            if (val) {
+                if (len > (MAX_LIST)) {
+                    object_post((t_object *)x, "Maximum list length is %i!", MAX_LIST);
+                    len = MAX_LIST;
+                }
 
-        if (type == 'i') {
-            int *v = (int*)value;
-            for (i = 0; i < length; i++)
-                atom_setlong(x->buffer + i, v[i]);
-        }
-        else if (type == 'f') {
-            float *v = (float*)value;
-            for (i = 0; i < length; i++)
-                atom_setfloat(x->buffer + i, v[i]);
-        }
+                if (type == 'i') {
+                    int *vi = (int*)val;
+                    for (i = 0; i < len; i++)
+                        atom_setlong(x->buffer + i, vi[i]);
+                }
+                else if (type == 'f') {
+                    float *vf = (float*)val;
+                    for (i = 0; i < len; i++)
+                        atom_setfloat(x->buffer + i, vf[i]);
+                }
 
-        if (obj) {
-            outlet_data(obj->o_outlet, type, length, x->buffer);
+                if (obj) {
+                    outlet_data(obj->o_outlet, type, len, x->buffer);
+                }
+                else {
+                    for (i=0; i<ptrs->num_objs; i++)
+                        outlet_data(ptrs->objs[i]->o_outlet, type, len, x->buffer);
+                }
+            }
+            else if (obj) {
+                atom_set_string(x->buffer, "release");
+                atom_set_string(x->buffer+1, "local");
+                outlet_list(obj->o_outlet, NULL, 2, x->buffer);
+            }
+            break;
         }
-        else {
-            for (i=0; i<ptrs->num_objs; i++)
-                outlet_data(ptrs->objs[i]->o_outlet, type, length, x->buffer);
-        }
-    }
-    else if (obj) {
-        atom_set_string(x->buffer, "release");
-        atom_set_string(x->buffer+1, "local");
-        outlet_list(obj->o_outlet, NULL, 2, x->buffer);
-    }
-}
-
-// *********************************************************
-// -(instance management handler)----------------------
-static void mapdevice_instance_event_handler(mapper_signal sig,
-                                             mapper_id instance,
-                                             mapper_instance_event event,
-                                             mapper_timetag_t *tt)
-{
-    t_map_ptrs *ptrs = mapper_signal_user_data(sig);
-    t_mapdevice *x = ptrs->home;
-
-    t_object *obj = (t_object *)mapper_signal_instance_user_data(sig, instance);
-    if (!obj)
-        return;
-
-    int i, mode;
-    atom_setlong(x->buffer, instance);
-    switch (event) {
-        case MAPPER_UPSTREAM_RELEASE:
+        case MPR_SIG_REL_UPSTRM:
             atom_set_string(x->buffer, "release");
             atom_set_string(x->buffer+1, "upstream");
             outlet_list(obj->o_outlet, NULL, 2, x->buffer);
             break;
-        case MAPPER_DOWNSTREAM_RELEASE:
+        case MPR_SIG_REL_DNSTRM:
             atom_set_string(x->buffer, "release");
             atom_set_string(x->buffer+1, "downstream");
             outlet_list(obj->o_outlet, NULL, 2, x->buffer);
             break;
-        case MAPPER_INSTANCE_OVERFLOW:
-            mode = mapper_signal_instance_stealing_mode(sig);
+        case MPR_SIG_INST_OFLW: {
+            atom_setlong(x->buffer, inst);
+            int mode = mpr_obj_get_prop_i32(sig, MPR_PROP_STEAL_MODE, NULL);
             switch (mode) {
-                case MAPPER_STEAL_OLDEST:
-                    instance = mapper_signal_oldest_active_instance(sig);
-                    if (instance)
-                        mapper_signal_instance_release(sig, instance, *tt);
+                case MPR_STEAL_OLDEST:
+                    inst = mpr_sig_get_oldest_inst_id(sig);
+                    if (inst)
+                        mpr_sig_release_inst(sig, inst, *time);
                     break;
-                case MAPPER_STEAL_NEWEST:
-                    instance = mapper_signal_newest_active_instance(sig);
-                    if (instance)
-                        mapper_signal_instance_release(sig, instance, *tt);
+                case MPR_STEAL_NEWEST:
+                    inst = mpr_sig_get_newest_inst_id(sig);
+                    if (inst)
+                        mpr_sig_release_inst(sig, inst, *time);
                     break;
                 case 0:
                     atom_set_string(x->buffer+1, "overflow");
-                    // send overflow message to all instances
+                        // send overflow message to all instances
                     for (i=0; i<ptrs->num_objs; i++)
                         outlet_list(ptrs->objs[i]->o_outlet, NULL, 2, x->buffer);
                     break;
@@ -610,6 +584,7 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
                     break;
             }
             break;
+        }
         default:
             break;
     }
@@ -620,30 +595,30 @@ static void mapdevice_instance_event_handler(mapper_signal sig,
 static void mapdevice_maybe_start_queue(t_mapdevice *x)
 {
     if (!x->updated) {
-        mapper_timetag_now(&x->timetag);
-        mapper_device_start_queue(x->device, x->timetag);
+        mpr_time_now(&x->timetag);
+        mpr_dev_start_queue(x->device, x->timetag);
         x->updated = 1;
     }
 }
 
 // *********************************************************
-// -(poll libmapper)----------------------------------------
+// -(poll libmpr)-------------------------------------------
 static void mapdevice_poll(t_mapdevice *x)
 {
     int count = 10;
-    while(count-- && mapper_device_poll(x->device, 0)) {};
+    while(count-- && mpr_dev_poll(x->device, 0)) {};
     if (!x->ready) {
-        if (mapper_device_ready(x->device)) {
+        if (mpr_dev_ready(x->device)) {
             object_post((t_object *)x, "Joining mapping network as '%s'",
-                        mapper_device_name(x->device));
-            if (!mapper_device_num_signals(x->device, MAPPER_DIR_ANY))
+                        mpr_obj_get_prop_str(x->device, MPR_PROP_NAME, NULL));
+            if (!mpr_list_get_count(mpr_dev_get_sigs(x->device, MPR_DIR_ANY)))
                 object_post((t_object *)x, "Waiting for inputs and outputs...");
             x->ready = 1;
             defer_low((t_object *)x, (method)mapdevice_print_properties, NULL, 0, NULL);
         }
     }
     else if (x->updated) {
-        mapper_device_send_queue(x->device, x->timetag);
+        mpr_dev_send_queue(x->device, x->timetag);
         x->updated = 0;
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay

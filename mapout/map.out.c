@@ -17,7 +17,7 @@
 #include "ext.h"            // standard Max include, always required
 #include "ext_obex.h"       // required for new style Max object
 #include "jpatcher_api.h"
-#include <mapper/mapper.h>
+#include <mpr/mpr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,10 +40,10 @@ typedef struct _mapout
     long                sig_length;
     char                sig_type;
     t_object            *dev_obj;
-    mapper_signal       sig_ptr;
-    mapper_timetag_t    *tt_ptr;
+    mpr_sig             sig_ptr;
+    mpr_time            tt_ptr;
     long                is_instance;
-    mapper_id           instance_id;
+    mpr_id              instance_id;
     void                *outlet;
     t_symbol            *myobjname;
     t_object            *patcher;
@@ -70,7 +70,6 @@ static void mapout_loadbang(t_mapout *x);
 static void mapout_int(t_mapout *x, long i);
 static void mapout_float(t_mapout *x, double f);
 static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv);
-static void mapout_query(t_mapout *x);
 static void mapout_release(t_mapout *x);
 
 static int atom_strcmp(t_atom *a, const char *string);
@@ -97,7 +96,6 @@ int main(void)
     class_addmethod(c, (method)mapout_int, "int", A_LONG, 0);
     class_addmethod(c, (method)mapout_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mapout_list, "list", A_GIMME, 0);
-    class_addmethod(c, (method)mapout_query, "query", 0);
     class_addmethod(c, (method)mapout_release, "release", 0);
     class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
     class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
@@ -208,7 +206,7 @@ void mapout_loadbang(t_mapout *x)
 
     t_object *patcher = x->patcher;
     while (patcher) {
-        object_obex_lookup(patcher, gensym("mapperhash"), (t_object **)&ht);
+        object_obex_lookup(patcher, gensym("mprhash"), (t_object **)&ht);
         if (ht) {
             add_to_hashtab(x, ht);
             break;
@@ -294,14 +292,13 @@ void parse_extra_properties(t_mapout *x)
             }
             /* Remove the default signal instance (0) if it exists. Since the user
              * may have properly added an instance 0, we will check for user_data. */
-            void *data = mapper_signal_instance_user_data(x->sig_ptr, 0);
+            void *data = mpr_sig_get_inst_data(x->sig_ptr, 0);
             if (!data)
-                mapper_signal_remove_instance(x->sig_ptr, 0);
+                mpr_sig_remove_inst(x->sig_ptr, 0);
 
             x->is_instance = 1;
             i++;
-            mapper_signal_reserve_instances(x->sig_ptr, 1, &x->instance_id,
-                                            (void **)&x);
+            mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
         else if (atom_strcmp(x->args+i, "@minimum") == 0 ||
                  atom_strcmp(x->args+i, "@min") == 0) {
@@ -346,7 +343,8 @@ void parse_extra_properties(t_mapout *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_minimum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MIN, NULL, x->sig_length,
+                                     MPR_INT32, val, 1);
                     i--;
                     break;
                 }
@@ -361,7 +359,8 @@ void parse_extra_properties(t_mapout *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_minimum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MIN, NULL, x->sig_length,
+                                     MPR_FLT, val, 1);
                     i--;
                     break;
                 }
@@ -412,7 +411,8 @@ void parse_extra_properties(t_mapout *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_maximum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MAX, NULL, x->sig_length,
+                                     MPR_INT32, val, 1);
                     i--;
                     break;
                 }
@@ -427,7 +427,8 @@ void parse_extra_properties(t_mapout *x)
                             val[j] = val[0];
                         }
                     }
-                    mapper_signal_set_maximum(x->sig_ptr, val);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_MAX, NULL, x->sig_length,
+                                     MPR_FLT, val, 1);
                     i--;
                     break;
                 }
@@ -440,27 +441,27 @@ void parse_extra_properties(t_mapout *x)
             switch ((x->args+i+1)->a_type) {
                 case A_SYM: {
                     const char *value = atom_get_string(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 's', value, 1);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN,
+                                     atom_get_string(x->args+i)+1, 1, MPR_STR,
+                                     value, 1);
                     i++;
                     break;
                 }
                 case A_FLOAT:
                 {
                     float value = atom_getfloat(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 'f', &value, 1);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN,
+                                     atom_get_string(x->args+i)+1, 1, MPR_FLT,
+                                     &value, 1);
                     i++;
                     break;
                 }
                 case A_LONG:
                 {
                     int value = atom_getlong(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 'i', &value, 1);
+                    mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN,
+                                     atom_get_string(x->args+i)+1, 1, MPR_INT32,
+                                     &value, 1);
                     i++;
                     break;
                 }
@@ -483,7 +484,7 @@ t_max_err set_dev_obj(t_mapout *x, t_object *attr, long argc, t_atom *argv)
 // -(set the signal pointer)--------------------------------
 t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->sig_ptr = (mapper_signal)argv->a_w.w_obj;
+    x->sig_ptr = (mpr_sig)argv->a_w.w_obj;
     if (x->sig_ptr)
         parse_extra_properties(x);
     return 0;
@@ -493,7 +494,7 @@ t_max_err set_sig_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
 // -(set the device pointer)--------------------------------
 t_max_err set_tt_ptr(t_mapout *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->tt_ptr = (mapper_timetag_t *)argv->a_w.w_obj;
+    x->tt_ptr = (mpr_time)argv->a_w.w_obj;
     return 0;
 }
 
@@ -505,8 +506,8 @@ static int check_ptrs(t_mapout *x)
         return 1;
     }
     else if (!x->length) {
-        x->length = mapper_signal_length(x->sig_ptr);
-        x->type = mapper_signal_type(x->sig_ptr);
+        x->length = mpr_obj_get_prop_i32(x->sig_ptr, MPR_PROP_LEN, NULL);
+        x->type = mpr_obj_get_prop_i32(x->sig_ptr, MPR_PROP_TYPE, NULL);
     }
     return 0;
 }
@@ -533,11 +534,7 @@ static void mapout_int(t_mapout *x, long l)
         value = &f;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
-    if (x->is_instance)
-        mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                      value, 1, *x->tt_ptr);
-    else
-        mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l, *x->tt_ptr);
 }
 
 // *********************************************************
@@ -562,11 +559,7 @@ static void mapout_float(t_mapout *x, double d)
         value = &i;
     }
     object_method(x->dev_obj, maybe_start_queue_sym);
-    if (x->is_instance)
-        mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                      value, 1, *x->tt_ptr);
-    else
-        mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d, *x->tt_ptr);
 }
 
 // *********************************************************
@@ -601,13 +594,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
         }
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
-        if (x->is_instance) {
-            mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                          value, count, *x->tt_ptr);
-        }
-        else {
-            mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
-        }
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, value, *x->tt_ptr);
     }
     else if (x->type == 'f') {
         float payload[argc];
@@ -624,27 +611,8 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
         }
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
-        if (x->is_instance) {
-            mapper_signal_instance_update(x->sig_ptr, x->instance_id,
-                                          value, count, *x->tt_ptr);
-        }
-        else {
-            mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
-        }
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, value, *x->tt_ptr);
     }
-}
-
-// *********************************************************
-// -(query remote endpoints)--------------------------------
-static void mapout_query(t_mapout *x)
-{
-    if (check_ptrs(x))
-        return;
-
-    /* TODO: we should cache query timetag and object pointer so that
-     *  we can deliver responses only to the object being queried. */
-
-    mapper_signal_query_remotes(x->sig_ptr, MAPPER_NOW);
 }
 
 // *********************************************************
@@ -655,7 +623,7 @@ static void mapout_release(t_mapout *x)
         return;
 
     object_method(x->dev_obj, maybe_start_queue_sym);
-    mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    mpr_sig_release_inst(x->sig_ptr, x->instance_id, *x->tt_ptr);
 }
 
 // *********************************************************
