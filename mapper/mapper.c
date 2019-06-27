@@ -1031,7 +1031,7 @@ static void mapperobj_register_signals(t_mapper *x) {
     char sig_type_char = 0;
     double sig_min_double, sig_max_double;
     float sig_min_float, sig_max_float;
-    long sig_min_long, sig_max_long, sig_length;
+    long long sig_min_long, sig_max_long, sig_length;
     int sig_min_int, sig_max_int;
 
     mapper_signal temp_sig;
