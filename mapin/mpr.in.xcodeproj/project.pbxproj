@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		706D6BD5176DF54E00628CE3 /* map.in.c in Sources */ = {isa = PBXBuildFile; fileRef = 706D6BD4176DF54E00628CE3 /* map.in.c */; };
+		706D6BD5176DF54E00628CE3 /* mpr.in.c in Sources */ = {isa = PBXBuildFile; fileRef = 706D6BD4176DF54E00628CE3 /* mpr.in.c */; };
 		8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8D5B49A704867FD3000E48DA /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		706D6BD4176DF54E00628CE3 /* map.in.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = map.in.c; sourceTree = "<group>"; };
-		8D576316048677EA00EA77CD /* map.in.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = map.in.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
+		706D6BD4176DF54E00628CE3 /* mpr.in.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mpr.in.c; sourceTree = "<group>"; };
+		8D576316048677EA00EA77CD /* mpr.in.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mpr.in.mxo; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D576317048677EA00EA77CD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -59,7 +59,7 @@
 		08FB77AFFE84173DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				706D6BD4176DF54E00628CE3 /* map.in.c */,
+				706D6BD4176DF54E00628CE3 /* mpr.in.c */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -67,7 +67,7 @@
 		19C28FB6FE9D52B211CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D576316048677EA00EA77CD /* map.in.mxo */,
+				8D576316048677EA00EA77CD /* mpr.in.mxo */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,9 +85,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		8D57630D048677EA00EA77CD /* map.in */ = {
+		8D57630D048677EA00EA77CD /* mpr.in */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "map.in" */;
+			buildConfigurationList = 1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "mpr.in" */;
 			buildPhases = (
 				70DBCB71122319DD003B0196 /* Headers */,
 				8D57630F048677EA00EA77CD /* Resources */,
@@ -98,10 +98,10 @@
 			);
 			dependencies = (
 			);
-			name = map.in;
+			name = mpr.in;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = maxadmin;
-			productReference = 8D576316048677EA00EA77CD /* map.in.mxo */;
+			productReference = 8D576316048677EA00EA77CD /* mpr.in.mxo */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -112,7 +112,7 @@
 			attributes = {
 				LastUpgradeCheck = 0460;
 			};
-			buildConfigurationList = 1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "map.in" */;
+			buildConfigurationList = 1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "mpr.in" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -126,7 +126,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D57630D048677EA00EA77CD /* map.in */,
+				8D57630D048677EA00EA77CD /* mpr.in */,
 			);
 		};
 /* End PBXProject section */
@@ -147,7 +147,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				706D6BD5176DF54E00628CE3 /* map.in.c in Sources */,
+				706D6BD5176DF54E00628CE3 /* mpr.in.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,8 +203,8 @@
 					"-lmx",
 					/usr/local/lib/libmpr.dylib,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.map.in;
-				PRODUCT_NAME = map.in;
+				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.mpr.in;
+				PRODUCT_NAME = mpr.in;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
@@ -234,7 +234,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "map.in" */ = {
+		1DEB911A08733D790010E9CD /* Build configuration list for PBXNativeTarget "mpr.in" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB911B08733D790010E9CD /* maxmsp */,
@@ -242,7 +242,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = maxmsp;
 		};
-		1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "map.in" */ = {
+		1DEB911E08733D790010E9CD /* Build configuration list for PBXProject "mpr.in" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB911F08733D790010E9CD /* maxmsp */,

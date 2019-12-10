@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>050FE30E-3011-4D0E-8536-EAEBA4D98619</string>
+	<key>IDESourceControlProjectName</key>
+	<string>map.out</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>E3ECC8C98ECDF859CC7C2E392FB0EC26C840A39C</key>
+		<string>https://github.com/malloch/mapper-max-pd.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>mapout/map.out.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>E3ECC8C98ECDF859CC7C2E392FB0EC26C840A39C</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/malloch/mapper-max-pd.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>E3ECC8C98ECDF859CC7C2E392FB0EC26C840A39C</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>E3ECC8C98ECDF859CC7C2E392FB0EC26C840A39C</string>
+			<key>IDESourceControlWCCName</key>
+			<string>mapper-max-pd</string>
+		</dict>
+	</array>
+</dict>
+</plist>
