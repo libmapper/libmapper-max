@@ -406,6 +406,7 @@ void parse_extra_properties(t_mapout *x, int argc, t_atom *argv)
         }
         i += length;
     }
+    mapper_signal_push(x->sig_ptr);
 }
 
 // *********************************************************
