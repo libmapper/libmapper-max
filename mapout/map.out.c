@@ -169,7 +169,7 @@ static void *mapout_new(t_symbol *s, int argc, t_atom *argv)
         }
 
         // we need to cache any arguments to add later
-        x->args = atomarray_new(argc-1, argv+i);
+        x->args = atomarray_new(argc-i, argv+i);
 
         // cache the registered name so we can remove self from hashtab later
         x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
