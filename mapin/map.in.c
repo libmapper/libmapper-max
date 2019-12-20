@@ -71,6 +71,9 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv);
 static void mapin_release(t_mapin *x);
 static void mapin_anything(t_mapin *x, t_symbol *s, int argc, t_atom *argv);
 
+t_max_err mapin_instance_get(t_mapin *x, t_object *attr, long *argc, t_atom **argv);
+t_max_err mapin_instance_set(t_mapin *x, t_object *attr, long argc, t_atom *argv);
+
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
 static void atom_set_string(t_atom *a, const char *string);
@@ -109,6 +112,9 @@ int main(void)
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
     CLASS_ATTR_OBJ(c, "tt_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, tt_ptr);
     CLASS_ATTR_ACCESSORS(c, "tt_ptr", 0, set_tt_ptr);
+
+    CLASS_ATTR_LONG(c, "instance", 0, t_mapin, instance_id);
+    CLASS_ATTR_ACCESSORS(c, "instance", mapin_instance_get, mapin_instance_set);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mapin_class = c;
@@ -291,9 +297,11 @@ void parse_extra_properties(t_mapin *x, int argc, t_atom *argv)
         }
 
         if (length <= 0) {
+            object_post((t_object*)x, "value missing for property %s", prop);
             continue;
         }
         if (heterogeneous_types == 2) {
+            object_post((t_object*)x, "only numeric types may be mixed in property values!");
             i += length;
             continue;
         }
@@ -318,6 +326,11 @@ void parse_extra_properties(t_mapin *x, int argc, t_atom *argv)
             }
             else if ((argv + i)->a_type == A_LONG) {
                 x->instance_id = atom_getlong(argv + i);
+            }
+            else {
+                object_post((t_object*)x, "instance value must be an integer or 'polyindex'");
+                i += length;
+                continue;
             }
             /* Remove the default signal instance (0) if it exists. Since the user
              * may have properly added an instance 0, we will check for user_data. */
@@ -597,6 +610,28 @@ static void mapin_release(t_mapin *x)
 
     object_method(x->dev_obj, maybe_start_queue_sym);
     mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
+}
+
+// *********************************************************
+// -(get instance id)---------------------------------------
+t_max_err mapin_instance_get(t_mapin *x, t_object *attr, long *argc, t_atom **argv)
+{
+    object_post((t_object*)x, "getting instance id");
+    char alloc;
+    atom_alloc(argc, argv, &alloc); // allocate return atom
+    atom_setlong(*argv, (long)x->instance_id);
+    return 0;
+}
+
+// *********************************************************
+// -(set instance id)---------------------------------------
+t_max_err mapin_instance_set(t_mapin *x, t_object *attr, long argc, t_atom *argv)
+{
+    x->instance_id = (mapper_id)atom_getlong(argv);
+    object_post((t_object*)x, "setting instance id to %d", (int)x->instance_id);
+    x->is_instance = 1;
+    mapper_signal_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
+    return 0;
 }
 
 // *********************************************************

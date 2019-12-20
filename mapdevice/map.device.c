@@ -226,7 +226,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
 
         // Create the timing clock
         x->clock = clock_new(x, (method)mapdevice_poll);
-        clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+        clock_fdelay(x->clock, INTERVAL);  // Set clock to go off after delay
     }
     return (x);
 }
@@ -555,7 +555,7 @@ static void mapdevice_sig_handler(mapper_signal sig, mapper_id instance,
     }
     else if (obj) {
         atom_set_string(x->buffer, "release");
-        atom_set_string(x->buffer+1, "local");
+        atom_set_string(x->buffer+1, "upstream");
         outlet_list(obj->o_outlet, NULL, 2, x->buffer);
     }
 }
@@ -646,7 +646,7 @@ static void mapdevice_poll(t_mapdevice *x)
         mapper_device_send_queue(x->device, x->timetag);
         x->updated = 0;
     }
-    clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
+    clock_fdelay(x->clock, INTERVAL);  // Set clock to go off after delay
 }
 
 
