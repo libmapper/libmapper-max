@@ -485,12 +485,14 @@ static void mapin_int(t_mapin *x, long l)
         f = (float)l;
         value = &f;
     }
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
@@ -514,12 +516,14 @@ static void mapin_float(t_mapin *x, double d)
         i = (int)d;
         value = &i;
     }
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
@@ -553,6 +557,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
+        critical_enter(0);
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
             mapper_signal_instance_update(x->sig_ptr, x->instance_id,
@@ -561,6 +566,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         else {
             mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
+        critical_exit(0);
     }
     else if (x->type == 'f') {
         float payload[argc];
@@ -576,6 +582,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
+        critical_enter(0);
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
             mapper_signal_instance_update(x->sig_ptr, x->instance_id,
@@ -584,6 +591,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         else {
             mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
+        critical_exit(0);
     }
 }
 
@@ -608,8 +616,10 @@ static void mapin_release(t_mapin *x)
     if (check_ptrs(x) || !x->is_instance)
         return;
 
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************

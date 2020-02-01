@@ -487,12 +487,14 @@ static void mapout_int(t_mapout *x, long l)
         f = (float)l;
         value = &f;
     }
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
@@ -516,12 +518,14 @@ static void mapout_float(t_mapout *x, double d)
         i = (int)d;
         value = &i;
     }
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
@@ -555,6 +559,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
+        critical_enter(0);
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
             mapper_signal_instance_update(x->sig_ptr, x->instance_id,
@@ -563,6 +568,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
         else {
             mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
+        critical_exit(0);
     }
     else if (x->type == 'f') {
         float payload[argc];
@@ -577,6 +583,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
                 return;
             }
         }
+        critical_enter(0);
         //update signal
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
@@ -586,6 +593,7 @@ static void mapout_list(t_mapout *x, t_symbol *s, int argc, t_atom *argv)
         else {
             mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
+        critical_exit(0);
     }
 }
 
@@ -623,8 +631,10 @@ static void mapout_release(t_mapout *x)
     if (check_ptrs(x) || !x->is_instance)
         return;
 
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
