@@ -47,8 +47,7 @@ typedef struct _mapin
     t_symbol            *myobjname;
     t_object            *patcher;
     t_hashtab           *ht;
-    long                num_args;
-    t_atom              *args;
+    t_atomarray         *args;
     long                connect_state;
     int                 length;
     char                type;
@@ -70,6 +69,10 @@ static void mapin_int(t_mapin *x, long i);
 static void mapin_float(t_mapin *x, double f);
 static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv);
 static void mapin_release(t_mapin *x);
+static void mapin_anything(t_mapin *x, t_symbol *s, int argc, t_atom *argv);
+
+t_max_err mapin_instance_get(t_mapin *x, t_object *attr, long *argc, t_atom **argv);
+t_max_err mapin_instance_set(t_mapin *x, t_object *attr, long argc, t_atom *argv);
 
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
@@ -96,6 +99,7 @@ int main(void)
     class_addmethod(c, (method)mapin_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mapin_list, "list", A_GIMME, 0);
     class_addmethod(c, (method)mapin_release, "release", 0);
+    class_addmethod(c, (method)mapin_anything, "anything", A_GIMME, 0);
     class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
     class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
 
@@ -108,6 +112,9 @@ int main(void)
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
     CLASS_ATTR_OBJ(c, "tt_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mapin, tt_ptr);
     CLASS_ATTR_ACCESSORS(c, "tt_ptr", 0, set_tt_ptr);
+
+    CLASS_ATTR_LONG(c, "instance", 0, t_mapin, instance_id);
+    CLASS_ATTR_ACCESSORS(c, "instance", mapin_instance_get, mapin_instance_set);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mapin_class = c;
@@ -166,16 +173,7 @@ static void *mapin_new(t_symbol *s, int argc, t_atom *argv)
         }
 
         // we need to cache any arguments to add later
-        x->args = 0;
-        x->num_args = argc - i;
-        if (x->num_args) {
-            long alloced = 0;
-            char result = 0;
-            atom_alloc_array(x->num_args, &alloced, &x->args, &result);
-            if (!result || !alloced)
-                return 0;
-            sysmem_copyptr(argv+i, x->args, x->num_args * sizeof(t_atom));
-        }
+        x->args = atomarray_new(argc-i, argv+i);
 
         // cache the registered name so we can remove self from hashtab later
         x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
@@ -193,7 +191,7 @@ static void mapin_free(t_mapin *x)
 {
     remove_from_hashtab(x);
     if (x->args)
-        sysmem_freeptr(x->args);
+        object_free(x->args);
 }
 
 void mapin_loadbang(t_mapin *x)
@@ -201,7 +199,7 @@ void mapin_loadbang(t_mapin *x)
     t_hashtab *ht;
 
     if (!x->patcher)
-    return;
+        return;
 
     t_object *patcher = x->patcher;
     while (patcher) {
@@ -242,24 +240,75 @@ void remove_from_hashtab(t_mapin *x)
 
 // *********************************************************
 // -(parse props from object arguments)---------------------
-void parse_extra_properties(t_mapin *x)
+void parse_extra_properties(t_mapin *x, int argc, t_atom *argv)
 {
-    int i;
-    // add other declared properties
-    for (i = 0; i < x->num_args; i++) {
-        if (i > x->num_args - 2) // need 2 arguments for key and value
+    int i, j, k, length, heterogeneous_types;
+    const char *prop;
+    char type;
+
+    // try to parse atom array as list of properties in form @key [value]
+    for (i = 0; i < argc;) {
+        if (i > argc - 2) // need at least 2 arguments for key and value
             break;
-        else if ((x->args+i)->a_type != A_SYM)
-            break;
-        else if ((atom_strcmp(x->args+i, "@name") == 0) ||
-            (atom_strcmp(x->args+i, "@type") == 0) ||
-            (atom_strcmp(x->args+i, "@length") == 0)){
-            i++;
+        else if ((argv + i)->a_type != A_SYM) {
+            ++i;
             continue;
         }
-        else if (atom_strcmp(x->args+i, "@instance") == 0) {
-            if ((x->args+i+1)->a_type == A_SYM &&
-                atom_strcmp(x->args+i+1, "polyindex") == 0) {
+        prop = atom_get_string(argv + i);
+
+        // ignore some properties
+        if (   (prop[0] != '@')
+            || (strcmp(prop, "@name") == 0)
+            || (strcmp(prop, "@type") == 0)
+            || (strcmp(prop, "@length") == 0)) {
+            ++i;
+            continue;
+        }
+
+        // ignore leading '@'
+        ++prop;
+
+        // advance to first value atom
+        ++i;
+
+        // find length and type of property value
+        length = 0;
+        type = 0;
+        heterogeneous_types = 0;
+        while (i + length < argc) {
+            char _type = (argv + i + length)->a_type;
+            if (_type == A_SYM && atom_get_string(argv + i + length)[0] == '@') {
+                // reached next property name
+                break;
+            }
+            if (!type)
+                type = _type;
+            else if (type != _type) {
+                if (   (type == A_LONG && _type == A_FLOAT)
+                    || (type == A_FLOAT && _type == A_LONG)) {
+                    // we will allow mixed number types
+                    type = A_FLOAT;
+                    heterogeneous_types = 1;
+                }
+                else
+                    heterogeneous_types = 2;
+            }
+            ++length;
+        }
+
+        if (length <= 0) {
+            object_post((t_object*)x, "value missing for property %s", prop);
+            continue;
+        }
+        if (heterogeneous_types == 2) {
+            object_post((t_object*)x, "only numeric types may be mixed in property values!");
+            i += length;
+            continue;
+        }
+
+        if (strcmp(prop, "instance") == 0) {
+            if ((argv + i)->a_type == A_SYM &&
+                atom_strcmp(argv + i, "polyindex") == 0) {
                 /* Check if object is embedded in a poly~ object - if so,
                  * retrieve the index and use as instance id. */
                 t_object *patcher = NULL;
@@ -272,19 +321,15 @@ void parse_extra_properties(t_mapin *x)
                         if (m) {
                             x->instance_id = (long)(*m)(assoc, patcher);
                         }
-                        else
-                            continue;
                     }
-                    else
-                        continue;
                 }
-                else
-                    continue;
             }
-            else if ((x->args+i+1)->a_type == A_LONG) {
-                x->instance_id = atom_getlong(x->args+i+1);
+            else if ((argv + i)->a_type == A_LONG) {
+                x->instance_id = atom_getlong(argv + i);
             }
             else {
+                object_post((t_object*)x, "instance value must be an integer or 'polyindex'");
+                i += length;
                 continue;
             }
             /* Remove the default signal instance (0) if it exists. Since the user
@@ -294,173 +339,85 @@ void parse_extra_properties(t_mapin *x)
                 mapper_signal_remove_instance(x->sig_ptr, 0);
 
             x->is_instance = 1;
-            i++;
             mapper_signal_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
         }
-        else if (atom_strcmp(x->args+i, "@minimum") == 0 ||
-                 atom_strcmp(x->args+i, "@min") == 0) {
+        else if (   strcmp(prop, "minimum") == 0 || strcmp(prop, "min") == 0
+                 || strcmp(prop, "maximum") == 0 || strcmp(prop, "max") == 0) {
             // check number of arguments
-            int length = 1, scalar_min = 0;
-            char type;
-            while (length + i < x->num_args) {
-                type = (x->args+i+length)->a_type;
-                if (type == A_SYM && atom_get_string(x->args+i+length)[0] == '@') {
-                    // reached next property name
-                    break;
-                }
-                if (type != A_LONG && type != A_FLOAT) {
-                    length = 0;
-                    break;
-                }
-                length++;
+            int is_min = (prop[1] == 'i');
+            if (type != A_LONG && type != A_FLOAT) {
+                i += length;
+                continue;
             }
-            length--;
-            if (length != x->sig_length) {
-                // we will allow using scalars to set min of entire vector
-                if (length == 1)
-                    scalar_min = 1;
-                else {
-                    post("'%s' property for signal %s requires %i arguments! (got %i)",
-                         atom_get_string(x->args+i), x->sig_name->s_name,
-                         x->sig_length, length);
-                    continue;
-                }
-            }
-
-            ++i;
-            int j;
             switch (x->sig_type) {
                 case 'i': {
                     int val[x->sig_length];
-                    for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_int(x->args + i);
+                    for (j = 0; j < x->sig_length; j++) {
+                        for (k = 0; k < length; k++)
+                            val[j] = atom_coerce_int(argv + i + k);
                     }
-                    if (scalar_min) {
-                        for (j = 1; j < x->sig_length; j++) {
-                            val[j] = val[0];
-                        }
-                    }
-                    mapper_signal_set_minimum(x->sig_ptr, val);
-                    i--;
+                    if (is_min)
+                        mapper_signal_set_minimum(x->sig_ptr, val);
+                    else
+                        mapper_signal_set_maximum(x->sig_ptr, val);
                     break;
                 }
                 case 'f': {
                     float val[x->sig_length];
-                    for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_float(x->args + i);
+                    for (j = 0; j < x->sig_length; j++) {
+                        for (k = 0; k < length; k++)
+                            val[j] = atom_coerce_float(argv + i + k);
                     }
-                    if (scalar_min) {
-                        for (j = 1; j < x->sig_length; j++) {
-                            val[j] = val[0];
-                        }
-                    }
-                    mapper_signal_set_minimum(x->sig_ptr, val);
-                    i--;
+                    if (is_min)
+                        mapper_signal_set_minimum(x->sig_ptr, val);
+                    else
+                        mapper_signal_set_maximum(x->sig_ptr, val);
                     break;
                 }
                 default:
                     break;
             }
         }
-        else if (atom_strcmp(x->args+i, "@maximum") == 0 ||
-                 atom_strcmp(x->args+i, "@max") == 0) {
-            // check number of arguments
-            int length = 1, scalar_max = 0;
-            char type;
-            while (length + i < x->num_args) {
-                type = (x->args+i+length)->a_type;
-                if (type == A_SYM && atom_get_string(x->args+i+length)[0] == '@') {
-                    // reached next property name
-                    break;
-                }
-                if (type != A_LONG && type != A_FLOAT) {
-                    length = 0;
-                    break;
-                }
-                length++;
-            }
-            length--;
-            if (length != x->sig_length) {
-                // we will allow using scalars to set max of entire vector
-                if (length == 1)
-                    scalar_max = 1;
-                else {
-                    post("'%s' property for signal %s requires %i arguments! (got %i)",
-                         atom_get_string(x->args+i), x->sig_name->s_name,
-                         x->sig_length, length);
-                    continue;
-                }
-            }
-
-            ++i;
-            int j;
-            switch (x->sig_type) {
-                case 'i': {
-                    int val[x->sig_length];
-                    for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_int(x->args + i);
-                    }
-                    if (scalar_max) {
-                        for (j = 1; j < x->sig_length; j++) {
-                            val[j] = val[0];
-                        }
-                    }
-                    mapper_signal_set_maximum(x->sig_ptr, val);
-                    i--;
-                    break;
-                }
-                case 'f': {
-                    float val[x->sig_length];
-                    for (j = 0; j < length; j++, i++) {
-                        val[j] = atom_coerce_float(x->args + i);
-                    }
-                    if (scalar_max) {
-                        for (j = 1; j < x->sig_length; j++) {
-                            val[j] = val[0];
-                        }
-                    }
-                    mapper_signal_set_maximum(x->sig_ptr, val);
-                    i--;
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-        else if (atom_get_string(x->args+i)[0] == '@') {
-            // TODO: allow vector property values
-            switch ((x->args+i+1)->a_type) {
+        else {
+            switch (type) {
                 case A_SYM: {
-                    const char *value = atom_get_string(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 's', value, 1);
-                    i++;
+                    if (length == 1) {
+                        const char *value = atom_get_string(argv + i);
+                        mapper_signal_set_property(x->sig_ptr, prop,
+                                                   1, 's', value, 1);
+                    }
+                    else {
+                        const char *value[length];
+                        for (j = 0; j < length; j++)
+                            value[j] = atom_get_string(argv + i + j);
+                        mapper_signal_set_property(x->sig_ptr, prop, length,
+                                                   's', &value, 1);
+                    }
                     break;
                 }
-                case A_FLOAT:
-                {
-                    float value = atom_getfloat(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 'f', &value, 1);
-                    i++;
+                case A_FLOAT: {
+                    float value[length];
+                    for (j = 0; j < length; j++)
+                        value[j] = atom_coerce_float(argv + i + j);
+                    mapper_signal_set_property(x->sig_ptr, prop, length,
+                                               'f', value, 1);
                     break;
                 }
-                case A_LONG:
-                {
-                    int value = atom_getlong(x->args+i+1);
-                    mapper_signal_set_property(x->sig_ptr,
-                                               atom_get_string(x->args+i)+1,
-                                               1, 'i', &value, 1);
-                    i++;
+                case A_LONG: {
+                    int value[length];
+                    for (j = 0; j < length; j++)
+                        value[j] = atom_coerce_int(argv + i + j);
+                    mapper_signal_set_property(x->sig_ptr, prop, length,
+                                               'i', value, 1);
                     break;
                 }
                 default:
                     break;
             }
         }
+        i += length;
     }
+    mapper_signal_push(x->sig_ptr);
 }
 
 // *********************************************************
@@ -476,8 +433,12 @@ t_max_err set_dev_obj(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 t_max_err set_sig_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
 {
     x->sig_ptr = (mapper_signal)argv->a_w.w_obj;
-    if (x->sig_ptr)
-        parse_extra_properties(x);
+    if (x->sig_ptr) {
+        long num_atoms;
+        t_atom *atoms;
+        atomarray_getatoms(x->args, &num_atoms, &atoms);
+        parse_extra_properties(x, num_atoms, atoms);
+    }
     return 0;
 }
 
@@ -489,6 +450,8 @@ t_max_err set_tt_ptr(t_mapin *x, t_object *attr, long argc, t_atom *argv)
     return 0;
 }
 
+// *********************************************************
+// -(check if device and signal pointers have been set)-----
 static int check_ptrs(t_mapin *x)
 {
     if (!x || !x->dev_obj || !x->sig_ptr) {
@@ -522,12 +485,14 @@ static void mapin_int(t_mapin *x, long l)
         f = (float)l;
         value = &f;
     }
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
@@ -551,12 +516,14 @@ static void mapin_float(t_mapin *x, double d)
         i = (int)d;
         value = &i;
     }
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     if (x->is_instance)
         mapper_signal_instance_update(x->sig_ptr, x->instance_id,
                                       value, 1, *x->tt_ptr);
     else
         mapper_signal_update(x->sig_ptr, value, 1, *x->tt_ptr);
+    critical_exit(0);
 }
 
 // *********************************************************
@@ -590,6 +557,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
+        critical_enter(0);
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
             mapper_signal_instance_update(x->sig_ptr, x->instance_id,
@@ -598,6 +566,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         else {
             mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
+        critical_exit(0);
     }
     else if (x->type == 'f') {
         float payload[argc];
@@ -613,6 +582,7 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
+        critical_enter(0);
         object_method(x->dev_obj, maybe_start_queue_sym);
         if (x->is_instance) {
             mapper_signal_instance_update(x->sig_ptr, x->instance_id,
@@ -621,6 +591,21 @@ static void mapin_list(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
         else {
             mapper_signal_update(x->sig_ptr, value, count, *x->tt_ptr);
         }
+        critical_exit(0);
+    }
+}
+
+// *********************************************************
+// -(anything)----------------------------------------------
+static void mapin_anything(t_mapin *x, t_symbol *s, int argc, t_atom *argv)
+{
+    if (check_ptrs(x)) {
+        // we need to cache any arguments to add later
+        atomarray_appendatoms(x->args, argc, argv);
+    }
+    else {
+        // we can call parse_extra_properties() immediately
+        parse_extra_properties(x, argc, argv);
     }
 }
 
@@ -631,8 +616,32 @@ static void mapin_release(t_mapin *x)
     if (check_ptrs(x) || !x->is_instance)
         return;
 
+    critical_enter(0);
     object_method(x->dev_obj, maybe_start_queue_sym);
     mapper_signal_instance_release(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    critical_exit(0);
+}
+
+// *********************************************************
+// -(get instance id)---------------------------------------
+t_max_err mapin_instance_get(t_mapin *x, t_object *attr, long *argc, t_atom **argv)
+{
+    object_post((t_object*)x, "getting instance id");
+    char alloc;
+    atom_alloc(argc, argv, &alloc); // allocate return atom
+    atom_setlong(*argv, (long)x->instance_id);
+    return 0;
+}
+
+// *********************************************************
+// -(set instance id)---------------------------------------
+t_max_err mapin_instance_set(t_mapin *x, t_object *attr, long argc, t_atom *argv)
+{
+    x->instance_id = (mapper_id)atom_getlong(argv);
+    object_post((t_object*)x, "setting instance id to %d", (int)x->instance_id);
+    x->is_instance = 1;
+    mapper_signal_reserve_instances(x->sig_ptr, 1, &x->instance_id, (void **)&x);
+    return 0;
 }
 
 // *********************************************************
@@ -658,19 +667,19 @@ static void atom_set_string(t_atom *a, const char *string)
 static int atom_coerce_int(t_atom *a)
 {
     if (a->a_type == A_LONG)
-    return (int)atom_getlong(a);
+        return (int)atom_getlong(a);
     else if (a->a_type == A_FLOAT)
-    return (int)atom_getfloat(a);
+        return (int)atom_getfloat(a);
     else
-    return 0;
+        return 0;
 }
 
 static float atom_coerce_float(t_atom *a)
 {
     if (a->a_type == A_LONG)
-    return (float)atom_getlong(a);
+        return (float)atom_getlong(a);
     else if (a->a_type == A_FLOAT)
-    return atom_getfloat(a);
+        return atom_getfloat(a);
     else
-    return 0.f;
+        return 0.f;
 }

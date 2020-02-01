@@ -49,6 +49,7 @@ typedef struct _mapdevice
     int                 ready;
     t_atom              buffer[MAX_LIST];
     t_object            *patcher;
+    int                 throttle;
 } t_mapdevice;
 
 typedef struct _map_ptrs
@@ -125,6 +126,7 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
     if ((x = object_alloc(mapdevice_class))) {
         x->outlet = listout((t_object *)x);
         x->name = 0;
+        x->throttle = 10;
 
         if (argv->a_type == A_SYM && atom_get_string(argv)[0] != '@')
             alias = atom_get_string(argv);
@@ -140,6 +142,20 @@ static void *mapdevice_new(t_symbol *s, int argc, t_atom *argv)
                 else if (atom_strcmp(argv+i, "@interface") == 0) {
                     if ((argv+i+1)->a_type == A_SYM) {
                         iface = atom_get_string(argv+i+1);
+                        i++;
+                    }
+                }
+                else if (atom_strcmp(argv+i, "@throttle") == 0) {
+                    if ((argv+i+1)->a_type == A_LONG) {
+                        int throttle = atom_getlong(argv+i+1);
+                        if (throttle > 0)
+                            x->throttle = throttle;
+                        i++;
+                    }
+                    else if ((argv+i+1)->a_type == A_FLOAT) {
+                        int throttle = (int)atom_getfloat(argv+i+1);
+                        if (throttle > 0)
+                            x->throttle = throttle;
                         i++;
                     }
                 }
@@ -499,6 +515,10 @@ static void mapdevice_print_properties(t_mapdevice *x)
         atom_setlong(x->buffer, mapper_device_num_signals(x->device,
                                                           MAPPER_DIR_OUTGOING));
         outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
+
+        //output throttle
+        atom_setlong(x->buffer, x->throttle);
+        outlet_anything(x->outlet, gensym("throttle"), 1, x->buffer);
     }
 }
 
@@ -555,7 +575,7 @@ static void mapdevice_sig_handler(mapper_signal sig, mapper_id instance,
     }
     else if (obj) {
         atom_set_string(x->buffer, "release");
-        atom_set_string(x->buffer+1, "local");
+        atom_set_string(x->buffer+1, "upstream");
         outlet_list(obj->o_outlet, NULL, 2, x->buffer);
     }
 }
@@ -630,8 +650,8 @@ static void mapdevice_maybe_start_queue(t_mapdevice *x)
 // -(poll libmapper)----------------------------------------
 static void mapdevice_poll(t_mapdevice *x)
 {
-    int count = 10;
-    while(count-- && mapper_device_poll(x->device, 0)) {};
+    int count = x->throttle;
+    while (count-- && mapper_device_poll(x->device, 0)) {};
     if (!x->ready) {
         if (mapper_device_ready(x->device)) {
             object_post((t_object *)x, "Joining mapping network as '%s'",

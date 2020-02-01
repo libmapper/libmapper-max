@@ -40,6 +40,22 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
+					"id" : "obj-4",
+					"linecount" : 5,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 270.0, 195.0, 288.0, 74.0 ],
+					"presentation_rect" : [ 271.0, 195.0, 0.0, 0.0 ],
+					"style" : "",
+					"text" : "Arguments:\nThe first argument sets the name of the signal; the second argument sets the data type (i for integer, f for float). An optional 3rd argument sets vector length."
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
 					"id" : "obj-27",
 					"maxclass" : "newobj",
 					"numinlets" : 0,
@@ -120,7 +136,8 @@
 									"id" : "obj-6",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
-									"numoutlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 315.0, 289.0, 20.0 ],
 									"style" : "",
 									"text" : "map.in frequency f @unit Hz @min 20 @max 20000"
@@ -177,8 +194,9 @@
 									"fontsize" : 12.0,
 									"id" : "obj-21",
 									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 0,
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 135.0, 289.0, 20.0 ],
 									"style" : "",
 									"text" : "map.in frequency f @unit Hz @min 20 @max 20000"
@@ -248,9 +266,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-13",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
+					"numinlets" : 1,
 					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"outlettype" : [ "list" ],
 					"patching_rect" : [ 120.0, 135.0, 73.0, 22.0 ],
 					"style" : "",
 					"text" : "map.in bar i"
@@ -279,9 +297,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-1",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
+					"numinlets" : 1,
 					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"outlettype" : [ "list" ],
 					"patching_rect" : [ 30.0, 135.0, 73.0, 22.0 ],
 					"style" : "",
 					"text" : "map.in foo f"
@@ -327,7 +345,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 433.0, 59.0, 20.0 ],
+					"patching_rect" : [ 240.0, 433.0, 59.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -343,7 +361,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 403.0, 86.0, 20.0 ],
+					"patching_rect" : [ 240.0, 403.0, 86.0, 22.0 ],
 					"style" : "",
 					"text" : "prepend help"
 				}
@@ -386,8 +404,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-6",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
-					"numoutlets" : 0,
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "list" ],
 					"patching_rect" : [ 30.0, 389.0, 72.0, 22.0 ],
 					"style" : "",
 					"text" : "map.device"
