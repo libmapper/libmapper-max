@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 777.0, 125.0, 640.0, 480.0 ],
+						"rect" : [ 683.0, 237.0, 640.0, 480.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -92,7 +92,7 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 45.0, 285.0, 50.0, 20.0 ],
+									"patching_rect" : [ 45.0, 285.0, 50.0, 22.0 ],
 									"style" : ""
 								}
 
@@ -106,9 +106,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 210.0, 409.0, 60.0 ],
+									"patching_rect" : [ 45.0, 210.0, 413.0, 60.0 ],
 									"style" : "",
-									"text" : "Sometimes changes in a signal value will be generated internally to your patch instead of resulting from mapped remote signals. Informing the map.in object of the new value allows it to be queried by other devices on the network, e.g. for training supervised machine learning systems."
+									"text" : "Sometimes changes in a signal value will be generated internally to your patch instead of resulting from mapped remote signals. Informing the mpr.in object of the new value allows it to be queried by other devices on the network, e.g. for training supervised machine learning systems."
 								}
 
 							}
@@ -121,9 +121,9 @@
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 315.0, 289.0, 20.0 ],
+									"patching_rect" : [ 45.0, 315.0, 285.0, 22.0 ],
 									"style" : "",
-									"text" : "map.in frequency f @unit Hz @min 20 @max 20000"
+									"text" : "mpr.in frequency f @unit Hz @min 20 @max 20000"
 								}
 
 							}
@@ -179,9 +179,9 @@
 									"maxclass" : "newobj",
 									"numinlets" : 0,
 									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 135.0, 289.0, 20.0 ],
+									"patching_rect" : [ 45.0, 135.0, 285.0, 22.0 ],
 									"style" : "",
-									"text" : "map.in frequency f @unit Hz @min 20 @max 20000"
+									"text" : "mpr.in frequency f @unit Hz @min 20 @max 20000"
 								}
 
 							}
@@ -251,9 +251,9 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 120.0, 135.0, 73.0, 22.0 ],
+					"patching_rect" : [ 120.0, 135.0, 70.0, 22.0 ],
 					"style" : "",
-					"text" : "map.in bar i"
+					"text" : "mpr.in bar i"
 				}
 
 			}
@@ -268,7 +268,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 315.0, 156.0, 74.0 ],
 					"style" : "",
-					"text" : "There needs to be a map.device object somewhere in the patcher. It will also bind to map.in objects in subpatchers"
+					"text" : "There needs to be a mpr.device object somewhere in the patcher. It will also bind to mpr.in objects in subpatchers"
 				}
 
 			}
@@ -282,9 +282,9 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 135.0, 73.0, 22.0 ],
+					"patching_rect" : [ 30.0, 135.0, 70.0, 22.0 ],
 					"style" : "",
-					"text" : "map.in foo f"
+					"text" : "mpr.in foo f"
 				}
 
 			}
@@ -311,9 +311,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 374.5, 72.0, 22.0 ],
+					"patching_rect" : [ 240.0, 374.5, 69.0, 22.0 ],
 					"style" : "",
-					"text" : "map.device"
+					"text" : "mpr.device"
 				}
 
 			}
@@ -327,7 +327,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 433.0, 59.0, 20.0 ],
+					"patching_rect" : [ 240.0, 433.0, 59.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -343,7 +343,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 403.0, 86.0, 20.0 ],
+					"patching_rect" : [ 240.0, 403.0, 86.0, 22.0 ],
 					"style" : "",
 					"text" : "prepend help"
 				}
@@ -358,9 +358,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 345.0, 54.0, 22.0 ],
+					"patching_rect" : [ 240.0, 345.0, 51.0, 22.0 ],
 					"style" : "",
-					"text" : "map.out"
+					"text" : "mpr.out"
 				}
 
 			}
@@ -375,7 +375,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 270.0, 125.0, 288.0, 60.0 ],
 					"style" : "",
-					"text" : "The map.in object creates a discoverable, dynamically-mappable input in your patch. Click the logo below to visit libmapper.org and learn more about these tools."
+					"text" : "The mpr.in object creates a discoverable, dynamically-mappable input in your patch. Click the logo below to visit libmapper.org and learn more about these tools."
 				}
 
 			}
@@ -388,9 +388,9 @@
 					"maxclass" : "newobj",
 					"numinlets" : 0,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 389.0, 72.0, 22.0 ],
+					"patching_rect" : [ 30.0, 389.0, 69.0, 22.0 ],
 					"style" : "",
-					"text" : "map.device"
+					"text" : "mpr.device"
 				}
 
 			}
@@ -453,7 +453,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 15.0, 485.0, 30.0 ],
 					"style" : "",
-					"text" : "map.in",
+					"text" : "mpr.in",
 					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ],
 					"varname" : "autohelp_top_title"
 				}

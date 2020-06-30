@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 161.0, 182.0, 616.0, 443.0 ],
+		"rect" : [ 100.0, 100.0, 616.0, 443.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 777.0, 125.0, 640.0, 480.0 ],
+						"rect" : [ 729.0, 232.0, 640.0, 480.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -82,82 +82,6 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"boxes" : [ 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-7",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 285.0, 41.0, 18.0 ],
-									"style" : "",
-									"text" : "query"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"format" : 6,
-									"id" : "obj-1",
-									"maxclass" : "flonum",
-									"numinlets" : 1,
-									"numoutlets" : 2,
-									"outlettype" : [ "", "bang" ],
-									"parameter_enable" : 0,
-									"patching_rect" : [ 45.0, 345.0, 50.0, 20.0 ],
-									"style" : ""
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-5",
-									"linecount" : 4,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 210.0, 409.0, 60.0 ],
-									"style" : "",
-									"text" : "Sometimes you might want to discover the values of remote inputs that are connected to this output, e.g. for training supervised machine learning systems. Just send the message \"query\" to the map.out object and it will query the values any connected signals and output them from its outlet."
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"color" : [ 0.745098, 0.0, 0.0, 1.0 ],
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-6",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 315.0, 296.0, 20.0 ],
-									"style" : "",
-									"text" : "map.out frequency f @unit Hz @min 20 @max 20000"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-4",
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 30.0, 180.0, 150.0, 20.0 ],
-									"style" : "",
-									"text" : "Querying remote values:"
-								}
-
-							}
-, 							{
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
@@ -195,28 +119,14 @@
 									"maxclass" : "newobj",
 									"numinlets" : 0,
 									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 135.0, 296.0, 20.0 ],
+									"patching_rect" : [ 45.0, 135.0, 293.0, 22.0 ],
 									"style" : "",
-									"text" : "map.out frequency f @unit Hz @min 20 @max 20000"
+									"text" : "mpr.out frequency f @unit Hz @min 20 @max 20000"
 								}
 
 							}
  ],
-						"lines" : [ 							{
-								"patchline" : 								{
-									"destination" : [ "obj-1", 0 ],
-									"source" : [ "obj-6", 0 ]
-								}
-
-							}
-, 							{
-								"patchline" : 								{
-									"destination" : [ "obj-6", 0 ],
-									"source" : [ "obj-7", 0 ]
-								}
-
-							}
- ]
+						"lines" : [  ]
 					}
 ,
 					"patching_rect" : [ 30.0, 225.0, 48.0, 22.0 ],
@@ -257,9 +167,9 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 120.0, 165.0, 81.0, 22.0 ],
+					"patching_rect" : [ 120.0, 165.0, 77.0, 22.0 ],
 					"style" : "",
-					"text" : "map.out bar i"
+					"text" : "mpr.out bar i"
 				}
 
 			}
@@ -274,7 +184,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 315.0, 156.0, 74.0 ],
 					"style" : "",
-					"text" : "There needs to be a map.device object somewhere in the patcher. It will also bind to map.out objects in subpatchers"
+					"text" : "There needs to be a mpr.device object somewhere in the patcher. It will also bind to mpr.out objects in subpatchers"
 				}
 
 			}
@@ -303,9 +213,9 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 165.0, 81.0, 22.0 ],
+					"patching_rect" : [ 30.0, 165.0, 77.0, 22.0 ],
 					"style" : "",
-					"text" : "map.out foo f"
+					"text" : "mpr.out foo f"
 				}
 
 			}
@@ -332,9 +242,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 374.5, 72.0, 22.0 ],
+					"patching_rect" : [ 240.0, 374.5, 69.0, 22.0 ],
 					"style" : "",
-					"text" : "map.device"
+					"text" : "mpr.device"
 				}
 
 			}
@@ -348,7 +258,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 433.0, 59.0, 20.0 ],
+					"patching_rect" : [ 240.0, 433.0, 59.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -364,7 +274,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 403.0, 86.0, 20.0 ],
+					"patching_rect" : [ 240.0, 403.0, 86.0, 22.0 ],
 					"style" : "",
 					"text" : "prepend help"
 				}
@@ -379,9 +289,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 345.0, 47.0, 22.0 ],
+					"patching_rect" : [ 240.0, 345.0, 43.0, 22.0 ],
 					"style" : "",
-					"text" : "map.in"
+					"text" : "mpr.in"
 				}
 
 			}
@@ -396,7 +306,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 270.0, 125.0, 273.0, 60.0 ],
 					"style" : "",
-					"text" : "The map.out object creates a discoverable, dynamically-mappable output in your patch. Click the logo below to visit libmapper.org and learn more about these tools."
+					"text" : "The mpr.out object creates a discoverable, dynamically-mappable output in your patch. Click the logo below to visit libmapper.org and learn more about these tools."
 				}
 
 			}
@@ -409,9 +319,9 @@
 					"maxclass" : "newobj",
 					"numinlets" : 0,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 389.0, 72.0, 22.0 ],
+					"patching_rect" : [ 30.0, 389.0, 69.0, 22.0 ],
 					"style" : "",
-					"text" : "map.device"
+					"text" : "mpr.device"
 				}
 
 			}
@@ -474,7 +384,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 15.0, 485.0, 30.0 ],
 					"style" : "",
-					"text" : "map.out",
+					"text" : "mpr.out",
 					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ],
 					"varname" : "autohelp_top_title"
 				}

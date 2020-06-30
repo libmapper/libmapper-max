@@ -291,7 +291,7 @@ void parse_extra_properties(t_mpr_in *x)
              * may have properly added an instance 0, we will check for user_data. */
             void *data = mpr_sig_get_inst_data(x->sig_ptr, 0);
             if (!data)
-                mpr_sig_remove_inst(x->sig_ptr, 0);
+                mpr_sig_remove_inst(x->sig_ptr, 0, MPR_NOW);
 
             x->is_instance = 1;
             i++;
@@ -499,8 +499,8 @@ static int check_ptrs(t_mpr_in *x)
         return 1;
     }
     else if (!x->length) {
-        x->length = mpr_obj_get_prop_as_i32(x->sig_ptr, MPR_PROP_LEN, NULL);
-        x->type = mpr_obj_get_prop_as_i32(x->sig_ptr, MPR_PROP_TYPE, NULL);
+        x->length = mpr_obj_get_prop_as_int32(x->sig_ptr, MPR_PROP_LEN, NULL);
+        x->type = mpr_obj_get_prop_as_int32(x->sig_ptr, MPR_PROP_TYPE, NULL);
     }
     return 0;
 }

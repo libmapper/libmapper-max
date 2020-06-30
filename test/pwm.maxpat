@@ -2,9 +2,11 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 6,
-			"minor" : 0,
-			"revision" : 8
+			"major" : 7,
+			"minor" : 3,
+			"revision" : 5,
+			"architecture" : "x86",
+			"modernui" : 1
 		}
 ,
 		"rect" : [ 264.0, 382.0, 508.0, 269.0 ],
@@ -13,30 +15,38 @@
 		"default_fontsize" : 12.0,
 		"default_fontface" : 0,
 		"default_fontname" : "Arial",
-		"gridonopen" : 0,
+		"gridonopen" : 1,
 		"gridsize" : [ 15.0, 15.0 ],
-		"gridsnaponopen" : 0,
+		"gridsnaponopen" : 1,
+		"objectsnaponopen" : 1,
 		"statusbarvisible" : 2,
 		"toolbarvisible" : 1,
+		"lefttoolbarpinned" : 0,
+		"toptoolbarpinned" : 0,
+		"righttoolbarpinned" : 0,
+		"bottomtoolbarpinned" : 0,
+		"toolbars_unpinned_last_save" : 0,
+		"tallnewobj" : 0,
 		"boxanimatetime" : 200,
-		"imprint" : 0,
 		"enablehscroll" : 1,
 		"enablevscroll" : 1,
 		"devicewidth" : 0.0,
 		"description" : "",
 		"digest" : "",
 		"tags" : "",
+		"style" : "",
+		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
 					"fontface" : 1,
 					"fontname" : "Arial",
 					"fontsize" : 14.0,
-					"frgb" : 0.0,
 					"id" : "obj-8",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 388.0, 114.0, 113.0, 22.0 ],
+					"style" : "",
 					"text" : "libmapper.org"
 				}
 
@@ -49,7 +59,8 @@
 					"id" : "obj-6",
 					"maxclass" : "fpic",
 					"numinlets" : 1,
-					"numoutlets" : 0,
+					"numoutlets" : 1,
+					"outlettype" : [ "jit_matrix" ],
 					"patching_rect" : [ 390.0, 30.0, 101.0, 85.0 ]
 				}
 
@@ -58,13 +69,13 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"frgb" : 0.0,
 					"id" : "obj-5",
 					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 240.0, 30.0, 60.0, 47.0 ],
+					"style" : "",
 					"text" : "allow remote release?"
 				}
 
@@ -77,7 +88,8 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 210.0, 30.0, 20.0, 20.0 ]
+					"patching_rect" : [ 210.0, 30.0, 20.0, 20.0 ],
+					"style" : ""
 				}
 
 			}
@@ -93,7 +105,8 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 238.0, 105.0, 45.0, 123.0 ],
 					"presentation_rect" : [ 0.0, 0.0, 18.0, 162.0 ],
-					"rows" : 10
+					"rows" : 10,
+					"style" : ""
 				}
 
 			}
@@ -106,7 +119,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "" ],
-					"patching_rect" : [ 30.0, 75.0, 227.0, 20.0 ],
+					"patching_rect" : [ 30.0, 75.0, 227.0, 22.0 ],
+					"style" : "",
 					"text" : "poly~ pwm_inside 10"
 				}
 
@@ -121,8 +135,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "list" ],
-					"patching_rect" : [ 30.0, 30.0, 101.0, 20.0 ],
-					"text" : "map.device pwm"
+					"patching_rect" : [ 30.0, 30.0, 97.0, 22.0 ],
+					"style" : "",
+					"text" : "mpr.device pwm"
 				}
 
 			}
@@ -132,7 +147,8 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 105.0, 123.0, 123.0 ]
+					"patching_rect" : [ 30.0, 105.0, 123.0, 123.0 ],
+					"style" : ""
 				}
 
 			}
@@ -140,8 +156,6 @@
 		"lines" : [ 			{
 				"patchline" : 				{
 					"destination" : [ "obj-2", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
 					"source" : [ "obj-1", 2 ]
 				}
 
@@ -149,8 +163,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 1 ],
-					"disabled" : 0,
-					"hidden" : 0,
 					"source" : [ "obj-1", 1 ]
 				}
 
@@ -158,8 +170,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-3", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
 					"source" : [ "obj-1", 0 ]
 				}
 
@@ -167,16 +177,21 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "pwm_inside.maxpat",
-				"bootpath" : "/Users/jocal/Documents/Mappers/mapper-max-pd/test",
-				"patcherrelativepath" : "",
+				"bootpath" : "~/Documents/Mappers/mapper-max-pd2/test",
+				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
-				"name" : "map.device.mxo",
+				"name" : "mpr.device.mxo",
 				"type" : "iLaX"
 			}
- ]
+, 			{
+				"name" : "mpr.in.mxo",
+				"type" : "iLaX"
+			}
+ ],
+		"autosave" : 0
 	}
 
 }

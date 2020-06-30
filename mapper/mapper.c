@@ -218,17 +218,17 @@ static void *mapperobj_new(t_symbol *s, int argc, t_atom *argv)
         }
 
         POST(x, "libmapper version %s – visit libmapper.org for more information.",
-             mpr_version());
+             mpr_get_version());
 
         x->device = mpr_dev_new(x->name, 0);
         if (!x->device) {
             POST(x, "Error initializing libmapper device.");
             return 0;
         }
-        x->graph = mpr_obj_graph(x->device);
+        x->graph = mpr_obj_get_graph(x->device);
         if (iface)
             mpr_graph_set_interface(x->graph, iface);
-        POST(x, "Using network interface %s.", mpr_graph_interface(x->graph));
+        POST(x, "Using network interface %s.", mpr_graph_get_interface(x->graph));
 
         // add other declared properties
         for (i = 0; i < argc; i++) {
@@ -319,31 +319,31 @@ static void mapperobj_print_properties(t_mapper *x)
 {
     if (x->ready) {
         //output name
-        maxpd_atom_set_string(x->buffer, mpr_obj_prop_as_str(x->device, MPR_PROP_NAME, NULL));
+        maxpd_atom_set_string(x->buffer, mpr_obj_get_prop_as_str(x->device, MPR_PROP_NAME, NULL));
         outlet_anything(x->outlet2, gensym("name"), 1, x->buffer);
 
         //output interface
-        maxpd_atom_set_string(x->buffer, mpr_graph_interface(x->graph));
+        maxpd_atom_set_string(x->buffer, mpr_graph_get_interface(x->graph));
         outlet_anything(x->outlet2, gensym("interface"), 1, x->buffer);
 
         //output IP
-        maxpd_atom_set_string(x->buffer, mpr_graph_address(x->graph));
+        maxpd_atom_set_string(x->buffer, mpr_graph_get_address(x->graph));
         outlet_anything(x->outlet2, gensym("IP"), 1, x->buffer);
 
         //output port
-        maxpd_atom_set_int(x->buffer, mpr_obj_prop_as_i32(x->device, MPR_PROP_PORT, NULL));
+        maxpd_atom_set_int(x->buffer, mpr_obj_get_prop_as_int32(x->device, MPR_PROP_PORT, NULL));
         outlet_anything(x->outlet2, gensym("port"), 1, x->buffer);
 
         //output ordinal
-        maxpd_atom_set_int(x->buffer, mpr_obj_prop_as_i32(x->device, MPR_PROP_ORDINAL, NULL));
+        maxpd_atom_set_int(x->buffer, mpr_obj_get_prop_as_int32(x->device, MPR_PROP_ORDINAL, NULL));
         outlet_anything(x->outlet2, gensym("ordinal"), 1, x->buffer);
 
         //output numInputs
-        maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_IN)));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
 
         //output numOutputs
-        maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_OUT)));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 }
@@ -548,7 +548,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
     }
 
     // Update status outlet
-    maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, dir)));
+    maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, dir)));
     if (dir == MPR_DIR_OUT)
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     else
@@ -572,16 +572,16 @@ static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
     direction = strdup(maxpd_atom_get_string(argv));
     sig_name = strdup(maxpd_atom_get_string(argv+1));
 
-    mpr_list sigs = mpr_dev_sigs(x->device, MPR_DIR_ANY);
+    mpr_list sigs = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
     sigs = mpr_list_filter(sigs, MPR_PROP_NAME, NULL, 1, MPR_STR, sig_name, MPR_OP_EQ);
     if (sigs && *sigs)
         mpr_sig_free(*sigs);
     if (strcmp(direction, "output") == 0) {
-        maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_OUT)));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
     else if (strcmp(direction, "input") == 0) {
-        maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_IN)));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
 }
@@ -604,19 +604,19 @@ static void mapperobj_clear_signals(t_mapper *x, t_symbol *s,
 
     mpr_list sigs;
     POST(x, "Clearing signals");
-    sigs = mpr_dev_sigs(x->device, dir);
+    sigs = mpr_dev_get_sigs(x->device, dir);
     while (sigs) {
         mpr_sig sig = *sigs;
-        sigs = mpr_list_next(sigs);
+        sigs = mpr_list_get_next(sigs);
         mpr_sig_free(sig);
     }
 
     if (dir & MPR_DIR_IN) {
-        maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_IN)));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
         outlet_anything(x->outlet2, gensym("numInputs"), 1, x->buffer);
     }
     if (dir & MPR_DIR_OUT) {
-        maxpd_atom_set_int(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_OUT)));
+        maxpd_atom_set_int(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 }
@@ -648,7 +648,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 
     //find signal
     mpr_sig sig = NULL;
-    mpr_list sigs = mpr_dev_sigs(x->device, MPR_DIR_ANY);
+    mpr_list sigs = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
     sigs = mpr_list_filter(sigs, MPR_PROP_NAME, NULL, 1, MPR_STR, s->s_name, MPR_OP_EQ);
     if (sigs && *sigs)
         sig = *sigs;
@@ -670,7 +670,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
                 return;
             }
             //output updated numOutputs
-            maxpd_atom_set_float(x->buffer, mpr_list_count(mpr_dev_sigs(x->device, MPR_DIR_OUT)));
+            maxpd_atom_set_float(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
             outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
         }
         else {
@@ -678,8 +678,8 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
     }
 
-    int len = mpr_obj_prop_as_i32(sig, MPR_PROP_LEN, NULL);
-    char type = mpr_obj_prop_as_i32(sig, MPR_PROP_TYPE, NULL);
+    int len = mpr_obj_get_prop_as_int32(sig, MPR_PROP_LEN, NULL);
+    char type = mpr_obj_get_prop_as_int32(sig, MPR_PROP_TYPE, NULL);
 
     if (argc == len + 1) {
         // Special case: signal value may be preceded by instance number
@@ -751,13 +751,13 @@ static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                                   int len, mpr_type type, const void *val,
                                   mpr_time time)
 {
-    t_mapper *x = mpr_obj_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
-    t_symbol *name = gensym(mpr_obj_prop_as_str(sig, MPR_PROP_NAME, NULL));
+    t_mapper *x = (void*)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
+    t_symbol *name = gensym(mpr_obj_get_prop_as_str(sig, MPR_PROP_NAME, NULL));
 
     switch (evt) {
         case MPR_SIG_UPDATE: {
             int poly = 0;
-            if (mpr_sig_num_inst(sig, MPR_STATUS_ALL) > 1) {
+            if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
                 maxpd_atom_set_int(x->buffer, inst);
                 poly = 1;
             }
@@ -795,15 +795,15 @@ static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
             break;
         case MPR_SIG_INST_OFLW: {
             maxpd_atom_set_int(x->buffer, inst);
-            int mode = mpr_obj_prop_as_i32(sig, MPR_PROP_STEAL_MODE, NULL);
+            int mode = mpr_obj_get_prop_as_int32(sig, MPR_PROP_STEAL_MODE, NULL);
             switch (mode) {
                 case MPR_STEAL_OLDEST:
-                    inst = mpr_sig_oldest_inst_id(sig);
+                    inst = mpr_sig_get_oldest_inst_id(sig);
                     if (inst)
                         mpr_sig_release_inst(sig, inst, time);
                     break;
                 case MPR_STEAL_NEWEST:
-                    inst = mpr_sig_newest_inst_id(sig);
+                    inst = mpr_sig_get_newest_inst_id(sig);
                     if (inst)
                         mpr_sig_release_inst(sig, inst, time);
                     break;
@@ -1038,9 +1038,9 @@ static void mapperobj_poll(t_mapper *x)
     int count = 10;
     while(count-- && mpr_dev_poll(x->device, 0)) {};
     if (!x->ready) {
-        if (mpr_dev_ready(x->device)) {
+        if (mpr_dev_get_is_ready(x->device)) {
             POST(x, "Joining mapping network as '%s'",
-                 mpr_obj_prop_as_str(x->device, MPR_PROP_NAME, NULL));
+                 mpr_obj_get_prop_as_str(x->device, MPR_PROP_NAME, NULL));
             x->ready = 1;
 #ifdef MAXMSP
             defer_low((t_object *)x, (method)mapperobj_print_properties, NULL, 0, NULL);
@@ -1086,7 +1086,7 @@ static void mapperobj_learn(t_mapper *x, t_symbol *s,
 static void maybe_start_queue(t_mapper *x)
 {
     if (!x->updated) {
-        mpr_time_now(&x->timetag);
+        mpr_time_set(&x->timetag, MPR_NOW);
         mpr_dev_start_queue(x->device, x->timetag);
         x->updated = 1;
     }

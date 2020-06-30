@@ -91,7 +91,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 75.0, 180.0, 165.0, 20.0 ],
 									"style" : "",
-									"text" : "[map.device @interface en1]"
+									"text" : "[mpr.device @interface en1]"
 								}
 
 							}
@@ -135,7 +135,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 45.0, 75.0, 405.0, 87.0 ],
 									"style" : "",
-									"text" : "By default the map.device object will try to use your computer's ethernet port, then wifi if ethernet is not available, and finally falling back to the local-loopback interfaces if wifi is not available either.\n\nThe default behaviour can be over-ridden by specifying the network interface to use as an argument:"
+									"text" : "By default the mpr.device object will try to use your computer's ethernet port, then wifi if ethernet is not available, and finally falling back to the local-loopback interfaces if wifi is not available either.\n\nThe default behaviour can be over-ridden by specifying the network interface to use as an argument:"
 								}
 
 							}
@@ -194,9 +194,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 374.5, 54.0, 22.0 ],
+					"patching_rect" : [ 240.0, 374.5, 51.0, 22.0 ],
 					"style" : "",
-					"text" : "map.out"
+					"text" : "mpr.out"
 				}
 
 			}
@@ -241,9 +241,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 345.0, 47.0, 22.0 ],
+					"patching_rect" : [ 240.0, 345.0, 43.0, 22.0 ],
 					"style" : "",
-					"text" : "map.in"
+					"text" : "mpr.in"
 				}
 
 			}
@@ -325,13 +325,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-8",
-					"linecount" : 12,
+					"linecount" : 10,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 240.0, 90.0, 317.0, 167.0 ],
+					"patching_rect" : [ 240.0, 90.0, 330.0, 141.0 ],
 					"style" : "",
-					"text" : "The map.device object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata\n\nAdd inputs and outputs to your device using the map.in and map.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
+					"text" : "The mpr.device object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata\n\nAdd inputs and outputs to your device using the mpr.in and mpr.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
 				}
 
 			}
@@ -345,9 +345,9 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 90.0, 133.0, 22.0 ],
+					"patching_rect" : [ 30.0, 90.0, 129.0, 22.0 ],
 					"style" : "",
-					"text" : "map.device my_device"
+					"text" : "mpr.device my_device"
 				}
 
 			}
@@ -410,7 +410,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 15.0, 485.0, 30.0 ],
 					"style" : "",
-					"text" : "map.device",
+					"text" : "mpr.device",
 					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ],
 					"varname" : "autohelp_top_title"
 				}

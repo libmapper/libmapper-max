@@ -479,7 +479,7 @@ static void mpr_device_print_properties(t_mpr_device *x)
         outlet_anything(x->outlet, gensym("IP"), 1, x->buffer);
 
         //output port
-        atom_setlong(x->buffer, mpr_obj_get_prop_as_i32(x->device, MPR_PROP_PORT, NULL));
+        atom_setlong(x->buffer, mpr_obj_get_prop_as_int32(x->device, MPR_PROP_PORT, NULL));
         outlet_anything(x->outlet, gensym("port"), 1, x->buffer);
 
         //output numInputs
@@ -508,7 +508,7 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                                    int len, mpr_type type, const void *val,
                                    mpr_time time)
 {
-    t_mpr_ptrs *ptrs = mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
+    t_mpr_ptrs *ptrs = (void*)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
     t_mpr_device *x = ptrs->home;
     t_object *obj = NULL;
     int i;
@@ -563,7 +563,7 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
             break;
         case MPR_SIG_INST_OFLW: {
             atom_setlong(x->buffer, inst);
-            int mode = mpr_obj_get_prop_as_i32(sig, MPR_PROP_STEAL_MODE, NULL);
+            int mode = mpr_obj_get_prop_as_int32(sig, MPR_PROP_STEAL_MODE, NULL);
             switch (mode) {
                 case MPR_STEAL_OLDEST:
                     inst = mpr_sig_get_oldest_inst_id(sig);

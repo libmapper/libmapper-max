@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D57630D048677EA00EA77CD"
-               BuildableName = "map.out.mxo"
+               BuildableName = "mpr.out.mxo"
                BlueprintName = "mpr.out"
                ReferencedContainer = "container:mpr.out.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D57630D048677EA00EA77CD"
-            BuildableName = "map.out.mxo"
+            BuildableName = "mpr.out.mxo"
             BlueprintName = "mpr.out"
             ReferencedContainer = "container:mpr.out.xcodeproj">
          </BuildableReference>

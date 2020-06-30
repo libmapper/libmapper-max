@@ -31,8 +31,8 @@ max_mingw: $(NAME).mxe
 
 .SUFFIXES: .mxe
 
-LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper)
-LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper)
+LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmpr)
+LIBMAPPER_LIBS = $(shell pkg-config --libs libmpr)
 
 PDMINGWCFLAGS = -DMAXMSP -DWIN_VERSION -DWIN_EXT_VERSION $(LIBMAPPER_CFLAGS)
 PDMINGWINCLUDE = -I$(MAXSDKPATH)/c74support/max-includes
@@ -85,8 +85,8 @@ LINUXCFLAGS = -DPD -O2 -funroll-loops -fomit-frame-pointer -fPIC \
 # Override this for m_pd.h location
 PDINCLUDE = -I$(HOME)/.local/include
 
-LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper)
-LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper)
+LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmpr)
+LIBMAPPER_LIBS = $(shell pkg-config --libs libmpr)
 
 LINUXINCLUDE = $(PDINCLUDE) $(LIBMAPPER_CFLAGS)
 LINUXLIBS = $(LIBMAPPER_LIBS)
@@ -106,8 +106,8 @@ pd_darwin: $(NAME).pd_darwin
 DARWINCFLAGS = -DPD -O2 -Wall -W -Wshadow -Wstrict-prototypes \
     -Wno-unused -Wno-parentheses -Wno-switch $(OPT_CFLAGS)
 
-LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmapper)
-LIBMAPPER_LIBS = $(shell pkg-config --libs libmapper)
+LIBMAPPER_CFLAGS = $(shell pkg-config --cflags libmpr)
+LIBMAPPER_LIBS = $(shell pkg-config --libs libmpr)
 
 .c.pd_darwin:
 	$(CC) -arch i386 -arch x86_64 $(DARWINCFLAGS) $(LINUXINCLUDE) -I /Applications/Pd-extended.app/Contents/Resources/include -o $*.o -c $*.c $(LIBMAPPER_CFLAGS)

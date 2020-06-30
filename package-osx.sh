@@ -9,15 +9,15 @@ echo building mapper.pd_darwin...
 make clean
 make
 
-echo building map.device.mxo...
+echo building mpr.device.mxo...
 cd ../mapdevice/
 xcodebuild build
 
-echo building map.in.mxo...
+echo building mpr.in.mxo...
 cd ../mapin/
 xcodebuild build
 
-echo building map.out.mxo...
+echo building mpr.out.mxo...
 cd ../mapout/
 xcodebuild build
 cd ..
@@ -40,14 +40,14 @@ cp ./help/mapper.maxhelp ./mapper-osx-max-pd/old_bindings/
 cp ./mapper/mapper.pd_darwin ./mapper-osx-max-pd/old_bindings/
 cp ./help/mapper.help.pd ./mapper-osx-max-pd/old_bindings/
 
-mv ./mapdevice/build/maxmsp/map.device.mxo ./mapper-osx-max-pd/new_bindings/
-cp ./help/map.device.maxhelp ./mapper-osx-max-pd/new_bindings/
+mv ./mapdevice/build/maxmsp/mpr.device.mxo ./mapper-osx-max-pd/new_bindings/
+cp ./help/mpr.device.maxhelp ./mapper-osx-max-pd/new_bindings/
 
-mv ./mapin/build/maxmsp/map.in.mxo ./mapper-osx-max-pd/new_bindings/
-cp ./help/map.in.maxhelp ./mapper-osx-max-pd/new_bindings/
+mv ./mapin/build/maxmsp/mpr.in.mxo ./mapper-osx-max-pd/new_bindings/
+cp ./help/mpr.in.maxhelp ./mapper-osx-max-pd/new_bindings/
 
-mv ./mapout/build/maxmsp/map.out.mxo ./mapper-osx-max-pd/new_bindings/
-cp ./help/map.out.maxhelp ./mapper-osx-max-pd/new_bindings/
+mv ./mapout/build/maxmsp/mpr.out.mxo ./mapper-osx-max-pd/new_bindings/
+cp ./help/mpr.out.maxhelp ./mapper-osx-max-pd/new_bindings/
 
 cp ./help/logolink.maxpat ./mapper-osx-max-pd/old_bindings/
 cp ./help/logolink.maxpat ./mapper-osx-max-pd/new_bindings/
@@ -56,11 +56,11 @@ echo copying dylibs...
 
 ./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/old_bindings/mapper.mxo/Contents/MacOS/mapper -d ./mapper-osx-max-pd/old_bindings/mapper.mxo/Contents/libs/
 
-./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/map.device.mxo/Contents/MacOS/map.device -d ./mapper-osx-max-pd/new_bindings/map.device.mxo/Contents/libs/
+./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/mpr.device.mxo/Contents/MacOS/mpr.device -d ./mapper-osx-max-pd/new_bindings/mpr.device.mxo/Contents/libs/
 
-./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/map.in.mxo/Contents/MacOS/map.in -d ./mapper-osx-max-pd/new_bindings/map.in.mxo/Contents/libs/
+./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/mpr.in.mxo/Contents/MacOS/mpr.in -d ./mapper-osx-max-pd/new_bindings/mpr.in.mxo/Contents/libs/
 
-./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/map.out.mxo/Contents/MacOS/map.out -d ./mapper-osx-max-pd/new_bindings/map.out.mxo/Contents/libs/
+./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/new_bindings/mpr.out.mxo/Contents/MacOS/mpr.out -d ./mapper-osx-max-pd/new_bindings/mpr.out.mxo/Contents/libs/
 
 ./dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper-osx-max-pd/oscmulticast/oscmulticast.mxo/Contents/MacOS/oscmulticast -d ./mapper-osx-max-pd/oscmulticast/oscmulticast.mxo/Contents/libs/
 
