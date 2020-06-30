@@ -16,7 +16,7 @@ editing mapping connections.
 
 ### Creating a device
 
-To create a _libmapper_ device, create an object called `[map.device]` with an
+To create a _libmapper_ device, create an object called `[mpr.device]` with an
 optional argument specifying the device's name.  There is a brief initialization
 period after a device is created where a unique ordinal is chosen to append to
 the device name.  This allows multiple devices with the same name to exist on
@@ -50,14 +50,14 @@ property.
 
 ### Multiple devices
 
-Once you have created a `[map.device]` object in a patcher, it considers itself
+Once you have created a `[mpr.device]` object in a patcher, it considers itself
 to be the "parent" device for that patcher and all of its subpatchers.  This
 means that it you try to create a second copy of the device in the same patcher,
 or in one of its child subpatchers, the object instantiation will fail.  When
 the object is created, it checks whether there is a pre-existing device that
 would cause a conflict.
 
-You can, however, create multiple `[map.device]` objects in the same patch as
+You can, however, create multiple `[mpr.device]` objects in the same patch as
 long as they are both contained in different subpatchers.
 
 ## Signals
@@ -65,7 +65,7 @@ long as they are both contained in different subpatchers.
 Now that we have created a device, we only need to know how to add signals in
 order to give our program some input/output functionality.  While libmapper
 enables arbitrary connections between _any_ declared signals, we still find it
-helpful to distinguish between two type of signals: `inputs` and `outputs`. 
+helpful to distinguish between two type of signals: `inputs` and `outputs`.
 
 - `outputs` signals are _sources_ of data, updated locally by their parent
 device
@@ -82,8 +82,8 @@ desired.
 
 ### Creating a signal
 
-Creating input and output signals is accomplished with the `[map.in]` and
-`[map.out]` objects, which requires two pieces of information: 
+Creating input and output signals is accomplished with the `[mpr.in]` and
+`[mpr.out]` objects, which requires two pieces of information:
 
 * a name for the signal
 * the signal's data type expressed as a character 'i' for `integer`, 'f' for
@@ -127,7 +127,7 @@ port, or it could just be a mouse-controlled GUI slider.  However it's getting
 the data, it must provide it to _libmapper_ so that it will be sent to other
 devices if that signal is mapped.
 
-This is accomplished by passing ints or floats to the `[map.out]` object.  In
+This is accomplished by passing ints or floats to the `[mpr.out]` object.  In
 the case of vector signals, a list with the same number of elements should be
 used.
 
@@ -168,16 +168,16 @@ other measures to reduce noise.  Some sensor data may need to be combined in
 order to derive physical meaning.  What you choose to expose as outputs of your
 device is entirely application-dependent.
 
-You can even publish both "/sensor1/position" and "/sensor1/voltage" if desired,
+You can even publish both "sensor1/position" and "sensor1/voltage" if desired,
 in order to expose both processed and raw data.  Keep in mind that these will
 not take up significant processing time, and _zero_ network bandwidth,
 if they are not mapped.
 
 ### Receiving signals
 
-Receiving signals is even easier: create a `[map.in]` object with a name and
+Receiving signals is even easier: create a `[mpr.in]` object with a name and
 type, and updates for this signal will be routed to its outlet.  The arguments
-for the `[map.in]` object are identical to `[map.out]`.
+for the `[mpr.in]` object are identical to `[mpr.out]`.
 
 Let's try making two devices in the same patch for testing.
 

@@ -53,7 +53,7 @@ Now that we have created a device, we only need to know how to
 add signals in order to give our program some input/output functionality.
 While libmapper enables arbitrary connections between _any_ declared signals,
 we still find it helpful to distinguish between two type of signals: `inputs`
-and `outputs`. 
+and `outputs`.
 
 - `outputs` signals are _sources_ of data, updated locally by their parent device
 - `inputs` signals are _consumers_ of data and are **not** generally
@@ -69,7 +69,7 @@ enables connections from input signals and to output signals if desired.
 ### Creating a signal
 
 We'll start with creating a "sender", so we will first talk about how
-to update output signals.  Creating a signal requires two pieces of information: 
+to update output signals.  Creating a signal requires two pieces of information:
 
 * a name for the signal (must be unique within a devices inputs or outputs)
 * the signal's data type expressed as a character 'i' for `integer`, 'f'
@@ -88,7 +88,7 @@ examples:
 
 The only _required_ parameters here are the signal name,
 and data type.  If no `length` property is provided, the signal is
-assumed to have length 1.  
+assumed to have length 1.
 Finally, supported types are currently 'i' or 'f' for `int` or
 `float` values, respectively.
 
@@ -201,7 +201,6 @@ between the two float objects and accomplished the same thing, but your
 * It can be edited to provide signal processing, including automatic
  linear scaling, calibration, muting, clipping, or an arbitrary
  expression - even FIR and IIR filters.
- 
 
 ### Learn mode
 

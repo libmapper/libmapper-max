@@ -50,7 +50,7 @@ between multiple active devices with the same name.
 Now that we have created a device, we only need to know how to add signals in
 order to give our program some input/output functionality.  While libmapper
 enables arbitrary connections between _any_ declared signals, we still find it
-helpful to distinguish between two type of signals: `inputs` and `outputs`. 
+helpful to distinguish between two type of signals: `inputs` and `outputs`.
 
 - `outputs` signals are _sources_ of data, updated locally by their parent
 device
@@ -67,7 +67,7 @@ connections from input signals and to output signals if desired.
 ### Creating a signal
 
 We'll start with creating a "sender", so we will first talk about how to update
-output signals.  Creating a signal requires two pieces of information: 
+output signals.  Creating a signal requires two pieces of information:
 
 * a name for the signal (must be unique within a devices inputs or outputs)
 * the signal's data type expressed as a character 'i' for `integer`, 'f' for
