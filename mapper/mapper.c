@@ -710,9 +710,11 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
 #endif
         if (maxpd_atom_strcmp(argv+1, "release") == 0)
-            mpr_sig_release_inst(sig, id, x->timetag);
+            mpr_sig_release_inst(sig, id);
     }
-    else if (type == 'i') {
+    else if (argc - j != len)
+        return;
+    if (type == 'i') {
         int payload[len];
         for (i = 0; i < argc; i++) {
             if ((argv + i + j)->a_type == A_FLOAT)
@@ -724,7 +726,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         //update signal
         maybe_start_queue(x);
-        mpr_sig_set_value(sig, id_ptr, len, MPR_INT32, payload, x->timetag);
+        mpr_sig_set_value(sig, id_ptr, len, MPR_INT32, payload);
     }
     else if (type == 'f') {
         float payload[len];
@@ -738,7 +740,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         }
         //update signal
         maybe_start_queue(x);
-        mpr_sig_set_value(sig, id_ptr, len, MPR_FLT, payload, x->timetag);
+        mpr_sig_set_value(sig, id_ptr, len, MPR_FLT, payload);
     }
     else {
         return;
@@ -800,12 +802,12 @@ static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                 case MPR_STEAL_OLDEST:
                     inst = mpr_sig_get_oldest_inst_id(sig);
                     if (inst)
-                        mpr_sig_release_inst(sig, inst, time);
+                        mpr_sig_release_inst(sig, inst);
                     break;
                 case MPR_STEAL_NEWEST:
                     inst = mpr_sig_get_newest_inst_id(sig);
                     if (inst)
-                        mpr_sig_release_inst(sig, inst, time);
+                        mpr_sig_release_inst(sig, inst);
                     break;
                 case 0:
                     maxpd_atom_set_string(x->buffer+1, "overflow");
@@ -1050,7 +1052,7 @@ static void mapperobj_poll(t_mapper *x)
         }
     }
     else if (x->updated) {
-        mpr_dev_send_queue(x->device, x->timetag);
+//        mpr_dev_send_queue(x->device, x->timetag);
         x->updated = 0;
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
@@ -1087,11 +1089,10 @@ static void maybe_start_queue(t_mapper *x)
 {
     if (!x->updated) {
         mpr_time_set(&x->timetag, MPR_NOW);
-        mpr_dev_start_queue(x->device, x->timetag);
+//        mpr_dev_start_queue(x->device, x->timetag);
         x->updated = 1;
     }
 }
-
 
 // *********************************************************
 // some helper functions for abtracting differences

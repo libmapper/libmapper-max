@@ -10,15 +10,15 @@ make clean
 make
 
 echo building mpr.device.mxo...
-cd ../mapdevice/
+cd ../mpr_device/
 xcodebuild build
 
 echo building mpr.in.mxo...
-cd ../mapin/
+cd ../mpr_in/
 xcodebuild build
 
 echo building mpr.out.mxo...
-cd ../mapout/
+cd ../mpr_out/
 xcodebuild build
 cd ..
 
@@ -40,13 +40,13 @@ cp ./help/mapper.maxhelp ./mapper-osx-max-pd/old_bindings/
 cp ./mapper/mapper.pd_darwin ./mapper-osx-max-pd/old_bindings/
 cp ./help/mapper.help.pd ./mapper-osx-max-pd/old_bindings/
 
-mv ./mapdevice/build/maxmsp/mpr.device.mxo ./mapper-osx-max-pd/new_bindings/
+mv ./mpr_device/build/maxmsp/mpr.device.mxo ./mapper-osx-max-pd/new_bindings/
 cp ./help/mpr.device.maxhelp ./mapper-osx-max-pd/new_bindings/
 
-mv ./mapin/build/maxmsp/mpr.in.mxo ./mapper-osx-max-pd/new_bindings/
+mv ./mpr_in/build/maxmsp/mpr.in.mxo ./mapper-osx-max-pd/new_bindings/
 cp ./help/mpr.in.maxhelp ./mapper-osx-max-pd/new_bindings/
 
-mv ./mapout/build/maxmsp/mpr.out.mxo ./mapper-osx-max-pd/new_bindings/
+mv ./mpr_out/build/maxmsp/mpr.out.mxo ./mapper-osx-max-pd/new_bindings/
 cp ./help/mpr.out.maxhelp ./mapper-osx-max-pd/new_bindings/
 
 cp ./help/logolink.maxpat ./mapper-osx-max-pd/old_bindings/

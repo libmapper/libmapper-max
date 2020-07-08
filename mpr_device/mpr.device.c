@@ -43,7 +43,6 @@ typedef struct _mpr_device
     char                *name;
     mpr_graph           graph;
     mpr_dev             device;
-    mpr_time            timetag;
     int                 updated;
     int                 ready;
     t_atom              buffer[MAX_LIST];
@@ -73,8 +72,6 @@ static int mpr_device_attach(t_mpr_device *x);
 static void mpr_device_add_signal(t_mpr_device *x, t_object *obj);
 static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj);
 
-static void mpr_device_maybe_start_queue(t_mpr_device *x);
-
 static void mpr_device_poll(t_mpr_device *x);
 
 static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
@@ -83,7 +80,6 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
 
 static void mpr_device_print_properties(t_mpr_device *x);
 
-//static void maybe_start_queue(t_mpr_device *x);
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
 static void atom_set_string(t_atom *a, const char *string);
@@ -101,7 +97,6 @@ int main(void)
                   (long)sizeof(t_mpr_device), 0L, A_GIMME, 0);
 
     class_addmethod(c, (method)mpr_device_notify, "notify", A_CANT, 0);
-    class_addmethod(c, (method)mpr_device_maybe_start_queue, "maybe_start_queue", A_CANT, 0);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mpr_device_class = c;
@@ -412,8 +407,6 @@ static void mpr_device_add_signal(t_mpr_device *x, t_object *obj)
         object_attr_setvalueof(obj, gensym("dev_obj"), 1, x->buffer);
         atom_setobj(x->buffer, (void *)sig);
         object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
-        atom_setobj(x->buffer, (void *)&x->timetag);
-        object_attr_setvalueof(obj, gensym("tt_ptr"), 1, x->buffer);
     }
 }
 
@@ -568,12 +561,12 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                 case MPR_STEAL_OLDEST:
                     inst = mpr_sig_get_oldest_inst_id(sig);
                     if (inst)
-                        mpr_sig_release_inst(sig, inst, time);
+                        mpr_sig_release_inst(sig, inst);
                     break;
                 case MPR_STEAL_NEWEST:
                     inst = mpr_sig_get_newest_inst_id(sig);
                     if (inst)
-                        mpr_sig_release_inst(sig, inst, time);
+                        mpr_sig_release_inst(sig, inst);
                     break;
                 case 0:
                     atom_set_string(x->buffer+1, "overflow");
@@ -592,17 +585,6 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
 }
 
 // *********************************************************
-// -(start a new queue if necessary)------------------------
-static void mpr_device_maybe_start_queue(t_mpr_device *x)
-{
-    if (!x->updated) {
-        mpr_time_set(&x->timetag, MPR_NOW);
-        mpr_dev_start_queue(x->device, x->timetag);
-        x->updated = 1;
-    }
-}
-
-// *********************************************************
 // -(poll libmpr)-------------------------------------------
 static void mpr_device_poll(t_mpr_device *x)
 {
@@ -617,10 +599,6 @@ static void mpr_device_poll(t_mpr_device *x)
             x->ready = 1;
             defer_low((t_object *)x, (method)mpr_device_print_properties, NULL, 0, NULL);
         }
-    }
-    else if (x->updated) {
-        mpr_dev_send_queue(x->device, x->timetag);
-        x->updated = 0;
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
 }

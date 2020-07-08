@@ -40,10 +40,10 @@ typedef struct _mpr_in
     char                sig_type;
     mpr_dev             dev_obj;
     mpr_sig             sig_ptr;
-    mpr_time            *tt_ptr;
     long                is_instance;
     mpr_id              instance_id;
-    void                *outlet;
+    void                *outlet1;
+    void                *outlet2;
     t_symbol            *myobjname;
     t_object            *patcher;
     t_hashtab           *ht;
@@ -63,7 +63,6 @@ static void add_to_hashtab(t_mpr_in *x, t_hashtab *ht);
 static void remove_from_hashtab(t_mpr_in *x);
 static t_max_err set_sig_ptr(t_mpr_in *x, t_object *attr, long argc, t_atom *argv);
 static t_max_err set_dev_obj(t_mpr_in *x, t_object *attr, long argc, t_atom *argv);
-static t_max_err set_tt_ptr(t_mpr_in *x, t_object *attr, long argc, t_atom *argv);
 
 static void mpr_in_loadbang(t_mpr_in *x);
 static void mpr_in_int(t_mpr_in *x, long i);
@@ -76,8 +75,6 @@ static const char *atom_get_string(t_atom *a);
 static void atom_set_string(t_atom *a, const char *string);
 static int atom_coerce_int(t_atom *a);
 static float atom_coerce_float(t_atom *a);
-
-t_symbol *maybe_start_queue_sym;
 
 // *********************************************************
 // -(global class pointer variable)-------------------------
@@ -106,8 +103,6 @@ int main(void)
     CLASS_ATTR_ACCESSORS(c, "dev_obj", 0, set_dev_obj);
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_in, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
-    CLASS_ATTR_OBJ(c, "tt_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_in, tt_ptr);
-    CLASS_ATTR_ACCESSORS(c, "tt_ptr", 0, set_tt_ptr);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mpr_in_class = c;
@@ -137,7 +132,8 @@ static void *mpr_in_new(t_symbol *s, int argc, t_atom *argv)
     }
 
     if ((x = (t_mpr_in *)object_alloc(mpr_in_class))) {
-        x->outlet = listout((t_object *)x);
+        x->outlet1 = listout((t_object *)x);
+        x->outlet2 = listout((t_object *)x);
 
         x->sig_name = gensym(atom_getsym(argv)->s_name);
 
@@ -183,7 +179,6 @@ static void *mpr_in_new(t_symbol *s, int argc, t_atom *argv)
         x->patcher = (t_object *)gensym("#P")->s_thing;
         mpr_in_loadbang(x);
     }
-    maybe_start_queue_sym = gensym("maybe_start_queue");
     return (x);
 }
 
@@ -291,7 +286,7 @@ void parse_extra_properties(t_mpr_in *x)
              * may have properly added an instance 0, we will check for user_data. */
             void *data = mpr_sig_get_inst_data(x->sig_ptr, 0);
             if (!data)
-                mpr_sig_remove_inst(x->sig_ptr, 0, MPR_NOW);
+                mpr_sig_remove_inst(x->sig_ptr, 0);
 
             x->is_instance = 1;
             i++;
@@ -485,14 +480,6 @@ t_max_err set_sig_ptr(t_mpr_in *x, t_object *attr, long argc, t_atom *argv)
     return 0;
 }
 
-// *********************************************************
-// -(set the device pointer)--------------------------------
-t_max_err set_tt_ptr(t_mpr_in *x, t_object *attr, long argc, t_atom *argv)
-{
-    x->tt_ptr = (mpr_time*)argv->a_w.w_obj;
-    return 0;
-}
-
 static int check_ptrs(t_mpr_in *x)
 {
     if (!x || !x->dev_obj || !x->sig_ptr) {
@@ -512,8 +499,7 @@ static void mpr_in_int(t_mpr_in *x, long l)
     if (check_ptrs(x))
         return;
 
-    object_method(x->dev_obj, maybe_start_queue_sym);
-    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l, *x->tt_ptr);
+    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
 }
 
 // *********************************************************
@@ -523,8 +509,7 @@ static void mpr_in_float(t_mpr_in *x, double d)
     if (check_ptrs(x))
         return;
 
-    object_method(x->dev_obj, maybe_start_queue_sym);
-    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d, *x->tt_ptr);
+    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
 }
 
 // *********************************************************
@@ -557,8 +542,7 @@ static void mpr_in_list(t_mpr_in *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
-        object_method(x->dev_obj, maybe_start_queue_sym);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, value, *x->tt_ptr);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, value);
     }
     else if (x->type == 'f') {
         float payload[argc];
@@ -574,8 +558,7 @@ static void mpr_in_list(t_mpr_in *x, t_symbol *s, int argc, t_atom *argv)
             }
         }
         //update signal
-        object_method(x->dev_obj, maybe_start_queue_sym);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, value, *x->tt_ptr);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, value);
     }
 }
 
@@ -586,8 +569,7 @@ static void mpr_in_release(t_mpr_in *x)
     if (check_ptrs(x) || !x->is_instance)
         return;
 
-    object_method(x->dev_obj, maybe_start_queue_sym);
-    mpr_sig_release_inst(x->sig_ptr, x->instance_id, *x->tt_ptr);
+    mpr_sig_release_inst(x->sig_ptr, x->instance_id);
 }
 
 // *********************************************************
