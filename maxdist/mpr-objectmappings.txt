@@ -1,0 +1,3 @@
+max objectfile map.device mpr.device;
+max objectfile map.in mpr.in;
+max objectfile map.out mpr.out;

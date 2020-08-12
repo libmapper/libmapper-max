@@ -1,0 +1,42 @@
+{
+	"author" : "libmapper",
+	"authors" : [],
+	"description" : "A library for connecting things.",
+	"displayname" : "",
+	"extends" : "",
+	"extensible" : 0,
+	"homepatcher" : "libmapper overview.maxpat",
+	"max_version_max" : "none",
+	"max_version_min" : "7.1",
+	"name" : "libmapper",
+	"os" : 	{
+		"macintosh" : 		{
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "none"
+		}
+,
+		"windows" : 		{
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "none"
+		}
+	}
+,
+	"package_extra" : 	{
+		"reverse_domain" : "org.libmapper",
+		"copyright" : "Copyright (c) 2020 libmapper"
+	}
+,
+	"tags" : ["framework", "interactive", "network", "mapping", "OSC"],
+	"version" : "@GIT_SHA@",
+	"website" : "https://libmapper.org",
+	"filelist" : 	{
+		"examples" : [],
+        "externals" : ["mpr.device.mxo", "mpr.in.mxo", "mpr.out.mxo", "oscmulticast.mxo"],
+		"patchers" : [],
+        "help" : ["mpr.device.maxhelp", "mpr.in.maxhelp", "mpr.out.maxhelp"],
+		"docs" : [],
+		"code" : [],
+		"extras" : [ "libmapper overview.maxpat" ]
+	}
+
+}

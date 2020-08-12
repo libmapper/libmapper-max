@@ -200,7 +200,7 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					/usr/local/lib/liblo.dylib,
 					"-lmx",
-					/usr/local/lib/libmpr.dylib,
+					/usr/local/lib/libmapper.dylib,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.mapper;
 				PRODUCT_NAME = mapper;
@@ -218,7 +218,7 @@
 		1DEB911F08733D790010E9CD /* maxmsp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH)";
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_AUTO_VECTORIZATION = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_OPTIMIZATION_LEVEL = 3;

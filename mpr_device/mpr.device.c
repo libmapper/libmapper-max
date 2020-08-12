@@ -16,13 +16,13 @@
 
 #include "ext.h"            // standard Max include, always required
 #include "ext_obex.h"       // required for new style Max object
+#include "ext_critical.h"
 #include "jpatcher_api.h"
-#include <mpr/mpr.h>
+#include <mapper/mapper.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <lo/lo.h>
 #ifndef WIN32
   #include <arpa/inet.h>
 #endif
@@ -47,6 +47,7 @@ typedef struct _mpr_device
     int                 ready;
     t_atom              buffer[MAX_LIST];
     t_object            *patcher;
+    int                 throttle;
 } t_mpr_device;
 
 typedef struct _mpr_ptrs
@@ -115,6 +116,7 @@ static void *mpr_device_new(t_symbol *s, int argc, t_atom *argv)
     if ((x = object_alloc(mpr_device_class))) {
         x->outlet = listout((t_object *)x);
         x->name = 0;
+        x->throttle = 10;
 
         if (argv->a_type == A_SYM && atom_get_string(argv)[0] != '@')
             alias = atom_get_string(argv);
@@ -130,6 +132,20 @@ static void *mpr_device_new(t_symbol *s, int argc, t_atom *argv)
                 else if (atom_strcmp(argv+i, "@interface") == 0) {
                     if ((argv+i+1)->a_type == A_SYM) {
                         iface = atom_get_string(argv+i+1);
+                        i++;
+                    }
+                }
+                else if (atom_strcmp(argv+i, "@throttle") == 0) {
+                    if ((argv+i+1)->a_type == A_LONG) {
+                        int throttle = atom_getlong(argv+i+1);
+                        if (throttle > 0)
+                            x->throttle = throttle;
+                        i++;
+                    }
+                    else if ((argv+i+1)->a_type == A_FLOAT) {
+                        int throttle = (int)atom_getfloat(argv+i+1);
+                        if (throttle > 0)
+                            x->throttle = throttle;
                         i++;
                     }
                 }
@@ -247,7 +263,7 @@ void mpr_device_notify(t_mpr_device *x, t_symbol *s, t_symbol *msg, void *sender
     else if (msg == gensym("hashtab_entry_free")) { // something left the hashtab
 		t_symbol *key = (t_symbol *)data;
 		t_object *obj = NULL;
-		
+
 		hashtab_lookup(sender, key, &obj);
 		if (obj) {
             mpr_device_remove_signal(x, obj);
@@ -322,21 +338,21 @@ int mpr_device_attach(t_mpr_device *x)
 
     x->patcher = patcher;
 
-    // walk up the patcher hierarchy checking if there is an upstream mpr_device object
+    // walk up the patcher hierarchy checking if there is an upstream mpr.device object
     while (patcher) {
         object_obex_lookup(patcher, gensym("mprhash"), (t_object **)&ht);
         if (ht) {
-            object_post((t_object *)x, "error: found mpr_device object in parent patcher!");
+            object_post((t_object *)x, "error: found mpr.device object in parent patcher!");
             return 1;
         }
         patcher = jpatcher_get_parentpatcher(patcher);
     }
 
-    // walk down the patcher hierarchy checking if there is a downstream mpr_device object
+    // walk down the patcher hierarchy checking if there is a downstream mpr.device object
     object_method(x->patcher, gensym("iterate"), check_downstream, (void *)x,
                   PI_DEEP, &result);
     if (result) {
-        object_post((t_object *)x, "error: found mpr_device object in parent patcher!");
+        object_post((t_object *)x, "error: found mpr.device object in parent patcher!");
         return 1;
     }
 
@@ -482,6 +498,10 @@ static void mpr_device_print_properties(t_mpr_device *x)
         //output numOutputs
         atom_setlong(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
         outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
+
+        //output throttle
+        atom_setlong(x->buffer, x->throttle);
+        outlet_anything(x->outlet, gensym("throttle"), 1, x->buffer);
     }
 }
 
@@ -496,7 +516,7 @@ static void outlet_data(void *outlet, char type, short length, t_atom *atoms)
 }
 
 // *********************************************************
-// -(int handler)-------------------------------------------
+// -(sig handler)-------------------------------------------
 static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                                    int len, mpr_type type, const void *val,
                                    mpr_time time)
@@ -539,7 +559,7 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
             }
             else if (obj) {
                 atom_set_string(x->buffer, "release");
-                atom_set_string(x->buffer+1, "local");
+                atom_set_string(x->buffer+1, "upstream");
                 outlet_list(obj->o_outlet, NULL, 2, x->buffer);
             }
             break;
@@ -570,7 +590,7 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                     break;
                 case 0:
                     atom_set_string(x->buffer+1, "overflow");
-                        // send overflow message to all instances
+                    // send overflow message to all instances
                     for (i=0; i<ptrs->num_objs; i++)
                         outlet_list(ptrs->objs[i]->o_outlet, NULL, 2, x->buffer);
                     break;
@@ -588,8 +608,10 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
 // -(poll libmpr)-------------------------------------------
 static void mpr_device_poll(t_mpr_device *x)
 {
-    int count = 10;
-    while(count-- && mpr_dev_poll(x->device, 0)) {};
+    int count = x->throttle;
+    critical_enter(0);
+    while (count-- && mpr_dev_poll(x->device, 0)) {};
+    critical_exit(0);
     if (!x->ready) {
         if (mpr_dev_get_is_ready(x->device)) {
             object_post((t_object *)x, "Joining mapping network as '%s'",

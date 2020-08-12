@@ -40,7 +40,7 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
-					"id" : "obj-27",
+					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 0,
 					"numoutlets" : 0,
@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 729.0, 232.0, 640.0, 480.0 ],
+						"rect" : [ 570.0, 205.0, 640.0, 480.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -85,43 +85,71 @@
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
+									"id" : "obj-5",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 75.0, 180.0, 165.0, 20.0 ],
+									"style" : "",
+									"text" : "[mpr.device @interface en1]"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
+									"id" : "obj-8",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 45.0, 270.0, 405.0, 33.0 ],
+									"style" : "",
+									"text" : "Any other properties you wish to attach to your device can also be specified as properties in the form @<key> <value>"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
+									"id" : "obj-6",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 30.0, 240.0, 150.0, 20.0 ],
+									"style" : "",
+									"text" : "Other properties:"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
+									"id" : "obj-3",
+									"linecount" : 6,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 45.0, 75.0, 405.0, 87.0 ],
+									"style" : "",
+									"text" : "By default the mpr.device object will try to use your computer's ethernet port, then wifi if ethernet is not available, and finally falling back to the local-loopback interfaces if wifi is not available either.\n\nThe default behaviour can be over-ridden by specifying the network interface to use as an argument:"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 12.0,
 									"id" : "obj-2",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 30.0, 45.0, 150.0, 20.0 ],
 									"style" : "",
-									"text" : "Metadata"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-24",
-									"linecount" : 3,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 75.0, 409.0, 47.0 ],
-									"style" : "",
-									"text" : "Labeling your output with metadata helps with mapping later - for example, if ranges are provided libmapper will perform linear scaling by default on new connections. Feel free to add any metadata you think might be useful."
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"color" : [ 0.745098, 0.0, 0.0, 1.0 ],
-									"fontname" : "Arial",
-									"fontsize" : 12.0,
-									"id" : "obj-21",
-									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 135.0, 293.0, 22.0 ],
-									"style" : "",
-									"text" : "mpr.out frequency f @unit Hz @min 20 @max 20000"
+									"text" : "Network interfaces:"
 								}
 
 							}
@@ -129,7 +157,7 @@
 						"lines" : [  ]
 					}
 ,
-					"patching_rect" : [ 30.0, 225.0, 48.0, 22.0 ],
+					"patching_rect" : [ 240.0, 285.0, 48.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -140,82 +168,6 @@
 ,
 					"style" : "",
 					"text" : "p more"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-19",
-					"maxclass" : "number",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 120.0, 135.0, 50.0, 22.0 ],
-					"style" : ""
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"color" : [ 0.745098, 0.0, 0.0, 1.0 ],
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-13",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 120.0, 165.0, 77.0, 22.0 ],
-					"style" : "",
-					"text" : "mpr.out bar i"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-11",
-					"linecount" : 5,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 315.0, 156.0, 74.0 ],
-					"style" : "",
-					"text" : "There needs to be a mpr.device object somewhere in the patcher. It will also bind to mpr.out objects in subpatchers"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"format" : 6,
-					"id" : "obj-5",
-					"maxclass" : "flonum",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 135.0, 50.0, 22.0 ],
-					"style" : ""
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"color" : [ 0.745098, 0.0, 0.0, 1.0 ],
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-1",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 165.0, 77.0, 22.0 ],
-					"style" : "",
-					"text" : "mpr.out foo f"
 				}
 
 			}
@@ -242,9 +194,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 240.0, 374.5, 69.0, 22.0 ],
+					"patching_rect" : [ 240.0, 374.5, 51.0, 22.0 ],
 					"style" : "",
-					"text" : "mpr.device"
+					"text" : "mpr.out"
 				}
 
 			}
@@ -299,14 +251,87 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
+					"id" : "obj-24",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 30.0, 180.0, 113.0, 22.0 ],
+					"style" : "",
+					"text" : "loadmess refer info"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"automouse" : 0,
+					"cols" : 1,
+					"colwidth" : 90,
+					"fontface" : 0,
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"hscroll" : 0,
+					"hsync" : 0,
+					"id" : "obj-23",
+					"maxclass" : "jit.cellblock",
+					"numinlets" : 2,
+					"numoutlets" : 4,
+					"outlettype" : [ "list", "", "", "" ],
+					"patching_rect" : [ 30.0, 210.0, 180.0, 183.0 ],
+					"rows" : 1,
+					"selmode" : 0,
+					"selsync" : 0,
+					"vscroll" : 0,
+					"vsync" : 0
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-21",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 30.0, 120.0, 85.0, 22.0 ],
+					"style" : "",
+					"text" : "prepend store"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-20",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 4,
+					"outlettype" : [ "", "", "", "" ],
+					"patching_rect" : [ 30.0, 150.0, 61.0, 22.0 ],
+					"saved_object_attributes" : 					{
+						"embed" : 0
+					}
+,
+					"style" : "",
+					"text" : "coll info 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
 					"id" : "obj-8",
-					"linecount" : 4,
+					"linecount" : 10,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 270.0, 125.0, 273.0, 60.0 ],
+					"patching_rect" : [ 240.0, 90.0, 330.0, 141.0 ],
 					"style" : "",
-					"text" : "The mpr.out object creates a discoverable, dynamically-mappable output in your patch. Click the logo below to visit libmapper.org and learn more about these tools."
+					"text" : "The mpr.device object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata\n\nAdd inputs and outputs to your device using the mpr.in and mpr.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
 				}
 
 			}
@@ -317,11 +342,12 @@
 					"fontsize" : 12.0,
 					"id" : "obj-6",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
-					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 389.0, 69.0, 22.0 ],
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "list" ],
+					"patching_rect" : [ 30.0, 90.0, 129.0, 22.0 ],
 					"style" : "",
-					"text" : "mpr.device"
+					"text" : "mpr.device my_device"
 				}
 
 			}
@@ -350,11 +376,11 @@
 					"id" : "obj-64",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "logolink.maxpat",
+					"name" : "mpr.logolink.maxpat",
 					"numinlets" : 0,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 450.0, 267.5, 150.0, 155.5 ],
+					"patching_rect" : [ 448.0, 267.5, 150.0, 155.5 ],
 					"viewvisibility" : 1
 				}
 
@@ -369,7 +395,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 45.0, 484.0, 22.0 ],
 					"style" : "",
-					"text" : "A MaxMSP wrapper for a libmapper output signal"
+					"text" : "A MaxMSP wrapper for a libmapper device"
 				}
 
 			}
@@ -384,7 +410,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 15.0, 15.0, 485.0, 30.0 ],
 					"style" : "",
-					"text" : "mpr.out",
+					"text" : "mpr.device",
 					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ],
 					"varname" : "autohelp_top_title"
 				}
@@ -399,7 +425,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 576.0, 15.0, 4.0, 304.0 ],
+					"patching_rect" : [ 576.0, 15.0, 4.0, 320.0 ],
 					"proportion" : 0.39,
 					"style" : ""
 				}
@@ -442,15 +468,22 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-13", 0 ],
-					"source" : [ "obj-19", 0 ]
+					"destination" : [ "obj-20", 0 ],
+					"source" : [ "obj-21", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"source" : [ "obj-5", 0 ]
+					"destination" : [ "obj-23", 0 ],
+					"source" : [ "obj-24", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-21", 0 ],
+					"source" : [ "obj-6", 0 ]
 				}
 
 			}
@@ -463,13 +496,7 @@
 
 			}
  ],
-		"dependency_cache" : [ 			{
-				"name" : "logolink.maxpat",
-				"patcherrelativepath" : ".",
-				"type" : "JSON",
-				"implicit" : 1
-			}
- ],
+		"dependency_cache" : [],
 		"autosave" : 0
 	}
 

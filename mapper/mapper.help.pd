@@ -89,11 +89,10 @@ a mapping connection between the two instances of the mapper object
 #X obj 334 275 sendOSC;
 #X msg 86 304 connect 224.0.1.3 7570;
 #X obj 86 280 loadbang;
-#X obj 554 275 print to_network;
+#X obj 489 272 print to_network;
 #X obj 79 53 prepend out1;
 #X obj 79 142 route in1;
-#X msg 334 228 send /map \$1/out1 -> \$2/in1 @mode expression @expression
-y=127-x;
+#X msg 334 228 send /map \$1/out1 -> \$2/in1 @expr y=127-x;
 #X connect 0 0 18 0;
 #X connect 2 0 3 0;
 #X connect 2 1 4 0;

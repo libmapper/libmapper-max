@@ -16,18 +16,18 @@
 #ifdef MAXMSP
     #include "ext.h"            // standard Max include, always required
     #include "ext_obex.h"       // required for new style Max object
+    #include "ext_critical.h"
     #include "ext_dictionary.h"
     #include "jpatcher_api.h"
 #else
     #include "m_pd.h"
     #define A_SYM A_SYMBOL
 #endif
-#include <mpr/mpr.h>
+#include <mapper/mapper.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <lo/lo.h>
 #ifndef WIN32
   #include <arpa/inet.h>
 #endif
@@ -99,7 +99,6 @@ static void mapperobj_register_signals(t_mapper *x);
 static void mapperobj_read_definition(t_mapper *x);
 #endif
 
-static void maybe_start_queue(t_mapper *x);
 static int maxpd_atom_strcmp(t_atom *a, const char *string);
 static const char *maxpd_atom_get_string(t_atom *a);
 static void maxpd_atom_set_string(t_atom *a, const char *string);
@@ -494,9 +493,8 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
                 i++;
             }
 #endif
-            if (prop_int > 1) {
-                mpr_sig_reserve_inst(sig, prop_int - 1, 0, 0);
-            }
+            if (prop_int > 1)
+                mpr_sig_reserve_inst(sig, prop_int, 0, 0);
         }
         else if (maxpd_atom_strcmp(argv+i, "@stealing") == 0) {
             if ((argv+i+1)->a_type == A_SYM) {
@@ -560,7 +558,7 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s,
 static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
                                     int argc, t_atom *argv)
 {
-    char *sig_name = NULL, *direction = NULL;
+    const char *sig_name = NULL, *direction = NULL;
 
     if (argc < 2) {
         return;
@@ -569,8 +567,8 @@ static void mapperobj_remove_signal(t_mapper *x, t_symbol *s,
         POST(x, "Unable to parse remove message!");
         return;
     }
-    direction = strdup(maxpd_atom_get_string(argv));
-    sig_name = strdup(maxpd_atom_get_string(argv+1));
+    direction = maxpd_atom_get_string(argv);
+    sig_name = maxpd_atom_get_string(argv+1);
 
     mpr_list sigs = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
     sigs = mpr_list_filter(sigs, MPR_PROP_NAME, NULL, 1, MPR_STR, sig_name, MPR_OP_EQ);
@@ -642,7 +640,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
     if (!x->ready)
         return;
 
-    int i = 0, j = 0, id, *id_ptr = NULL;
+    int i = 0, j = 0, id = 0;
     if (!argc)
         return;
 
@@ -654,52 +652,31 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         sig = *sigs;
 
     if (!sig) {
-        if (x->learn_mode) {
-            // register as new signal
-            if (argv->a_type == A_FLOAT) {
-                sig = mpr_sig_new(x->device, MPR_DIR_OUT, s->s_name, argc,
-                                  MPR_FLT, 0, 0, 0, 0, 0, 0);
-            }
-#ifdef MAXMSP
-            else if (argv->a_type == A_LONG) {
-                sig = mpr_sig_new(x->device, MPR_DIR_OUT, s->s_name, argc,
-                                  MPR_INT32, 0, 0, 0, 0, 0, 0);
-            }
-#endif
-            else {
-                return;
-            }
-            //output updated numOutputs
-            maxpd_atom_set_float(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
-            outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
+        if (!x->learn_mode)
+            return;
+
+        // register as new signal
+        if (argv->a_type == A_FLOAT) {
+            sig = mpr_sig_new(x->device, MPR_DIR_OUT, s->s_name, argc,
+                              MPR_FLT, 0, 0, 0, 0, 0, 0);
         }
+#ifdef MAXMSP
+        else if (argv->a_type == A_LONG) {
+            sig = mpr_sig_new(x->device, MPR_DIR_OUT, s->s_name, argc,
+                              MPR_INT32, 0, 0, 0, 0, 0, 0);
+        }
+#endif
         else {
             return;
         }
+        //output updated numOutputs
+        maxpd_atom_set_float(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
+        outlet_anything(x->outlet2, gensym("numOutputs"), 1, x->buffer);
     }
 
     int len = mpr_obj_get_prop_as_int32(sig, MPR_PROP_LEN, NULL);
-    char type = mpr_obj_get_prop_as_int32(sig, MPR_PROP_TYPE, NULL);
+    mpr_type type = (mpr_type)mpr_obj_get_prop_as_int32(sig, MPR_PROP_TYPE, NULL);
 
-    if (argc == len + 1) {
-        // Special case: signal value may be preceded by instance number
-        if ((argv)->a_type == A_FLOAT) {
-            id = (int)maxpd_atom_get_float(argv);
-            id_ptr = &id;
-            j = 1;
-        }
-#ifdef MAXMSP
-        else if ((argv)->a_type == A_LONG) {
-            id = (int)atom_getlong(argv);
-            id_ptr = &id;
-            j = 1;
-        }
-#endif
-        else {
-            POST(x, "Instance ID is not int or float!");
-            return;
-        }
-    }
     if (argc == 2 && (argv + 1)->a_type == A_SYM) {
         if ((argv)->a_type == A_FLOAT) {
             id = (int)atom_getfloat(argv);
@@ -708,15 +685,36 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
         else if ((argv)->a_type == A_LONG) {
             id = (int)atom_getlong(argv);
         }
+        else
+            return;
 #endif
         if (maxpd_atom_strcmp(argv+1, "release") == 0)
             mpr_sig_release_inst(sig, id);
-    }
-    else if (argc - j != len)
         return;
-    if (type == 'i') {
+    }
+
+    if (argc == len + 1) {
+        // Special case: signal value may be preceded by instance number
+        if ((argv)->a_type == A_FLOAT) {
+            id = (int)maxpd_atom_get_float(argv);
+            j = 1;
+        }
+#ifdef MAXMSP
+        else if ((argv)->a_type == A_LONG) {
+            id = (int)atom_getlong(argv);
+            j = 1;
+        }
+#endif
+        else {
+            POST(x, "Instance ID is not int or float!");
+            return;
+        }
+    }
+    else if (argc != len)
+        return;
+    if (MPR_INT32 == type) {
         int payload[len];
-        for (i = 0; i < argc; i++) {
+        for (i = 0; i < len; i++) {
             if ((argv + i + j)->a_type == A_FLOAT)
                 payload[i] = (int)atom_getfloat(argv + i + j);
 #ifdef MAXMSP
@@ -725,12 +723,11 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
         }
         //update signal
-        maybe_start_queue(x);
-        mpr_sig_set_value(sig, id_ptr, len, MPR_INT32, payload);
+        mpr_sig_set_value(sig, id, len, MPR_INT32, payload);
     }
-    else if (type == 'f') {
+    else if (MPR_FLT == type) {
         float payload[len];
-        for (i = 0; i < argc; i++) {
+        for (i = 0; i < len; i++) {
             if ((argv + i + j)->a_type == A_FLOAT)
                 payload[i] = atom_getfloat(argv + i + j);
 #ifdef MAXMSP
@@ -739,8 +736,7 @@ static void mapperobj_anything(t_mapper *x, t_symbol *s, int argc, t_atom *argv)
 #endif
         }
         //update signal
-        maybe_start_queue(x);
-        mpr_sig_set_value(sig, id_ptr, len, MPR_FLT, payload);
+        mpr_sig_set_value(sig, id, len, MPR_FLT, payload);
     }
     else {
         return;
@@ -765,15 +761,25 @@ static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
             }
             if (val) {
                 int i;
-                int *v = (int*)val;
 
                 if (len > (MAX_LIST-1)) {
                     POST(x, "Maximum list length is %i!", MAX_LIST-1);
                     len = MAX_LIST-1;
                 }
-
-                for (i = 0; i < len; i++)
-                    maxpd_atom_set_int(x->buffer + i + poly, v[i]);
+#ifdef MAXMSP
+                if (MPR_INT32 == type) {
+                    int *v = (int*)val;
+                    for (i = 0; i < len; i++)
+                        maxpd_atom_set_int(x->buffer + i + poly, v[i]);
+                }
+                else if (MPR_FLT == type) {
+#endif
+                    float *v = (float*)val;
+                    for (i = 0; i < len; i++)
+                        maxpd_atom_set_float(x->buffer + i + poly, v[i]);
+#ifdef MAXMSP
+                }
+#endif
                 outlet_anything(x->outlet1, name, len + poly, x->buffer);
             }
             else if (poly) {
@@ -1038,7 +1044,13 @@ static void mapperobj_register_signals(t_mapper *x) {
 static void mapperobj_poll(t_mapper *x)
 {
     int count = 10;
+#ifdef MAXMSP
+    critical_enter(0);
+#endif
     while(count-- && mpr_dev_poll(x->device, 0)) {};
+#ifdef MAXMSP
+    critical_exit(0);
+#endif
     if (!x->ready) {
         if (mpr_dev_get_is_ready(x->device)) {
             POST(x, "Joining mapping network as '%s'",
@@ -1050,10 +1062,6 @@ static void mapperobj_poll(t_mapper *x)
             mapperobj_print_properties(x);
 #endif
         }
-    }
-    else if (x->updated) {
-//        mpr_dev_send_queue(x->device, x->timetag);
-        x->updated = 0;
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
 }
@@ -1082,15 +1090,6 @@ static void mapperobj_learn(t_mapper *x, t_symbol *s,
                 POST(x, "Learning mode on.");
             }
         }
-    }
-}
-
-static void maybe_start_queue(t_mapper *x)
-{
-    if (!x->updated) {
-        mpr_time_set(&x->timetag, MPR_NOW);
-//        mpr_dev_start_queue(x->device, x->timetag);
-        x->updated = 1;
     }
 }
 

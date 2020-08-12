@@ -11,14 +11,15 @@ Hopefully in the near future the new bindings will also be adapted for Pure Data
 
 This software is licensed under the GNU Lesser Public General License version 2.1 or later; see the attached file COPYING for details, which should be included in this download.
 
-To build, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo <= v0.26 is not sufficient, as libmapper depends on new functionality in the library.
+To build, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library.
 
 On OSX you can build all the binaries by running the script `package-osx.sh` from the command-line.
 
 ## Acknowledgements
 
-Development of this software was mainly supported by the [Input Devices and Music Interaction Laboratory][3] at McGill University.
+Development of this software was supported by the [Input Devices and Music Interaction Laboratory][3] at McGill University and the [Graphics and Experiential Media (GEM) Lab][4] at Dalhousie University.
 
 [1]: http://github.com/libmapper/libmapper
 [2]: http://github.com/radarsat1/liblo
 [3]: http://idmil.org/software/libmapper
+[4]: https://gem.cs.dal.ca/

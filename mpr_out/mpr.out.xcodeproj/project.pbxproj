@@ -201,7 +201,7 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					/usr/local/lib/liblo.dylib,
 					"-lmx",
-					/usr/local/lib/libmpr.dylib,
+					/usr/local/lib/libmapper.dylib,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.mpr.out;
 				PRODUCT_NAME = mpr.out;

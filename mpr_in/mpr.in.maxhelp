@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 688.0, 251.0, 616.0, 443.0 ],
+		"rect" : [ 65.0, 238.0, 616.0, 443.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -120,7 +120,8 @@
 									"id" : "obj-6",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
-									"numoutlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 315.0, 285.0, 22.0 ],
 									"style" : "",
 									"text" : "mpr.in frequency f @unit Hz @min 20 @max 20000"
@@ -177,8 +178,9 @@
 									"fontsize" : 12.0,
 									"id" : "obj-21",
 									"maxclass" : "newobj",
-									"numinlets" : 0,
-									"numoutlets" : 0,
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 135.0, 285.0, 22.0 ],
 									"style" : "",
 									"text" : "mpr.in frequency f @unit Hz @min 20 @max 20000"
@@ -248,9 +250,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-13",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
+					"numinlets" : 1,
 					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"outlettype" : [ "list" ],
 					"patching_rect" : [ 120.0, 135.0, 70.0, 22.0 ],
 					"style" : "",
 					"text" : "mpr.in bar i"
@@ -279,9 +281,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-1",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
+					"numinlets" : 1,
 					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"outlettype" : [ "list" ],
 					"patching_rect" : [ 30.0, 135.0, 70.0, 22.0 ],
 					"style" : "",
 					"text" : "mpr.in foo f"
@@ -386,8 +388,9 @@
 					"fontsize" : 12.0,
 					"id" : "obj-6",
 					"maxclass" : "newobj",
-					"numinlets" : 0,
-					"numoutlets" : 0,
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "list" ],
 					"patching_rect" : [ 30.0, 389.0, 69.0, 22.0 ],
 					"style" : "",
 					"text" : "mpr.device"
@@ -419,7 +422,7 @@
 					"id" : "obj-64",
 					"lockeddragscroll" : 0,
 					"maxclass" : "bpatcher",
-					"name" : "logolink.maxpat",
+					"name" : "mpr.logolink.maxpat",
 					"numinlets" : 0,
 					"numoutlets" : 0,
 					"offset" : [ 0.0, 0.0 ],
@@ -532,13 +535,7 @@
 
 			}
  ],
-		"dependency_cache" : [ 			{
-				"name" : "logolink.maxpat",
-				"patcherrelativepath" : ".",
-				"type" : "JSON",
-				"implicit" : 1
-			}
- ],
+		"dependency_cache" : [],
 		"autosave" : 0
 	}
 

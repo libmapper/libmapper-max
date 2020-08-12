@@ -191,7 +191,7 @@
 				HEADER_SEARCH_PATHS = (
 					/Developer/Headers/FlatCarbon,
 					"/usr/local/include/**",
-					"$(C74SUPPORT)/max-includes",
+					"$(C74SUPPORT)/max-includes/**",
 				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "";
@@ -201,7 +201,7 @@
 					"$(C74_SYM_LINKER_FLAGS)",
 					/usr/local/lib/liblo.dylib,
 					"-lmx",
-					/usr/local/lib/libmpr.dylib,
+					/usr/local/lib/libmapper.dylib,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.idmil.mpr.in;
 				PRODUCT_NAME = mpr.in;
