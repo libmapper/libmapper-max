@@ -3,12 +3,12 @@
 // a maxmsp and puredata external encapsulating the functionality of a
 // libmpr "device", allowing name and metadata to be set
 // http://www.libmapper.org
-// Joseph Malloch, IDMIL 2013
+// Joseph Malloch, 2013-2020
 //
-// This software was written in the Input Devices and Music Interaction
-// Laboratory at McGill University in Montreal, and is copyright those
-// found in the AUTHORS file.  It is licensed under the GNU Lesser Public
-// General License version 2.1 or later.  Please see COPYING for details.
+// This software was written in the Graphics and Experiential Media (GEM) Lab at Dalhousie
+// University in Halifax and the Input Devices and Music Interaction Laboratory (IDMIL) at McGill
+// University in Montreal, and is copyright those found in the AUTHORS file.  It is licensed under
+// the GNU Lesser Public General License version 2.1 or later.  Please see COPYING for details.
 //
 
 // *********************************************************
@@ -50,11 +50,17 @@ typedef struct _mpr_device
     int                 throttle;
 } t_mpr_device;
 
+typedef struct
+{
+    t_object ob;
+    void *outlet;
+} *sig_obj;
+
 typedef struct _mpr_ptrs
 {
-    t_mpr_device        *home;
     int                 num_objs;
     t_object            **objs;
+    t_mpr_device        *home;
 } t_mpr_ptrs;
 
 // *********************************************************
@@ -349,8 +355,7 @@ int mpr_device_attach(t_mpr_device *x)
     }
 
     // walk down the patcher hierarchy checking if there is a downstream mpr.device object
-    object_method(x->patcher, gensym("iterate"), check_downstream, (void *)x,
-                  PI_DEEP, &result);
+    object_method(x->patcher, gensym("iterate"), check_downstream, (void *)x, PI_DEEP, &result);
     if (result) {
         object_post((t_object *)x, "error: found mpr.device object in parent patcher!");
         return 1;
@@ -367,8 +372,7 @@ int mpr_device_attach(t_mpr_device *x)
     object_attach_byptr_register(x, x->ht, CLASS_NOBOX);
 
     // add downstream mpr.in and mpr.out objects to hashtable
-    object_method(x->patcher, gensym("iterate"), add_downstream, (void *)x,
-                  PI_DEEP, &result);
+    object_method(x->patcher, gensym("iterate"), add_downstream, (void *)x, PI_DEEP, &result);
 
     // call a method on every object in the hash table
     hashtab_funall(x->ht, (method)mpr_device_attach_obj, x);
@@ -379,51 +383,49 @@ int mpr_device_attach(t_mpr_device *x)
 static void mpr_device_add_signal(t_mpr_device *x, t_object *obj)
 {
     mpr_sig sig = NULL;
-    if (obj) {
-        t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
-        const char *name = temp->s_name;
-        char type = object_attr_getchar(obj, gensym("sig_type"));
-        long length = object_attr_getlong(obj, gensym("sig_length"));
-        mpr_dir dir = 0;
+    t_symbol *temp = object_attr_getsym(obj, gensym("sig_name"));
+    const char *name = temp->s_name;
+    char type = object_attr_getchar(obj, gensym("sig_type"));
+    long length = object_attr_getlong(obj, gensym("sig_length"));
+    mpr_dir dir = 0;
 
-        if (object_classname(obj) == gensym("mpr.out"))
-            dir = MPR_DIR_OUT;
-        else if (object_classname(obj) == gensym("mpr.in"))
-            dir = MPR_DIR_IN;
-        else
-            return;
+    if (object_classname(obj) == gensym("mpr.out"))
+        dir = MPR_DIR_OUT;
+    else if (object_classname(obj) == gensym("mpr.in"))
+        dir = MPR_DIR_IN;
+    else
+        return;
 
-        mpr_list list = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
-        list = mpr_list_filter(list, MPR_PROP_NAME, NULL, 1, MPR_STR, name, MPR_OP_EQ);
-        if (list && (sig = *list)) {
-            // another max object associated with this signal exists
-            t_mpr_ptrs *ptrs = (t_mpr_ptrs *)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
-            ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
-            ptrs->objs[ptrs->num_objs] = obj;
-            ptrs->num_objs++;
-        }
-        else {
-            t_mpr_ptrs *ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
-            ptrs->home = x;
-            ptrs->objs = (t_object **)malloc(sizeof(t_object *));
-            ptrs->num_objs = 1;
-            ptrs->objs[0] = obj;
-            sig = mpr_sig_new(x->device, dir, name, length, type, 0, 0, 0,
-                              NULL, mpr_device_sig_handler, MPR_SIG_ALL);
-            mpr_obj_set_prop(sig, MPR_PROP_DATA, NULL, 1, MPR_PTR, ptrs, 0);
-        }
-        //output new numOutputs/numInputs
-        atom_setlong(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, dir)));
-        if (dir == MPR_DIR_OUT)
-            outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
-        else
-            outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
-
-        atom_setobj(x->buffer, (void *)x);
-        object_attr_setvalueof(obj, gensym("dev_obj"), 1, x->buffer);
-        atom_setobj(x->buffer, (void *)sig);
-        object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
+    mpr_list list = mpr_dev_get_sigs(x->device, MPR_DIR_ANY);
+    list = mpr_list_filter(list, MPR_PROP_NAME, NULL, 1, MPR_STR, name, MPR_OP_EQ);
+    if (list && (sig = *list)) {
+        // another max object associated with this signal exists
+        t_mpr_ptrs *ptrs = (t_mpr_ptrs *)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
+        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
+        ptrs->objs[ptrs->num_objs] = obj;
+        ptrs->num_objs++;
     }
+    else {
+        t_mpr_ptrs *ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
+        ptrs->home = x;
+        ptrs->objs = (t_object **)malloc(sizeof(t_object *));
+        ptrs->num_objs = 1;
+        ptrs->objs[0] = obj;
+        sig = mpr_sig_new(x->device, dir, name, length, type, 0, 0, 0,
+                          NULL, mpr_device_sig_handler, MPR_SIG_ALL);
+        mpr_obj_set_prop(sig, MPR_PROP_DATA, NULL, 1, MPR_PTR, ptrs, 0);
+    }
+    //output new numOutputs/numInputs
+    atom_setlong(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, dir)));
+    if (dir == MPR_DIR_OUT)
+        outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
+    else
+        outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
+
+    atom_setobj(x->buffer, (void *)x);
+    object_attr_setvalueof(obj, gensym("dev_obj"), 1, x->buffer);
+    atom_setobj(x->buffer, (void *)sig);
+    object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
 }
 
 static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj)
@@ -522,12 +524,13 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                                    mpr_time time)
 {
     t_mpr_ptrs *ptrs = (void*)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
+    t_mpr_ptrs *inst_ptrs = 0;
     t_mpr_device *x = ptrs->home;
-    t_object *obj = NULL;
+
     int i;
 
     if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
-        obj = (t_object *)mpr_sig_get_inst_data(sig, inst);
+        inst_ptrs = (t_mpr_ptrs*)mpr_sig_get_inst_data(sig, inst);
     }
 
     switch (evt) {
@@ -549,30 +552,34 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                         atom_setfloat(x->buffer + i, vf[i]);
                 }
 
-                if (obj) {
-                    outlet_data(obj->o_outlet, type, len, x->buffer);
+                if (inst_ptrs) {
+                    for (i = 0; i < inst_ptrs->num_objs; i++)
+                        outlet_data(((sig_obj)inst_ptrs->objs[i])->outlet, type, len, x->buffer);
                 }
                 else {
                     for (i=0; i<ptrs->num_objs; i++)
                         outlet_data(ptrs->objs[i]->o_outlet, type, len, x->buffer);
                 }
             }
-            else if (obj) {
+            else if (inst_ptrs) {
                 atom_set_string(x->buffer, "release");
                 atom_set_string(x->buffer+1, "upstream");
-                outlet_list(obj->o_outlet, NULL, 2, x->buffer);
+                for (i = 0; i < inst_ptrs->num_objs; i++)
+                    outlet_list(((sig_obj)inst_ptrs->objs[i])->outlet, NULL, 2, x->buffer);
             }
             break;
         }
         case MPR_SIG_REL_UPSTRM:
             atom_set_string(x->buffer, "release");
             atom_set_string(x->buffer+1, "upstream");
-            outlet_list(obj->o_outlet, NULL, 2, x->buffer);
+            for (i = 0; i < inst_ptrs->num_objs; i++)
+                outlet_list(((sig_obj)inst_ptrs->objs[i])->outlet, NULL, 2, x->buffer);
             break;
         case MPR_SIG_REL_DNSTRM:
             atom_set_string(x->buffer, "release");
             atom_set_string(x->buffer+1, "downstream");
-            outlet_list(obj->o_outlet, NULL, 2, x->buffer);
+            for (i = 0; i < inst_ptrs->num_objs; i++)
+                outlet_list(((sig_obj)inst_ptrs->objs[i])->outlet, NULL, 2, x->buffer);
             break;
         case MPR_SIG_INST_OFLW: {
             atom_setlong(x->buffer, inst);

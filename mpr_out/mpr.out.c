@@ -3,12 +3,12 @@
 // a maxmsp and puredata external encapsulating the functionality of a
 // libmapper output signal, allowing name and metadata to be set
 // http://www.libmapper.org
-// Joseph Malloch, IDMIL 2013
+// Joseph Malloch, 2013-2020
 //
-// This software was written in the Input Devices and Music Interaction
-// Laboratory at McGill University in Montreal, and is copyright those
-// found in the AUTHORS file.  It is licensed under the GNU Lesser Public
-// General License version 2.1 or later.  Please see COPYING for details.
+// This software was written in the Graphics and Experiential Media (GEM) Lab at Dalhousie
+// University in Halifax and the Input Devices and Music Interaction Laboratory (IDMIL) at McGill
+// University in Montreal, and is copyright those found in the AUTHORS file.  It is licensed under
+// the GNU Lesser Public General License version 2.1 or later.  Please see COPYING for details.
 //
 
 // *********************************************************
@@ -36,6 +36,7 @@
 typedef struct _mpr_out
 {
     t_object            ob;
+    void                *outlet;
     t_symbol            *sig_name;
     long                sig_length;
     char                sig_type;
@@ -43,7 +44,6 @@ typedef struct _mpr_out
     mpr_sig             sig_ptr;
     long                is_instanced;
     mpr_id              instance_id;
-    void                *outlet;
     t_symbol            *myobjname;
     t_object            *patcher;
     t_hashtab           *ht;
@@ -52,6 +52,12 @@ typedef struct _mpr_out
     int                 length;
     char                type;
 } t_mpr_out;
+
+typedef struct _mpr_ptrs
+{
+    int                 num_objs;
+    t_object            **objs;
+} t_mpr_ptrs;
 
 // *********************************************************
 // -(function prototypes)-----------------------------------
@@ -183,6 +189,32 @@ static void *mpr_out_new(t_symbol *s, int argc, t_atom *argv)
 // -(free)--------------------------------------------------
 static void mpr_out_free(t_mpr_out *x)
 {
+    if (x->is_instanced) {
+        // need to remove self from instance user_data
+        t_mpr_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
+        if (ptrs && ptrs->num_objs > 0) {
+            int i, found = 0;
+            for (i = 0; i < ptrs->num_objs; i++) {
+                if (found) {
+                    ptrs->objs[i-1] = ptrs->objs[i];
+                }
+                else if (ptrs->objs[i] == (void*)x) {
+                    found = 1;
+                }
+            }
+            if (found) {
+                --ptrs->num_objs;
+                if (ptrs->num_objs <= 0) {
+                    // also free struct
+                    free(ptrs);
+                    mpr_sig_set_inst_data(x->sig_ptr, x->instance_id, NULL);
+                }
+                else {
+                    ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs) * sizeof(t_object *));
+                }
+            }
+        }
+    }
     remove_from_hashtab(x);
     if (x->args)
         object_free(x->args);
@@ -325,13 +357,27 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
                 i += length;
                 continue;
             }
-            /* Remove the default signal instance (0) if it exists. Since the user
-             * may have properly added an instance 0, we will check for user_data. */
-            void *data = mpr_sig_get_inst_data(x->sig_ptr, 0);
-            if (!data)
+            if (!x->is_instanced) {
+                /* Set use_inst property to True. */
+                int one = 1;
+                mpr_obj_set_prop(x->sig_ptr, MPR_PROP_USE_INST, NULL, 1, MPR_BOOL, &one, 1);
+                /* Remove the default signal instance (0). */
                 mpr_sig_remove_inst(x->sig_ptr, 0);
-            x->is_instanced = 1;
-            mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&x);
+                x->is_instanced = 1;
+            }
+            t_mpr_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
+            if (!ptrs) {
+                ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
+                ptrs->objs = (t_object **)malloc(sizeof(t_object *));
+                ptrs->num_objs = 1;
+                ptrs->objs[0] = (void*)x;
+                mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&ptrs);
+            }
+            else {
+                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
+                ptrs->objs[ptrs->num_objs] = (void*)x;
+                ptrs->num_objs++;
+            }
         }
         else if (   strcmp(prop_name, "minimum") == 0 || strcmp(prop_name, "min") == 0
                  || strcmp(prop_name, "maximum") == 0 || strcmp(prop_name, "max") == 0) {
@@ -561,13 +607,27 @@ t_max_err mpr_out_instance_get(t_mpr_out *x, t_object *attr, long *argc, t_atom 
 t_max_err mpr_out_instance_set(t_mpr_out *x, t_object *attr, long argc, t_atom *argv)
 {
     x->instance_id = atom_coerce_int(argv);
-    /* Remove the default signal instance (0) if it exists. Since the user
-     * may have properly added an instance 0, we will check for user_data. */
-    void *data = mpr_sig_get_inst_data(x->sig_ptr, 0);
-    if (!data)
+    if (!x->is_instanced) {
+        /* Set use_inst property to True. */
+        int one = 1;
+        mpr_obj_set_prop(x->sig_ptr, MPR_PROP_USE_INST, NULL, 1, MPR_BOOL, &one, 1);
+        /* Remove the default signal instance (0). */
         mpr_sig_remove_inst(x->sig_ptr, 0);
-    x->is_instanced = 1;
-    mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&x);
+        x->is_instanced = 1;
+    }
+    t_mpr_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
+    if (!ptrs) {
+        ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
+        ptrs->objs = (t_object **)malloc(sizeof(t_object *));
+        ptrs->num_objs = 1;
+        ptrs->objs[0] = (void*)x;
+        mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&ptrs);
+    }
+    else {
+        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
+        ptrs->objs[ptrs->num_objs] = (void*)x;
+        ptrs->num_objs++;
+    }
     return 0;
 }
 
