@@ -476,34 +476,52 @@ static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj)
 // -(print properties)--------------------------------------
 static void mpr_device_print_properties(t_mpr_device *x)
 {
-    if (x->ready) {
-        //output name
-        atom_set_string(x->buffer, mpr_obj_get_prop_as_str(x->device, MPR_PROP_NAME, NULL));
-        outlet_anything(x->outlet, gensym("name"), 1, x->buffer);
+    if (!x->ready)
+        return;
 
-        //output interface
-        atom_set_string(x->buffer, mpr_graph_get_interface(x->graph));
-        outlet_anything(x->outlet, gensym("interface"), 1, x->buffer);
-
-        //output IP
-        atom_set_string(x->buffer, mpr_graph_get_address(x->graph));
-        outlet_anything(x->outlet, gensym("IP"), 1, x->buffer);
-
-        //output port
-        atom_setlong(x->buffer, mpr_obj_get_prop_as_int32(x->device, MPR_PROP_PORT, NULL));
-        outlet_anything(x->outlet, gensym("port"), 1, x->buffer);
-
-        //output numInputs
-        atom_setlong(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_IN)));
-        outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
-
-        //output numOutputs
-        atom_setlong(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, MPR_DIR_OUT)));
-        outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
-
-        //output throttle
-        atom_setlong(x->buffer, x->throttle);
-        outlet_anything(x->outlet, gensym("throttle"), 1, x->buffer);
+    // code below assumes homogeneous types
+    int i, j, len, numprops = mpr_obj_get_num_props(x->device, 0);
+    const char *key;
+    mpr_type type;
+    const void *val;
+    mpr_prop prop;
+    for (i = 0; i < numprops; i++) {
+        prop = mpr_obj_get_prop_by_idx(x->device, i, &key, &len, &type, &val, NULL);
+        if (MPR_PROP_UNKNOWN == prop || !key || !val)
+            continue;
+        switch (type) {
+            case MPR_STR:
+                if (len == 1)
+                    atom_set_string(x->buffer, (char*)val);
+                else {
+                    for (j = 0; j < len; j++)
+                        atom_set_string(x->buffer + j, ((char**)val)[j]);
+                }
+                break;
+            case MPR_INT32:
+            case MPR_BOOL:
+                for (j = 0; j < len; j++)
+                    atom_setlong(x->buffer + j, ((int*)val)[j]);
+                break;
+            case MPR_FLT:
+            case MPR_DBL:
+                for (j = 0; j < len; j++)
+                    atom_setfloat(x->buffer + j, ((float*)val)[j]);
+                break;
+            case MPR_INT64: {
+                // Max does not support int64 so we will print as hex
+                char tmp[32];
+                for (j = 0; j < len; j++) {
+                    snprintf(tmp, 16, "%16llx", ((uint64_t*)val)[j]);
+                    atom_set_string(x->buffer + j, tmp);
+                }
+                break;
+            }
+            default:
+//                post("can't handle property type %c for prop %s", type, key);
+                continue;
+        }
+        outlet_anything(x->outlet, gensym(key), len, x->buffer);
     }
 }
 
