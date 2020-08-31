@@ -17,12 +17,9 @@ cp COPYING ./dist/
 cp README ./dist/
 cp ./maxdist/mpr-objectmappings.txt ./dist/Max/Mapper/init/
 cp ./maxdist/package-info.json ./dist/Max/Mapper/
-cp ./maxdist/logolink.maxpat ./dist/Max/Mapper/help/
+cp -r ./maxdist/docs ./dist/Max/Mapper/
+cp -r ./maxdist/examples ./dist/Max/Mapper/
 cp ./icons/icon.png ./dist/Max/Mapper/
-cp ./test/instanced_sliders.maxpat ./dist/Max/Mapper/extra/
-cp ./test/slider_instance.maxpat ./dist/Max/Mapper/extra/
-cp ./test/instanced_pwm.maxpat ./dist/Max/Mapper/extra/
-cp ./test/pwm_instance.maxpat ./dist/Max/Mapper/extra/
 
 echo building mapper.mxo...
 cd mapper/

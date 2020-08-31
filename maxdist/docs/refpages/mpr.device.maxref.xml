@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mpr.device" module="" category="libmapper">
+	<digest>
+		A Max wrapper for a libmapper device.
+	</digest>
+	<description>
+		The <o>mpr.device</o> object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Joseph Malloch</metadata>
+		<metadata name="copyright">© 2006 - 2020 Joseph Malloch</metadata>
+		<metadata name="version">1.0</metadata>
+        <metadata name="tag">libmapper</metadata>
+        <metadata name="tag">GEM Lab</metadata>
+        <metadata name="tag">IDMIL</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>
+                Messages in
+			</digest>
+			<description>
+			</description>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="OUTLET_TYPE">
+			<digest>
+                Received messages
+			</digest>
+			<description>
+			</description>
+		</outlet>
+	</outletlist>
+
+    <!--ATTRIBUTES-->
+    <attributelist>
+    </attributelist>
+
+    <!--MESSAGES-->
+    <methodlist>
+        <method name="int">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                int
+            </description>
+        </method>
+        <method name="float">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                float
+            </description>
+        </method>
+        <method name="symbol">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                symbol
+            </description>
+        </method>
+        <method name="list">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                list
+            </description>
+        </method>
+    </methodlist>
+
+	<!--SEEALSO-->
+	<seealsolist>
+        <seealso name="mpr.in" />
+        <seealso name="mpr.out" />
+        <seealso name="mapper" />
+	</seealsolist>
+
+	<!--MENU ITEMS-->
+	<menuitemlist>
+	</menuitemlist>
+
+	<!--EXAMPLE-->
+	<examplelist>
+	</examplelist>
+
+
+</c74object>
+

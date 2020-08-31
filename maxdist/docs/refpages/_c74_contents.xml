@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<root>
+<refpage name='mapper.maxref.xml'/>
+<refpage name='mpr.device.maxref.xml'/>
+<refpage name='mpr.in.maxref.xml'/>
+<refpage name='mpr.out.maxref.xml'/>
+<refpage name='oscmulticast.maxref.xml'/>
+</root>

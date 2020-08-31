@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="oscmulticast" module="" category="libmapper">
+	<digest>
+		OSC over multicast
+	</digest>
+	<description>
+		Sends and receives Open Sound Control over multicast IP. Similar to the mxj objects net.multi.send/recv but doesn't garble OSC messages.
+	</description>
+
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Joseph Malloch</metadata>
+		<metadata name="copyright">© 2006 - 2020 Joseph Malloch</metadata>
+		<metadata name="version">1.0</metadata>
+        <metadata name="tag">libmapper</metadata>
+        <metadata name="tag">GEM Lab</metadata>
+        <metadata name="tag">IDMIL</metadata>
+	</metadatalist>
+
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>
+                Messages in
+			</digest>
+			<description>
+			</description>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="OUTLET_TYPE">
+			<digest>
+                Received messages
+			</digest>
+			<description>
+			</description>
+		</outlet>
+	</outletlist>
+
+    <!--ATTRIBUTES-->
+    <attributelist>
+    </attributelist>
+
+    <!--MESSAGES-->
+    <methodlist>
+        <method name="int">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                int
+            </description>
+        </method>
+        <method name="float">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                float
+            </description>
+        </method>
+        <method name="symbol">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                symbol
+            </description>
+        </method>
+        <method name="list">
+            <arglist>
+            </arglist>
+            <digest>
+            </digest>
+            <description>
+                list
+            </description>
+        </method>
+    </methodlist>
+
+	<!--SEEALSO-->
+	<seealsolist>
+	</seealsolist>
+
+	<!--MENU ITEMS-->
+	<menuitemlist>
+	</menuitemlist>
+
+	<!--EXAMPLE-->
+	<examplelist>
+	</examplelist>
+
+
+</c74object>
+
