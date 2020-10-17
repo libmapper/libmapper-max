@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 100.0, 490.0, 555.0, 269.0 ],
+		"rect" : [ 100.0, 490.0, 322.0, 269.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -37,40 +37,6 @@
 		"style" : "",
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-4",
-					"linecount" : 3,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 320.0, 75.0, 85.0, 47.0 ],
-					"style" : "",
-					"text" : "For more information click here ->"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"bgmode" : 0,
-					"border" : 0,
-					"clickthrough" : 0,
-					"enablehscroll" : 0,
-					"enablevscroll" : 0,
-					"id" : "obj-64",
-					"lockeddragscroll" : 0,
-					"maxclass" : "bpatcher",
-					"name" : "mpr.logolink.maxpat",
-					"numinlets" : 0,
-					"numoutlets" : 0,
-					"offset" : [ 0.0, 0.0 ],
-					"patching_rect" : [ 403.0, 12.5, 150.0, 155.5 ],
-					"viewvisibility" : 1
-				}
-
-			}
-, 			{
 				"box" : 				{
 					"columns" : 4,
 					"id" : "obj-2",
@@ -152,7 +118,22 @@
 
 			}
  ],
-		"dependency_cache" : [],
+		"dependency_cache" : [ 			{
+				"name" : "pwm_instance.maxpat",
+				"bootpath" : "~/Documents/Mappers/mapper-max-pd2/maxdist/examples",
+				"patcherrelativepath" : ".",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "mpr.device.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "mpr.in.mxo",
+				"type" : "iLaX"
+			}
+ ],
 		"autosave" : 0
 	}
 
