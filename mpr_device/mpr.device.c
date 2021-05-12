@@ -14,6 +14,10 @@
 // *********************************************************
 // -(Includes)----------------------------------------------
 
+#ifdef WIN32
+#define _WINSOCKAPI_ //for winsock1/2 conflicts
+#endif
+
 #include "ext.h"            // standard Max include, always required
 #include "ext_obex.h"       // required for new style Max object
 #include "ext_critical.h"
@@ -25,9 +29,10 @@
 #include <math.h>
 #ifndef WIN32
   #include <arpa/inet.h>
+  #include <unistd.h>
 #endif
 
-#include <unistd.h>
+
 
 #define INTERVAL 1
 #define MAX_LIST 256
@@ -96,6 +101,14 @@ static void atom_set_string(t_atom *a, const char *string);
 static void *mpr_device_class;
 
 // *********************************************************
+
+#ifdef WIN32
+void ext_main(void* r)
+{
+	main();
+}
+#endif
+
 // -(main)--------------------------------------------------
 int main(void)
 {
