@@ -13,6 +13,9 @@
 
 // *********************************************************
 // -(Includes)----------------------------------------------
+#ifdef WIN32
+#define _WINSOCKAPI_ //for winsock1/2 conflicts
+#endif
 
 #include "ext.h"            // standard Max include, always required
 #include "ext_obex.h"       // required for new style Max object
@@ -25,9 +28,9 @@
 #include <math.h>
 #ifndef WIN32
   #include <arpa/inet.h>
+  #include <unistd.h>
 #endif
 
-#include <unistd.h>
 
 #define MAX_LIST 256
 
@@ -90,6 +93,14 @@ static float atom_coerce_float(t_atom *a);
 static void *mpr_out_class;
 
 // *********************************************************
+
+#ifdef WIN32
+void ext_main(void *r)
+{
+	main();
+}
+#endif
+
 // -(main)--------------------------------------------------
 int main(void)
 {
@@ -114,7 +125,7 @@ int main(void)
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_out, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
 
-    CLASS_ATTR_LONG(c, "instance", 0, t_mpr_out, instance_id);
+    CLASS_ATTR_ATOM_LONG(c, "instance", 0, t_mpr_out, instance_id);
     CLASS_ATTR_ACCESSORS(c, "instance", mpr_out_instance_get, mpr_out_instance_set);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
@@ -389,23 +400,25 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
             }
             switch (x->sig_type) {
                 case 'i': {
-                    int val[x->sig_length];
+					int *val = malloc(x->sig_length * sizeof(int));
                     for (j = 0, k = 0; j < x->sig_length; j++, k++) {
                         if (k >= length)
                             k = 0;
                         val[j] = atom_coerce_int(argv + i + k);
                     }
                     mpr_obj_set_prop(x->sig_ptr, extremum, NULL, x->sig_length, MPR_INT32, val, 1);
+					free(val);
                     break;
                 }
                 case 'f': {
-                    float val[x->sig_length];
+                    float *val = malloc(x->sig_length * sizeof(float));
                     for (j = 0, k = 0; j < x->sig_length; j++, k++) {
                         if (k >= length)
                             k = 0;
                         val[j] = atom_coerce_float(argv + i + k);
                     }
                     mpr_obj_set_prop(x->sig_ptr, extremum, NULL, x->sig_length, MPR_FLT, val, 1);
+                    free(val);
                     break;
                 }
                 default:
@@ -420,25 +433,28 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
                         mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, 1, MPR_STR, value, 1);
                     }
                     else {
-                        const char *value[length];
+                        char *value = malloc(length);
                         for (j = 0; j < length; j++)
                             value[j] = atom_get_string(argv + i + j);
                         mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_STR, &value, 1);
+                        free(value);
                     }
                     break;
                 }
                 case A_FLOAT: {
-                    float value[length];
+                    float *value = malloc(length * sizeof(float));
                     for (j = 0; j < length; j++)
                         value[j] = atom_coerce_float(argv + i + j);
                     mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_FLT, value, 1);
+                    free(value);
                     break;
                 }
                 case A_LONG: {
-                    int value[length];
+                    int *value = malloc(length * sizeof(int));
                     for (j = 0; j < length; j++)
                         value[j] = atom_coerce_int(argv + i + j);
                     mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_INT32, value, 1);
+                    free(value);
                     break;
                 }
                 default:
@@ -529,7 +545,7 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
     }
 
     if (x->type == 'i') {
-        int payload[argc];
+        int *payload = malloc(argc * sizeof(int));
         value = &payload;
         for (i = 0; i < argc; i++) {
             if ((argv+i)->a_type == A_FLOAT)
@@ -538,6 +554,7 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
                 payload[i] = (int)atom_getlong(argv+i);
             else {
                 object_post((t_object *)x, "Illegal data type in list!");
+                free(payload);
                 return;
             }
         }
@@ -545,9 +562,10 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
         critical_enter(0);
         mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, value);
         critical_exit(0);
+        free(payload);
     }
     else if (x->type == 'f') {
-        float payload[argc];
+        float *payload = malloc(argc * sizeof(float));
         value = &payload;
         for (i = 0; i < argc; i++) {
             if ((argv+i)->a_type == A_FLOAT)
@@ -556,6 +574,7 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
                 payload[i] = (float)atom_getlong(argv+i);
             else {
                 object_post((t_object *)x, "Illegal data type in list!");
+                free(payload);
                 return;
             }
         }
@@ -563,6 +582,7 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
         critical_enter(0);
         mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, value);
         critical_exit(0);
+        free(payload);
     }
 }
 
