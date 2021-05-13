@@ -97,7 +97,7 @@ static void *mpr_out_class;
 #ifdef WIN32
 void ext_main(void *r)
 {
-	main();
+    main();
 }
 #endif
 
@@ -400,14 +400,14 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
             }
             switch (x->sig_type) {
                 case 'i': {
-					int *val = malloc(x->sig_length * sizeof(int));
+                    int *val = malloc(x->sig_length * sizeof(int));
                     for (j = 0, k = 0; j < x->sig_length; j++, k++) {
                         if (k >= length)
                             k = 0;
                         val[j] = atom_coerce_int(argv + i + k);
                     }
                     mpr_obj_set_prop(x->sig_ptr, extremum, NULL, x->sig_length, MPR_INT32, val, 1);
-					free(val);
+                    free(val);
                     break;
                 }
                 case 'f': {

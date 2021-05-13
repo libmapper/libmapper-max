@@ -105,7 +105,7 @@ static void *mpr_device_class;
 #ifdef WIN32
 void ext_main(void* r)
 {
-	main();
+    main();
 }
 #endif
 
@@ -270,57 +270,57 @@ static void mpr_device_free(t_mpr_device *x)
 void mpr_device_notify(t_mpr_device *x, t_symbol *s, t_symbol *msg, void *sender,
                        void *data)
 {
-	if (msg == gensym("hashtab_entry_new")) { // something arrived in the hashtab
-		t_symbol *key = (t_symbol *)data;
-		t_object *obj = NULL;
-		hashtab_lookup(sender, key, &obj);
+    if (msg == gensym("hashtab_entry_new")) { // something arrived in the hashtab
+        t_symbol *key = (t_symbol *)data;
+        t_object *obj = NULL;
+        hashtab_lookup(sender, key, &obj);
         if (obj) {
             mpr_device_add_signal(x, obj);
             object_attach_byptr(x, obj); // attach to object
         }
-	}
+    }
     else if (msg == gensym("hashtab_entry_free")) { // something left the hashtab
-		t_symbol *key = (t_symbol *)data;
-		t_object *obj = NULL;
+        t_symbol *key = (t_symbol *)data;
+        t_object *obj = NULL;
 
-		hashtab_lookup(sender, key, &obj);
-		if (obj) {
+        hashtab_lookup(sender, key, &obj);
+        if (obj) {
             mpr_device_remove_signal(x, obj);
-			object_detach_byptr(x, obj); // detach from it
+            object_detach_byptr(x, obj); // detach from it
         }
-	}
+    }
 }
 
 void mpr_device_detach_obj(t_hashtab_entry *e, void *arg)
 {
-	t_mpr_device *x = (t_mpr_device *)arg;
-	if (x) {
-		// detach from the object, it's going away...
+    t_mpr_device *x = (t_mpr_device *)arg;
+    if (x) {
+        // detach from the object, it's going away...
         atom_setobj(x->buffer, 0);
         object_attr_setvalueof(e->value, gensym("dev_obj"), 1, x->buffer);
         object_attr_setvalueof(e->value, gensym("sig_ptr"), 1, x->buffer);
-		object_detach_byptr(x, e->value);
-	}
+        object_detach_byptr(x, e->value);
+    }
 }
 
 void mpr_device_detach(t_mpr_device *x)
 {
-	if (x->ht) {
-		hashtab_funall(x->ht, (method)mpr_device_detach_obj, x);
+    if (x->ht) {
+        hashtab_funall(x->ht, (method)mpr_device_detach_obj, x);
         hashtab_methodall(x->ht, gensym("remove_from_hashtab"));
-		object_detach_byptr(x, x->ht); // detach from the hashtable
+        object_detach_byptr(x, x->ht); // detach from the hashtable
         hashtab_chuck(x->ht);
         object_obex_store(x->patcher, gensym("mprhash"), NULL);
-	}
+    }
 }
 
 void mpr_device_attach_obj(t_hashtab_entry *e, void *arg)
 {
-	t_mpr_device *x = (t_mpr_device *)arg;
-	if (x) {
-		// attach to the object to receive its notifications
-		object_attach_byptr(x, e->value);
-	}
+    t_mpr_device *x = (t_mpr_device *)arg;
+    if (x) {
+        // attach to the object to receive its notifications
+        object_attach_byptr(x, e->value);
+    }
 }
 
 long check_downstream(t_mpr_device *x, t_object *obj)
@@ -351,8 +351,8 @@ int mpr_device_attach(t_mpr_device *x)
     t_hashtab *ht = 0;
     long result = 0;
 
-	object_obex_lookup(x, gensym("#P"), &patcher); // get the object's patcher
-	if (!patcher)
+    object_obex_lookup(x, gensym("#P"), &patcher); // get the object's patcher
+    if (!patcher)
         return 1;
 
     x->patcher = patcher;
