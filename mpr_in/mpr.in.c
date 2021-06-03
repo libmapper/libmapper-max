@@ -52,6 +52,10 @@ typedef struct _mpr_in
     t_object            *patcher;
     t_hashtab           *ht;
     t_atomarray         *args;
+    union {
+        int *ints;
+        float *floats;
+    } buffer;
     long                connect_state;
     int                 length;
     char                type;
@@ -183,6 +187,10 @@ static void *mpr_in_new(t_symbol *s, int argc, t_atom *argv)
             x->sig_length = 1;
             i = 2;
         }
+        if (x->sig_type == 'i')
+            x->buffer.ints = (int*)malloc(x->sig_length * sizeof(int));
+        else
+            x->buffer.floats = (float*)malloc(x->sig_length * sizeof(float));
 
         // we need to cache any arguments to add later
         x->args = atomarray_new(argc-i, argv+i);
@@ -227,6 +235,8 @@ static void mpr_in_free(t_mpr_in *x)
         }
     }
     remove_from_hashtab(x);
+    if (x->buffer.ints)
+        free(x->buffer.ints);
     if (x->args)
         object_free(x->args);
 }
@@ -532,57 +542,60 @@ static void mpr_in_float(t_mpr_in *x, double d)
 // -(set list input)----------------------------------------
 static void mpr_in_list(t_mpr_in *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i;
+    int i, j;
     void *value = 0;
 
     if (check_ptrs(x) || !argc)
         return;
 
     if (argc < x->length || (argc % x->length) != 0) {
-        object_post((t_object *)x, "Illegal list length (expected factor of %i)",
-                    x->length);
+        object_post((t_object *)x, "Illegal list length (expected factor of %i)", x->length);
         return;
     }
 
     if (x->type == 'i') {
-        int *payload = malloc(argc * sizeof(int));
-        value = &payload;
-        for (i = 0; i < argc; i++) {
-            if ((argv+i)->a_type == A_FLOAT)
-                payload[i] = (int)atom_getfloat(argv+i);
-            else if ((argv+i)->a_type == A_LONG)
-                payload[i] = (int)atom_getlong(argv+i);
-            else {
-                object_post((t_object *)x, "Illegal data type in list!");
-                free(payload);
-                return;
+        int *payload = x->buffer.ints;
+        for (i = 0, j = 0; i < x->sig_length; i++, j++) {
+            if (j >= argc)
+                j = 0;
+            switch ((argv+j)->a_type) {
+                case A_FLOAT:
+                    payload[i] = (int)atom_getfloat(argv+j);
+                    break;
+                case A_LONG:
+                    payload[i] = (int)atom_getlong(argv+j);
+                    break;
+                default:
+                    object_post((t_object *)x, "Illegal data type in list!");
+                    return;
             }
         }
         //update signal
         critical_enter(0);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, value);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, payload);
         critical_exit(0);
-        free(payload);
     }
     else if (x->type == 'f') {
-        float *payload = malloc(argc * sizeof(float));
-        value = &payload;
-        for (i = 0; i < argc; i++) {
-            if ((argv+i)->a_type == A_FLOAT)
-                payload[i] = atom_getfloat(argv+i);
-            else if ((argv+i)->a_type == A_LONG)
-                payload[i] = (float)atom_getlong(argv+i);
-            else {
-                object_post((t_object *)x, "Illegal data type in list!");
-                free(payload);
-                return;
+        float *payload = x->buffer.floats;
+        for (i = 0, j = 0; i < x->sig_length; i++) {
+            if (j >= argc)
+                j = 0;
+            switch ((argv+i)->a_type) {
+                case A_FLOAT:
+                    payload[i] = atom_getfloat(argv+i);
+                    break;
+                case A_LONG:
+                    payload[i] = (float)atom_getlong(argv+i);
+                    break;
+                default:
+                    object_post((t_object *)x, "Illegal data type in list!");
+                    return;
             }
         }
         //update signal
         critical_enter(0);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, value);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, payload);
         critical_exit(0);
-        free(payload);
     }
 }
 

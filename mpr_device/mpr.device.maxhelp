@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 665.0, 311.0, 616.0, 488.0 ],
+						"rect" : [ 0.0, 26.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -92,7 +92,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 285.0, 135.0, 255.0, 40.0 ],
-									"presentation_rect" : [ 263.0, 83.0, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "Clicking on these buttons edits the map. Try writing your own expression!"
 								}
@@ -106,7 +105,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 450.0, 180.0, 80.0, 22.0 ],
-									"presentation_rect" : [ 412.0, 119.0, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "y=(x*2)%127"
 								}
@@ -120,7 +118,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 332.0, 180.0, 30.0, 22.0 ],
-									"presentation_rect" : [ 299.0, 120.0, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "y=x"
 								}
@@ -134,7 +131,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 375.0, 180.0, 54.0, 22.0 ],
-									"presentation_rect" : [ 303.0, 120.0, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "y=127-x"
 								}
@@ -220,9 +216,8 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 60.0, 120.0, 60.0, 49.0 ],
-													"presentation_rect" : [ 182.0, 122.0, 0.0, 0.0 ],
 													"style" : "",
-													"text" : "/unmap $1/bar -> $1/foo"
+													"text" : "/unmap $1/foo -> $1/bar"
 												}
 
 											}
@@ -288,7 +283,6 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 30.0, 30.0, 30.0, 30.0 ],
-													"presentation_rect" : [ 329.0, 31.0, 0.0, 0.0 ],
 													"style" : ""
 												}
 
@@ -525,7 +519,6 @@
 									"outlettype" : [ "" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 45.0, 195.0, 180.0, 45.0 ],
-									"presentation_rect" : [ 44.0, 209.0, 0.0, 0.0 ],
 									"style" : ""
 								}
 
@@ -584,7 +577,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 270.0, 330.0, 315.0, 124.0 ],
+									"patching_rect" : [ 270.0, 330.0, 316.0, 124.0 ],
 									"style" : "",
 									"text" : "In a real mapping scenario this editing would likely be done using a mapping GUI such as WebMapper, and the source and destination signals could belong to devices in other Max patches or implemented in Pure Data, C/C++, Python, SuperCollider, etc. These devices could be located on other computers on your local network."
 								}
@@ -759,7 +752,6 @@
 					}
 ,
 					"patching_rect" : [ 315.0, 30.0, 66.0, 22.0 ],
-					"presentation_rect" : [ 314.0, 30.0, 0.0, 0.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -863,7 +855,7 @@
 									"numoutlets" : 4,
 									"outlettype" : [ "list", "", "", "" ],
 									"patching_rect" : [ 45.0, 255.0, 255.0, 195.0 ],
-									"rows" : 20,
+									"rows" : 15,
 									"selmode" : 0,
 									"selsync" : 0,
 									"vsync" : 0
@@ -1364,7 +1356,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 616.0, 488.0 ],
+						"rect" : [ 665.0, 311.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1423,7 +1415,7 @@
 									"numoutlets" : 4,
 									"outlettype" : [ "list", "", "", "" ],
 									"patching_rect" : [ 45.0, 240.0, 255.0, 225.0 ],
-									"rows" : 18,
+									"rows" : 13,
 									"selmode" : 0,
 									"selsync" : 0,
 									"vsync" : 0
