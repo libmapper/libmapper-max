@@ -12,6 +12,7 @@ add_definitions(
     -D_WINSOCK_DEPRECATED_NO_WARNINGS
     -DHAVE_WINSOCK2_H
     -DNODEFAULTLIB
+    -DMAXMSP
 )
 
 #############################################################
