@@ -48,6 +48,8 @@ Run the following to generate a solution, replacing your version's details:
 
 By now, you should have a Visual Studio solution in the ./build directory. Open the .sln and build the external project(s) of your choosing.
 
+Once built, copy the Max help files for each external to the output directory so that they're visible in Max. 
+
 ### Running
 
 To run the externals, you'll have to copy libmapper.dll, liblo.dll and zlibd.dll to the folder where Max is installed. This is usually in Program Files/Cycling '74/Max 8 by default.
