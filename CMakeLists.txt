@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.19)
 
-# Replace with local paths before building
-set(MAX_SDK_DIR "C:/Users/brady/Documents/GitHub/McGill/max-sdk/source/max-sdk-base")
-set(BUILD_DIR "C:/Users/brady/Documents/GitHub/McGill/libmapper/build")
-set(LIBLO_DIR "C:/Users/brady/Documents/GitHub/McGill/liblo")
+set(BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build")
+set(LIBMAPPER_DIR "${BUILD_DIR}/libmapper/libmapper-main")
+set(LIBMAPPER_BUILD_DIR "${LIBMAPPER_DIR}/build/Debug")
+set(LIBLO_DIR "${LIBMAPPER_DIR}/build/liblo/liblo-master")
 set(LIBLO_BUILD_DIR "${LIBLO_DIR}/cmake/build/Debug")
 set(LIBLO_INCLUDES "${LIBLO_DIR}/cmake/build;${LIBLO_DIR}")
-set(LIBMAPPER_DIR "C:/Users/brady/Documents/GitHub/McGill/libmapper/")
-set(LIBMAPPER_BUILD_DIR "${LIBMAPPER_DIR}/build/Debug")
-set(C74_SUPPORT_DIR "C:/Users/brady/Documents/GitHub/McGill/max-sdk/source/max-sdk-base/c74support")
+set(MAX_SDK_DIR "${BUILD_DIR}/max-sdk/max-sdk/source/max-sdk-base")
+set(C74_SUPPORT_DIR "${MAX_SDK_DIR}/c74support")
 
 project(libmapper-max-externals)
 
