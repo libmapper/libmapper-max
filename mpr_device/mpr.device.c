@@ -560,7 +560,7 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
 
     int i;
 
-    if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
+    if (mpr_sig_get_num_inst(sig, MPR_STATUS_ANY) > 1) {
         inst_ptrs = (t_mpr_ptrs*)mpr_sig_get_inst_data(sig, inst);
     }
 

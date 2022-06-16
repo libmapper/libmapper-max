@@ -781,7 +781,7 @@ static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
     switch (evt) {
         case MPR_SIG_UPDATE: {
             int poly = 0;
-            if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
+            if (mpr_sig_get_num_inst(sig, MPR_STATUS_ANY) > 1) {
                 maxpd_atom_set_int(x->buffer.atoms, inst);
                 poly = 1;
             }
