@@ -11,9 +11,11 @@ Hopefully in the near future the new bindings will also be adapted for Pure Data
 
 This software is licensed under the GNU Lesser Public General License version 2.1 or later; see the attached file COPYING for details, which should be included in this download.
 
-To build, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library.
+To build on Windows, run `windows_build.ps1` from the command line or file explorer and the built externals will be in /build/Debug.
 
-On OSX you can build all the binaries by running the script `package-osx.sh` from the command-line.
+To build on OSX and Linux, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library.
+
+On OSX you can build all the binaries by running the script `package-osx.sh` from the command-line and the externals will be found in /dist/Max and dist/pd.
 
 ## Acknowledgements
 

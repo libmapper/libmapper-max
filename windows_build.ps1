@@ -22,10 +22,35 @@ if (!(Test-Path "$($scriptDir)/build/max-sdk/")) {
   rm max-sdk.zip
 }
 
+# Download the Pure Data and pd.build repos
+if (!(Test-Path "$($scriptDir)/build/pure-data/")) {
+  cd "$($scriptDir)/build"
+  Invoke-WebRequest https://github.com/pure-data/pure-data/archive/refs/tags/0.52-2.zip -OutFile pure-data.zip
+  Expand-Archive pure-data.zip pure-data
+  rm pure-data.zip
+}
+if (!(Test-Path "$($scriptDir)/build/pd.build/")) {
+  cd "$($scriptDir)/build"
+  Invoke-WebRequest https://github.com/pierreguillot/pd.build/archive/refs/heads/master.zip -OutFile pd.build.zip
+  Expand-Archive pd.build.zip pd.build
+  rm pd.build.zip
+}
+
 # Build the externals
 cd "$($scriptDir)/build"
 cmake ..
 cmake --build . --target all_build
+
+# Copy the help files over
+if (!(Test-Path "$($scriptDir)/build/Debug/help/")) {
+  cd "$($scriptDir)/build/Debug/"
+  mkdir help
+}
+cd $scriptDir
+cp ./mapper/mapper.maxhelp ./build/Debug/help/
+cp ./mpr_device/mpr.device.maxhelp ./build/Debug/help/
+cp ./mpr_in/mpr.in.maxhelp ./build/Debug/help/
+cp ./mpr_out/mpr.out.maxhelp ./build/Debug/help/
 
 Write-Host "Done: /build/Debug/ contains the built externals"
 Pause

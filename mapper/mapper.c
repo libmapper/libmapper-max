@@ -121,7 +121,7 @@ static void *mapperobj_class;
 // *********************************************************
 // -(main)--------------------------------------------------
 
-#ifdef WIN32
+#if defined(WIN32) && defined(MAXMSP)
 void ext_main(void *r)
 {
     main();
@@ -146,7 +146,7 @@ void ext_main(void *r)
         return 0;
     }
 #else
-    int mapper_setup(void)
+    void mapper_setup(void)
     {
         t_class *c;
         c = class_new(gensym("mapper"), (t_newmethod)mapperobj_new, (t_method)mapperobj_free,
@@ -158,7 +158,6 @@ void ext_main(void *r)
         class_addmethod(c,   (t_method)mapperobj_set,           gensym("set"),    A_GIMME, 0);
         class_addmethod(c,   (t_method)mapperobj_clear_signals, gensym("clear"),  A_GIMME, 0);
         mapperobj_class = c;
-        return 0;
     }
 #endif
 

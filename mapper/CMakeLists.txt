@@ -43,3 +43,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Liblo_LIB})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Libmapper_LIB})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/INCREMENTAL:NO")
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cmake-pd)

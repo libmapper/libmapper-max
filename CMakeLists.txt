@@ -9,7 +9,7 @@ set(LIBLO_INCLUDES "${LIBLO_DIR}/cmake/build;${LIBLO_DIR}")
 set(MAX_SDK_DIR "${BUILD_DIR}/max-sdk/max-sdk/source/max-sdk-base")
 set(C74_SUPPORT_DIR "${MAX_SDK_DIR}/c74support")
 
-project(libmapper-max-externals)
+project(mapper-max-pd-externals)
 
 set(Liblo_LIB ${LIBLO_BUILD_DIR}/liblo.lib)
 set(Libmapper_LIB ${LIBMAPPER_BUILD_DIR}/libmapper.lib)
