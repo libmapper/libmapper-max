@@ -29,12 +29,6 @@ if (!(Test-Path "$($scriptDir)/build/pure-data/")) {
   Expand-Archive pure-data.zip pure-data
   rm pure-data.zip
 }
-if (!(Test-Path "$($scriptDir)/build/pd.build/")) {
-  cd "$($scriptDir)/build"
-  Invoke-WebRequest https://github.com/pierreguillot/pd.build/archive/refs/heads/master.zip -OutFile pd.build.zip
-  Expand-Archive pd.build.zip pd.build
-  rm pd.build.zip
-}
 
 # Build the externals
 cd "$($scriptDir)/build"
