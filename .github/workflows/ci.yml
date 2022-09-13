@@ -1,0 +1,35 @@
+name: C/C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  MacOS-Latest:
+    runs-on: macOS-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: build externals
+      run:
+        ./package-osx.sh
+    - uses: actions/upload-artifact@v3
+      with:
+        name: max-pd-externals-macosx
+        path: dist
+
+  Windows-Latest:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: install dependencies
+      run:
+        ./windows_build.ps1
+    - uses: actions/upload-artifact@v3
+      with:
+        name: max-externals-win64
+        path: dist

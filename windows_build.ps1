@@ -3,14 +3,17 @@ $scriptDir = Get-Location
 if (!(Test-Path "$($scriptDir)/build/")) {
   mkdir build
 }
+if (!(Test-Path "$($scriptDir)/dist/")) {
+  mkdir dist
+}
 
 # Download and install libmapper
 if (!(Test-Path "$($scriptDir)/build/libmapper/")) {
   cd "$($scriptDir)/build"
-  Invoke-WebRequest https://github.com/libmapper/libmapper/archive/refs/heads/main.zip -OutFile libmapper.zip
+  Invoke-WebRequest https://github.com/libmapper/libmapper/archive/refs/tags/2.3.zip -OutFile libmapper.zip
   Expand-Archive libmapper.zip libmapper
   rm libmapper.zip
-  cd libmapper/libmapper-main
+  cd libmapper/libmapper-2.3
   ./windows_build.ps1
 }
 
@@ -35,16 +38,19 @@ cd "$($scriptDir)/build"
 cmake ..
 cmake --build . --target all_build
 
+# Copy the externals to ./dist
+cd $scriptDir
+cp ./build/Debug/* ./dist
+
 # Copy the help files over
-if (!(Test-Path "$($scriptDir)/build/Debug/help/")) {
-  cd "$($scriptDir)/build/Debug/"
+if (!(Test-Path "$($scriptDir)/dist/help/")) {
+  cd "$($scriptDir)/dist/"
   mkdir help
 }
 cd $scriptDir
-cp ./mapper/mapper.maxhelp ./build/Debug/help/
-cp ./mpr_device/mpr.device.maxhelp ./build/Debug/help/
-cp ./mpr_in/mpr.in.maxhelp ./build/Debug/help/
-cp ./mpr_out/mpr.out.maxhelp ./build/Debug/help/
+cp ./mapper/mapper.maxhelp ./dist/help/
+cp ./mpr_device/mpr.device.maxhelp ./dist/help/
+cp ./mpr_in/mpr.in.maxhelp ./dist/help/
+cp ./mpr_out/mpr.out.maxhelp ./dist/help/
 
-Write-Host "Done: /build/Debug/ contains the built externals"
-Pause
+Write-Host "Done: /dist/ contains the built externals"
