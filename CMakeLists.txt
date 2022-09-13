@@ -1,18 +1,14 @@
 cmake_minimum_required(VERSION 3.19)
 
 set(BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build")
-set(LIBMAPPER_DIR "${BUILD_DIR}/libmapper/libmapper-main")
-set(LIBMAPPER_BUILD_DIR "${LIBMAPPER_DIR}/build/Debug")
-set(LIBLO_DIR "${LIBMAPPER_DIR}/build/liblo/liblo-master")
-set(LIBLO_BUILD_DIR "${LIBLO_DIR}/cmake/build/Debug")
-set(LIBLO_INCLUDES "${LIBLO_DIR}/cmake/build;${LIBLO_DIR}")
+set(LIBMAPPER_DIR "${BUILD_DIR}/libmapper/libmapper-2.3-dev-win64")
 set(MAX_SDK_DIR "${BUILD_DIR}/max-sdk/max-sdk/source/max-sdk-base")
 set(C74_SUPPORT_DIR "${MAX_SDK_DIR}/c74support")
 
 project(mapper-max-pd-externals)
 
-set(Liblo_LIB ${LIBLO_BUILD_DIR}/liblo.lib)
-set(Libmapper_LIB ${LIBMAPPER_BUILD_DIR}/libmapper.lib)
+set(Liblo_LIB ${LIBMAPPER_DIR}/liblo.lib)
+set(Libmapper_LIB ${LIBMAPPER_DIR}/libmapper.lib)
 mark_as_advanced(Liblo_LIB)
 mark_as_advanced(Libmapper_LIB)
 

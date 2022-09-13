@@ -7,14 +7,12 @@ if (!(Test-Path "$($scriptDir)/dist/")) {
   mkdir dist
 }
 
-# Download and install libmapper
+# Download libmapper 2.3 binaries
 if (!(Test-Path "$($scriptDir)/build/libmapper/")) {
   cd "$($scriptDir)/build"
-  Invoke-WebRequest https://github.com/libmapper/libmapper/archive/refs/tags/2.3.zip -OutFile libmapper.zip
+  Invoke-WebRequest https://github.com/libmapper/libmapper/releases/download/2.3/libmapper-2.3-dev-win64.zip -OutFile libmapper.zip
   Expand-Archive libmapper.zip libmapper
   rm libmapper.zip
-  cd libmapper/libmapper-2.3
-  ./windows_build.ps1
 }
 
 # Download the max sdk
