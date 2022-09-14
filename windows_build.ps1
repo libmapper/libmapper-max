@@ -5,6 +5,9 @@ if (!(Test-Path "$($scriptDir)/build/")) {
 }
 if (!(Test-Path "$($scriptDir)/dist/")) {
   mkdir dist
+  cd dist
+  mkdir max-8
+  mkdir pure-data
 }
 
 # Download libmapper 2.3 binaries
@@ -36,19 +39,28 @@ cd "$($scriptDir)/build"
 cmake ..
 cmake --build . --target all_build
 
-# Copy the externals to ./dist
+# Copy the externals to dist
 cd $scriptDir
-cp ./build/Debug/* ./dist
+cp ./build/Debug/* ./dist/max-8
+cp ./build/mapper/Debug/mapper.dll ./dist/pure-data
 
-# Copy the help files over
-if (!(Test-Path "$($scriptDir)/dist/help/")) {
-  cd "$($scriptDir)/dist/"
+# Copy the dlls to dist
+cp ./build/libmapper/libmapper-2.3-dev-win64/*.dll ./dist
+
+# Copy the max help files to dist
+if (!(Test-Path "$($scriptDir)/dist/max-8/help/")) {
+  cd "$($scriptDir)/dist/max-8"
+  mkdir help
+  cd ..
+  cd pure-data
   mkdir help
 }
 cd $scriptDir
-cp ./mapper/mapper.maxhelp ./dist/help/
-cp ./mpr_device/mpr.device.maxhelp ./dist/help/
-cp ./mpr_in/mpr.in.maxhelp ./dist/help/
-cp ./mpr_out/mpr.out.maxhelp ./dist/help/
+cp ./mapper/mapper.maxhelp ./dist/max-8/help/
+cp ./mpr_device/mpr.device.maxhelp ./dist/max-8/help/
+cp ./mpr_in/mpr.in.maxhelp ./dist/max-8/help/
+cp ./mpr_out/mpr.out.maxhelp ./dist/max-8/help/
+cp ./mapper/mapper.help.pd ./dist/pure-data/help
+
 
 Write-Host "Done: /dist/ contains the built externals"
