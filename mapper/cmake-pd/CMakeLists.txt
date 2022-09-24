@@ -33,7 +33,8 @@ remove_definitions(
 )
 
 include_directories( 
-  "${LIBMAPPER_DIR}"
+  "${LIBLO_INCLUDES}"
+  "${LIBMAPPER_DIR}/include"
 )
 
 target_link_libraries(mapper-pd-project PUBLIC ${Liblo_LIB})

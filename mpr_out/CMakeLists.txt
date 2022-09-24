@@ -21,7 +21,8 @@ add_definitions(
 include_directories( 
   "${MAX_SDK_INCLUDES}"
   "${MAX_SDK_MSP_INCLUDES}"
-  "${LIBMAPPER_DIR}"
+  "${LIBLO_INCLUDES}"
+  "${LIBMAPPER_DIR}/include"
 )
 
 file(GLOB PROJECT_SRC

@@ -10,12 +10,14 @@ if (!(Test-Path "$($scriptDir)/dist/")) {
   mkdir pure-data
 }
 
-# Download libmapper 2.3 binaries
+# Download and compile libmapper
 if (!(Test-Path "$($scriptDir)/build/libmapper/")) {
   cd "$($scriptDir)/build"
-  Invoke-WebRequest https://github.com/libmapper/libmapper/releases/download/2.3/libmapper-2.3-dev-win64.zip -OutFile libmapper.zip
+  Invoke-WebRequest https://github.com/libmapper/libmapper/archive/refs/heads/main.zip -OutFile libmapper.zip
   Expand-Archive libmapper.zip libmapper
   rm libmapper.zip
+  cd libmapper/libmapper-main
+  ./windows_build.ps1
 }
 
 # Download the max sdk
@@ -45,7 +47,7 @@ cp ./build/Debug/* ./dist/max-8
 cp ./build/mapper/Debug/mapper.dll ./dist/pure-data
 
 # Copy the dlls to dist
-cp ./build/libmapper/libmapper-2.3-dev-win64/*.dll ./dist
+cp ./build/libmapper/libmapper-main/dist/*.dll ./dist
 
 # Copy the max help files to dist
 if (!(Test-Path "$($scriptDir)/dist/max-8/help/")) {
