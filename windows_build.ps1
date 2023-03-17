@@ -43,7 +43,10 @@ cmake --build . --target all_build
 
 # Copy the externals to dist
 cd $scriptDir
-cp ./build/Debug/* ./dist/max-8
+cp ./build/Debug/mapper.mxe64 ./dist/max-8/mapper.mxe64
+cp ./build/Debug/mpr_device.mxe64 ./dist/max-8/mpr.device.mxe64
+cp ./build/Debug/mpr_in.mxe64 ./dist/max-8/mpr.in.mxe64
+cp ./build/Debug/mpr_out.mxe64 ./dist/max-8/mpr.out.mxe64
 cp ./build/mapper/Debug/mapper.dll ./dist/pure-data
 
 # Copy the dlls to dist
@@ -58,11 +61,22 @@ if (!(Test-Path "$($scriptDir)/dist/max-8/help/")) {
   mkdir help
 }
 cd $scriptDir
+if (!(Test-Path "$($scriptDir)/dist/max-8/docs/")) {
+  cd "$($scriptDir)/dist/max-8"
+  mkdir docs
+  cd ..
+  cd pure-data
+  mkdir docs
+}
+cd $scriptDir
 cp ./mapper/mapper.maxhelp ./dist/max-8/help/
+cp ./mapper/mapper.maxref.xml ./dist/max-8/docs/
 cp ./mpr_device/mpr.device.maxhelp ./dist/max-8/help/
+cp ./mpr_device/mpr.device.maxref.xml ./dist/max-8/docs/
 cp ./mpr_in/mpr.in.maxhelp ./dist/max-8/help/
+cp ./mpr_in/mpr.in.maxref.xml ./dist/max-8/docs/
 cp ./mpr_out/mpr.out.maxhelp ./dist/max-8/help/
+cp ./mpr_out/mpr.out.maxref.xml ./dist/max-8/docs/
 cp ./mapper/mapper.help.pd ./dist/pure-data/help
-
 
 Write-Host "Done: /dist/ contains the built externals"
