@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mpr_device">
+
+	<digest>
+		A libmapper device that uses mpr_in and mpr_out for its signals.
+	</digest>
+	
+	<description>
+		A libmapper device in which signals can be added, removed, and connected to other libmapper signals on the network.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Joseph Malloch, Brady Boettcher</metadata>
+		<metadata name="tag">libmapper</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="message">
+			<digest>Adding/removing signals and setting their values.</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="message">
+			<digest>Destination signal values when updated.</digest>
+		</outlet>
+		<outlet id="1" type="info">
+			<digest>Device and status information.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="alias" optional="1" type="message">
+			<digest>Device name, default is maxmsp.</digest>
+		</objarg>
+		<objarg name="interface" optional="1" type="message">
+			<digest>Network interface to use for the libmapper network.</digest>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mapper"/>
+		<seealso name="mpr_in"/>
+		<seealso name="mpr_out"/>
+	</seealsolist>
+	
+</c74object>

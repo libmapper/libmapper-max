@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="mpr_out">
+
+	<digest>
+		A libmapper device
+	</digest>
+	
+	<description>
+		A libmapper device in which signals can be added, removed, and connected to other libmapper signals on the network.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Joseph Malloch, Brady Boettcher</metadata>
+		<metadata name="tag">libmapper</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="message">
+			<digest>The new signal value to send to the network.</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="name" optional="0" type="message">
+			<digest>Signal name.</digest>
+		</objarg>
+		<objarg name="type" optional="0" type="message">
+			<digest>Signal type (int, float).</digest>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="mpr_device"/>
+		<seealso name="mpr_in"/>
+		<seealso name="mapper"/>
+	</seealsolist>
+	
+</c74object>
