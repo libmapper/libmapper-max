@@ -31,5 +31,5 @@ jobs:
         ./windows_build.ps1
     - uses: actions/upload-artifact@v3
       with:
-        name: max-externals-win64
-        path: dist
+        name: max-package-win64
+        path: dist/max-8/Mapper

@@ -8,6 +8,16 @@ if (!(Test-Path "$($scriptDir)/dist/")) {
   cd dist
   mkdir max-8
   mkdir pure-data
+  cd pure-data
+  mkdir help
+  cd ..
+  cd max-8
+  mkdir Mapper
+  cd Mapper
+  mkdir externals
+  mkdir docs
+  mkdir help
+  mkdir support
 }
 
 # Download and compile libmapper
@@ -43,40 +53,24 @@ cmake --build . --target all_build
 
 # Copy the externals to dist
 cd $scriptDir
-cp ./build/Debug/mapper.mxe64 ./dist/max-8/mapper.mxe64
-cp ./build/Debug/mpr_device.mxe64 ./dist/max-8/mpr.device.mxe64
-cp ./build/Debug/mpr_in.mxe64 ./dist/max-8/mpr.in.mxe64
-cp ./build/Debug/mpr_out.mxe64 ./dist/max-8/mpr.out.mxe64
-cp ./build/mapper/Debug/mapper.dll ./dist/pure-data
+cp ./build/Debug/mapper.mxe64 ./dist/max-8/Mapper/externals/mapper.mxe64
+cp ./build/Debug/mpr_device.mxe64 ./dist/max-8/Mapper/externals/mpr.device.mxe64
+cp ./build/Debug/mpr_in.mxe64 ./dist/max-8/Mapper/externals/mpr.in.mxe64
+cp ./build/Debug/mpr_out.mxe64 ./dist/max-8/Mapper/externals/mpr.out.mxe64
+cp ./build/mapper/Debug/mapper.dll ./dist/pure-data/mapper.dll
 
-# Copy the dlls to dist
-cp ./build/libmapper/libmapper-main/dist/*.dll ./dist
-
-# Copy the max help files to dist
-if (!(Test-Path "$($scriptDir)/dist/max-8/help/")) {
-  cd "$($scriptDir)/dist/max-8"
-  mkdir help
-  cd ..
-  cd pure-data
-  mkdir help
-}
-cd $scriptDir
-if (!(Test-Path "$($scriptDir)/dist/max-8/docs/")) {
-  cd "$($scriptDir)/dist/max-8"
-  mkdir docs
-  cd ..
-  cd pure-data
-  mkdir docs
-}
-cd $scriptDir
-cp ./mapper/mapper.maxhelp ./dist/max-8/help/
-cp ./mapper/mapper.maxref.xml ./dist/max-8/docs/
-cp ./mpr_device/mpr.device.maxhelp ./dist/max-8/help/
-cp ./mpr_device/mpr.device.maxref.xml ./dist/max-8/docs/
-cp ./mpr_in/mpr.in.maxhelp ./dist/max-8/help/
-cp ./mpr_in/mpr.in.maxref.xml ./dist/max-8/docs/
-cp ./mpr_out/mpr.out.maxhelp ./dist/max-8/help/
-cp ./mpr_out/mpr.out.maxref.xml ./dist/max-8/docs/
+# Copy the help and docs
+cp ./mapper/mapper.maxhelp ./dist/max-8/Mapper/help/
+cp ./mapper/mapper.maxref.xml ./dist/max-8/Mapper/docs/
+cp ./mpr_device/mpr.device.maxhelp ./dist/max-8/Mapper/help/
+cp ./mpr_device/mpr.device.maxref.xml ./dist/max-8/Mapper/docs/
+cp ./mpr_in/mpr.in.maxhelp ./dist/max-8/Mapper/help/
+cp ./mpr_in/mpr.in.maxref.xml ./dist/max-8/Mapper/docs/
+cp ./mpr_out/mpr.out.maxhelp ./dist/max-8/Mapper/help/
+cp ./mpr_out/mpr.out.maxref.xml ./dist/max-8/Mapper/docs/
 cp ./mapper/mapper.help.pd ./dist/pure-data/help
+
+# Copy the dlls to dist/max-8/support
+cp ./build/libmapper/libmapper-main/dist/*.dll ./dist/max-8/Mapper/support/
 
 Write-Host "Done: /dist/ contains the built externals"
