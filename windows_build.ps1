@@ -15,6 +15,9 @@ if (!(Test-Path "$($scriptDir)/dist/")) {
   mkdir Mapper
   cd Mapper
   mkdir externals
+  mkdir examples
+  mkdir init
+  mkdir media
   mkdir docs
   mkdir help
   mkdir support
@@ -51,6 +54,16 @@ cd "$($scriptDir)/build"
 cmake ..
 cmake --build . --target all_build
 
+# Start the dist process
+cd $scriptDir
+cp ./AUTHORS ./dist/
+cp ./COPYING ./dist/
+cp ./README ./dist/
+cp ./maxdist/mpr-objectmappings.txt ./dist/max-8/Mapper/init/
+cp ./maxdist/package-info.json ./dist/max-8/Mapper/
+cp ./maxdist/examples/* ./dist/max-8/Mapper/examples/
+cp ./icons/icon.png ./dist/max-8/Mapper/
+
 # Copy the externals to dist
 cd $scriptDir
 cp ./build/Debug/mapper.mxe64 ./dist/max-8/Mapper/externals/mapper.mxe64
@@ -61,13 +74,11 @@ cp ./build/mapper/Debug/mapper.dll ./dist/pure-data/mapper.dll
 
 # Copy the help and docs
 cp ./mapper/mapper.maxhelp ./dist/max-8/Mapper/help/
-cp ./mapper/mapper.maxref.xml ./dist/max-8/Mapper/docs/
+cp ./mapper/sample_device_definition.json ./dist/max-8/Mapper/media/
 cp ./mpr_device/mpr.device.maxhelp ./dist/max-8/Mapper/help/
-cp ./mpr_device/mpr.device.maxref.xml ./dist/max-8/Mapper/docs/
 cp ./mpr_in/mpr.in.maxhelp ./dist/max-8/Mapper/help/
-cp ./mpr_in/mpr.in.maxref.xml ./dist/max-8/Mapper/docs/
 cp ./mpr_out/mpr.out.maxhelp ./dist/max-8/Mapper/help/
-cp ./mpr_out/mpr.out.maxref.xml ./dist/max-8/Mapper/docs/
+cp ./maxdist/docs/refpages/* ./dist/max-8/Mapper/docs/
 cp ./mapper/mapper.help.pd ./dist/pure-data/help
 
 # Copy the dlls to dist/max-8/support

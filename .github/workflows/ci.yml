@@ -32,4 +32,8 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: max-package-win64
-        path: dist/max-8/Mapper
+        path: dist/max-8/
+    - uses: actions/upload-artifact@v3
+      with:
+        name: pd-package-win64
+        path: dist/pure-data/
