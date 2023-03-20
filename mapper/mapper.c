@@ -121,7 +121,7 @@ static void *mapperobj_class;
 // *********************************************************
 // -(main)--------------------------------------------------
 
-#ifdef WIN32
+#if defined(WIN32) && defined(MAXMSP)
 void ext_main(void *r)
 {
     main();
@@ -146,7 +146,7 @@ void ext_main(void *r)
         return 0;
     }
 #else
-    int mapper_setup(void)
+    void mapper_setup(void)
     {
         t_class *c;
         c = class_new(gensym("mapper"), (t_newmethod)mapperobj_new, (t_method)mapperobj_free,
@@ -158,7 +158,6 @@ void ext_main(void *r)
         class_addmethod(c,   (t_method)mapperobj_set,           gensym("set"),    A_GIMME, 0);
         class_addmethod(c,   (t_method)mapperobj_clear_signals, gensym("clear"),  A_GIMME, 0);
         mapperobj_class = c;
-        return 0;
     }
 #endif
 
@@ -781,7 +780,7 @@ static void mapperobj_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
     switch (evt) {
         case MPR_SIG_UPDATE: {
             int poly = 0;
-            if (mpr_sig_get_num_inst(sig, MPR_STATUS_ALL) > 1) {
+            if (mpr_sig_get_num_inst(sig, MPR_STATUS_ANY) > 1) {
                 maxpd_atom_set_int(x->buffer.atoms, inst);
                 poly = 1;
             }

@@ -11,9 +11,11 @@ Hopefully in the near future the new bindings will also be adapted for Pure Data
 
 This software is licensed under the GNU Lesser Public General License version 2.1 or later; see the attached file COPYING for details, which should be included in this download.
 
-To build, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library.
+## Building
 
-On OSX you can build all the binaries by running the script `package-osx.sh` from the command-line.
+To build on OSX, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library. You can then build all the binaries by running the script `package-osx.sh` from the command-line and the externals will be found in /dist/Max and dist/pd.
+
+For Windows machines, run the `./windows_build.ps1` script in this repository's root from powershell. The script will download and install the libmapper and liblo dependencies and build the externals. To use the Max externals on Windows, you'll need to copy the libmapper, liblo and zlib dll's into `C:\Program Files\Cycling '74\Max 8` or equivalent on your machine.
 
 ## Acknowledgements
 

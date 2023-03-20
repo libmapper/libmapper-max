@@ -1,0 +1,4 @@
+LIBRARY mapper
+
+EXPORTS
+	mapper_setup
