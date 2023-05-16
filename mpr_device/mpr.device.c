@@ -1,9 +1,8 @@
 //
 // mpr.device.c
-// a maxmsp and puredata external encapsulating the functionality of a
-// libmpr "device", allowing name and metadata to be set
+// a Max external encapsulating the functionality of a libmapper "device"
 // http://www.libmapper.org
-// Joseph Malloch, 2013-2020
+// Joseph Malloch, 2013-2023
 //
 // This software was written in the Graphics and Experiential Media (GEM) Lab at Dalhousie
 // University in Halifax and the Input Devices and Music Interaction Laboratory (IDMIL) at McGill

@@ -1,13 +1,13 @@
 //
 // mapper.c
-// a maxmsp and puredata external encapsulating the functionality of libmapper
-// http://www.idmil.org/software/libmapper
-// Joseph Malloch, IDMIL 2010
+// a Max and Pure Data external encapsulating the functionality of libmapper
+// http://www.libmapper.org
+// Joseph Malloch, 2010–2023
 //
-// This software was written in the Input Devices and Music Interaction
-// Laboratory at McGill University in Montreal, and is copyright those
-// found in the AUTHORS file.  It is licensed under the GNU Lesser Public
-// General License version 2.1 or later.  Please see COPYING for details.
+// This software was written in the Graphics and Experiential Media (GEM) Lab at Dalhousie
+// University in Halifax and the Input Devices and Music Interaction Laboratory (IDMIL) at McGill
+// University in Montreal, and is copyright those found in the AUTHORS file.  It is licensed under
+// the GNU Lesser Public General License version 2.1 or later.  Please see COPYING for details.
 //
 
 // *********************************************************
