@@ -79,3 +79,4 @@ ipch/
 *.pidb
 *.svclog
 *.scc
+dylibbundler/dylibbundler

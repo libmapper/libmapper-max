@@ -40,4 +40,6 @@ include_directories(
 target_link_libraries(mapper-pd-project PUBLIC ${Liblo_LIB})
 target_link_libraries(mapper-pd-project PUBLIC ${Libmapper_LIB})
 
-set_target_properties(mapper-pd-project PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
+endif()

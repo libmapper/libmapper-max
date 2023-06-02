@@ -22,7 +22,7 @@ include_directories(
   "${MAX_SDK_INCLUDES}"
   "${MAX_SDK_MSP_INCLUDES}"
   "${LIBLO_INCLUDES}"
-  "${LIBMAPPER_DIR}/include"
+  "${LIBMAPPER_INCLUDES}"
 )
 
 file(GLOB PROJECT_SRC
@@ -41,4 +41,6 @@ include(${MAX_SDK_DIR}/script/max-posttarget.cmake)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Liblo_LIB})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Libmapper_LIB})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
+endif()

@@ -20,7 +20,7 @@ To build on OSX, you will first need to install [libmapper][1] and [liblo][2] fr
 You can then build all the binaries by running the script `package-osx.sh` from the command-line:
 
 ```
-./package-osx.sh
+./macos-build.sh
 
 ```
 

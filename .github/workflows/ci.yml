@@ -12,9 +12,12 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+    - name: install dependencies
+      run:
+        brew install autoconf-archive automake pkg-config cmake
     - name: build externals
       run:
-        ./package-osx.sh
+        ./macos_build.sh
     - uses: actions/upload-artifact@v3
       with:
         name: max-pd-externals-macosx

@@ -20,21 +20,21 @@ add_definitions(
 #############################################################
 
 include_directories( 
-  "${MAX_SDK_INCLUDES}"
-  "${MAX_SDK_MSP_INCLUDES}"
-  "${LIBLO_INCLUDES}"
-  "${LIBMAPPER_DIR}/include"
+    "${MAX_SDK_INCLUDES}"
+    "${MAX_SDK_MSP_INCLUDES}"
+    "${LIBLO_INCLUDES}"
+    "${LIBMAPPER_INCLUDES}"
 )
 
 file(GLOB PROJECT_SRC
-   "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-   "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
 add_library( 
-  ${PROJECT_NAME} 
-  MODULE
-  ${PROJECT_SRC}
+    ${PROJECT_NAME}
+    MODULE
+    ${PROJECT_SRC}
 )
 
 include(${MAX_SDK_DIR}/script/max-posttarget.cmake)
@@ -42,7 +42,9 @@ include(${MAX_SDK_DIR}/script/max-posttarget.cmake)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Liblo_LIB})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Libmapper_LIB})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/INCREMENTAL:NO")
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/INCREMENTAL:NO")
+endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cmake-pd)
