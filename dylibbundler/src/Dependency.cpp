@@ -101,7 +101,7 @@ Dependency::Dependency(std::string path)
     if( !prefix.empty() && prefix[ prefix.size()-1 ] != '/' ) prefix += "/";
     if( prefix.empty() || !fileExists( prefix+filename ) )
     {
-        //the pathes contains at least /usr/lib so if it is empty we have not initilazed it
+        //the paths contains at least /usr/lib so if it is empty we have not initialized it
         if( pathes.empty() ) initSearchPathes();
         
         //check if file is contained in one of the pathes

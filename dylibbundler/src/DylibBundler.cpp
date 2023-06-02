@@ -36,6 +36,8 @@ void changeLibPathsOnFile(std::string file_to_fix)
 
 void addDependency(std::string path)
 {
+    if(path.compare(0, 9, "/usr/lib/") == 0) return;
+
     Dependency dep(path);
     
     // we need to check if this library was already added to avoid duplicates
