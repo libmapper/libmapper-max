@@ -5,7 +5,7 @@ mkdir ./dist
 mkdir ./dist/Max
 mkdir ./dist/Max/Mapper
 mkdir ./dist/Max/Mapper/externals
-mkdir ./dist/Max/Mapper/extra
+mkdir ./dist/Max/Mapper/extras
 mkdir ./dist/Max/Mapper/help
 mkdir ./dist/Max/Mapper/init
 mkdir ./dist/Max/Mapper/media
@@ -16,6 +16,7 @@ cp AUTHORS ./dist/
 cp COPYING ./dist/
 cp README ./dist/
 cp ./maxdist/mpr-objectmappings.txt ./dist/Max/Mapper/init/
+cp ./maxdist/mpr.overview.maxpat ./dist/Max/Mapper/extras/
 cp ./maxdist/package-info.json ./dist/Max/Mapper/
 cp -r ./maxdist/docs ./dist/Max/Mapper/
 cp -r ./maxdist/examples ./dist/Max/Mapper/
@@ -149,7 +150,7 @@ cp ../mapper/mapper.help.pd ../dist/pd/mapper/
 
 mv mapper.mxo ../dist/Max/Mapper/externals
 cp ../mapper/mapper.maxhelp ../dist/Max/Mapper/help/
-cp ../mapper/sample_device_definition.json ../dist/Max/Mapper/extra
+cp ../mapper/sample_device_definition.json ../dist/Max/Mapper/help/
 
 mv mpr.device.mxo ../dist/Max/Mapper/externals
 cp ../mpr.device/mpr.device.maxhelp ../dist/Max/Mapper/help/
