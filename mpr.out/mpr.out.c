@@ -12,12 +12,15 @@
 
 // *********************************************************
 // -(Includes)----------------------------------------------
+
 #ifdef WIN32
-#define _WINSOCKAPI_ //for winsock1/2 conflicts
+    #define _WINSOCKAPI_        // for winsock1/2 conflicts
+    #define MAXAPI_USE_MSCRT    // use Microsoft C Runtime Library instead of Max copy
 #endif
 
-#include "ext.h"            // standard Max include, always required
-#include "ext_obex.h"       // required for new style Max object
+#include "ext.h"                // standard Max include, always required
+#include "ext_obex.h"           // required for new style Max object
+#include "ext_proto.h"
 #include "ext_critical.h"
 #include "jpatcher_api.h"
 #include <mapper/mapper.h>
@@ -35,7 +38,7 @@
 
 // *********************************************************
 // -(object struct)-----------------------------------------
-typedef struct _mpr_out
+typedef struct _sig
 {
     t_object            ob;
     void                *outlet;
@@ -57,37 +60,37 @@ typedef struct _mpr_out
     long                connect_state;
     int                 length;
     char                type;
-} t_mpr_out;
+} t_sig;
 
 typedef struct _mpr_ptrs
 {
     int                 num_objs;
     t_object            **objs;
-} t_mpr_ptrs;
+} t_sig_ptrs;
 
 // *********************************************************
 // -(function prototypes)-----------------------------------
 static void *mpr_out_new(t_symbol *s, int argc, t_atom *argv);
-static void mpr_out_free(t_mpr_out *x);
+static void mpr_out_free(t_sig *x);
 
-static void add_to_hashtab(t_mpr_out *x, t_hashtab *ht);
-static void remove_from_hashtab(t_mpr_out *x);
-static t_max_err set_sig_ptr(t_mpr_out *x, t_object *attr, long argc, t_atom *argv);
-static t_max_err set_dev_obj(t_mpr_out *x, t_object *attr, long argc, t_atom *argv);
+static void add_to_hashtab(t_sig *x, t_hashtab *ht);
+static void remove_from_hashtab(t_sig *x);
+static t_max_err set_sig_ptr(t_sig *x, t_object *attr, long argc, t_atom *argv);
+static t_max_err set_dev_obj(t_sig *x, t_object *attr, long argc, t_atom *argv);
 
-static void mpr_out_loadbang(t_mpr_out *x);
-static void mpr_out_int(t_mpr_out *x, long i);
-static void mpr_out_float(t_mpr_out *x, double f);
-static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv);
-static void mpr_out_release(t_mpr_out *x);
-static void mpr_out_anything(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv);
+static void mpr_out_loadbang(t_sig *x);
+static void mpr_out_int(t_sig *x, long i);
+static void mpr_out_float(t_sig *x, double f);
+static void mpr_out_list(t_sig *x, t_symbol *s, int argc, t_atom *argv);
+static void mpr_out_release(t_sig *x);
+static void mpr_out_anything(t_sig *x, t_symbol *s, int argc, t_atom *argv);
 
-t_max_err mpr_out_instance_get(t_mpr_out *x, t_object *attr, long *argc, t_atom **argv);
-t_max_err mpr_out_instance_set(t_mpr_out *x, t_object *attr, long argc, t_atom *argv);
+t_max_err mpr_out_instance_get(t_sig *x, t_object *attr, long *argc, t_atom **argv);
+t_max_err mpr_out_instance_set(t_sig *x, t_object *attr, long argc, t_atom *argv);
 
 static int atom_strcmp(t_atom *a, const char *string);
 static const char *atom_get_string(t_atom *a);
-static void atom_set_string(t_atom *a, const char *string);
+//static void atom_set_string(t_atom *a, const char *string);
 static int atom_coerce_int(t_atom *a);
 static float atom_coerce_float(t_atom *a);
 
@@ -96,7 +99,6 @@ static float atom_coerce_float(t_atom *a);
 static void *mpr_out_class;
 
 // *********************************************************
-
 #ifdef WIN32
 void ext_main(void *r)
 {
@@ -109,7 +111,7 @@ int main(void)
 {
     t_class *c;
     c = class_new("mpr.out", (method)mpr_out_new, (method)mpr_out_free,
-                  (long)sizeof(t_mpr_out), 0L, A_GIMME, 0);
+                  (long)sizeof(t_sig), 0L, A_GIMME, 0);
 
     class_addmethod(c, (method)mpr_out_loadbang, "loadbang", 0);
     class_addmethod(c, (method)mpr_out_int, "int", A_LONG, 0);
@@ -120,15 +122,15 @@ int main(void)
     class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
     class_addmethod(c, (method)remove_from_hashtab, "remove_from_hashtab", A_CANT, 0);
 
-    CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_out, sig_name);
-    CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_out, sig_length);
-    CLASS_ATTR_CHAR(c, "sig_type", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_out, sig_type);
-    CLASS_ATTR_OBJ(c, "dev_obj", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_out, dev_obj);
+    CLASS_ATTR_SYM(c, "sig_name", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_name);
+    CLASS_ATTR_LONG(c, "sig_length", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_length);
+    CLASS_ATTR_CHAR(c, "sig_type", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_type);
+    CLASS_ATTR_OBJ(c, "dev_obj", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, dev_obj);
     CLASS_ATTR_ACCESSORS(c, "dev_obj", 0, set_dev_obj);
-    CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_mpr_out, sig_ptr);
+    CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
 
-    CLASS_ATTR_ATOM_LONG(c, "instance", 0, t_mpr_out, instance_id);
+    CLASS_ATTR_LONG(c, "instance", 0, t_sig, instance_id);
     CLASS_ATTR_ACCESSORS(c, "instance", mpr_out_instance_get, mpr_out_instance_set);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
@@ -138,14 +140,14 @@ int main(void)
 
 static void mpr_out_usage()
 {
-    post("usage: [mpr.out <signal-name> <datatype> <optional: vectorlength>]");
+    post("usage: [mpr.out <signal name> <datatype> <optional: vector length>]");
 }
 
 // *********************************************************
 // -(new)---------------------------------------------------
 static void *mpr_out_new(t_symbol *s, int argc, t_atom *argv)
 {
-    t_mpr_out *x = NULL;
+    t_sig *x = NULL;
 
     long i = 0;
 
@@ -153,17 +155,17 @@ static void *mpr_out_new(t_symbol *s, int argc, t_atom *argv)
         mpr_out_usage();
         return 0;
     }
-    if ((argv)->a_type != A_SYM || (argv+1)->a_type != A_SYM) {
+    if ((argv)->a_type != A_SYM || (argv + 1)->a_type != A_SYM) {
         mpr_out_usage();
         return 0;
     }
 
-    if ((x = (t_mpr_out *)object_alloc(mpr_out_class))) {
-        x->outlet = listout((t_object *)x);
+    if ((x = (t_sig*) object_alloc(mpr_out_class))) {
+        x->outlet = listout((t_object*) x);
 
         x->sig_name = gensym(atom_getsym(argv)->s_name);
 
-        char *temp = atom_getsym(argv+1)->s_name;
+        char *temp = atom_getsym(argv + 1)->s_name;
         x->sig_type = temp[0];
         if (x->sig_type != 'i' && x->sig_type != 'f')
             return 0;
@@ -174,10 +176,10 @@ static void *mpr_out_new(t_symbol *s, int argc, t_atom *argv)
         x->is_instanced = 0;
         x->connect_state = 0;
 
-        if (argc >= 3 && (argv+2)->a_type == A_LONG) {
-            x->sig_length = atom_getlong(argv+2);
-            if (x->sig_length > 100) {
-                post("vector lengths > 100 not currently supported.");
+        if (argc >= 3 && (argv + 2)->a_type == A_LONG) {
+            x->sig_length = atom_getlong(argv + 2);
+            if (x->sig_length < 1 || x->sig_length > 100) {
+                post("vector length must be between 1 and 100.");
                 return 0;
             }
             i = 3;
@@ -192,55 +194,64 @@ static void *mpr_out_new(t_symbol *s, int argc, t_atom *argv)
             x->buffer.floats = (float*)malloc(x->sig_length * sizeof(float));
 
         // we need to cache any arguments to add later
-        x->args = atomarray_new(argc-i, argv+i);
+        x->args = atomarray_new(argc - i, argv + i);
 
         // cache the registered name so we can remove self from hashtab later
         x = object_register(CLASS_BOX, x->myobjname = symbol_unique(), x);
 
-        x->patcher = (t_object *)gensym("#P")->s_thing;
+        x->patcher = (t_object*) gensym("#P")->s_thing;
         mpr_out_loadbang(x);
     }
     return (x);
 }
 
-// *********************************************************
-// -(free)--------------------------------------------------
-static void mpr_out_free(t_mpr_out *x)
+static void remove_instance_ptr(t_sig *x)
 {
-    if (x->is_instanced) {
-        // need to remove self from instance user_data
-        t_mpr_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
-        if (ptrs && ptrs->num_objs > 0) {
-            int i, found = 0;
-            for (i = 0; i < ptrs->num_objs; i++) {
-                if (found) {
-                    ptrs->objs[i-1] = ptrs->objs[i];
-                }
-                else if (ptrs->objs[i] == (void*)x) {
-                    found = 1;
-                }
-            }
-            if (found) {
-                --ptrs->num_objs;
-                if (ptrs->num_objs <= 0) {
-                    // also free struct
-                    free(ptrs);
-                    mpr_sig_set_inst_data(x->sig_ptr, x->instance_id, NULL);
-                }
-                else {
-                    ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs) * sizeof(t_object *));
-                }
-            }
+    if (!x->sig_ptr || !x->is_instanced)
+        return;
+    t_sig_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
+    if (!ptrs || ptrs->num_objs <= 0)
+        return;
+    int found = 0;
+    for (int i = 0; i < ptrs->num_objs; i++) {
+        if (found) {
+            ptrs->objs[i - 1] = ptrs->objs[i];
+        }
+        else if (ptrs->objs[i] == (t_object*) x) {
+            found = 1;
         }
     }
+    if (!found)
+        return;
+    --ptrs->num_objs;
+    if (ptrs->num_objs <= 0) {
+        // free array and struct
+        free(ptrs->objs);
+        free(ptrs);
+        mpr_sig_set_inst_data(x->sig_ptr, x->instance_id, NULL);
+    }
+    else {
+        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs) * sizeof(t_object*));
+    }
+}
+
+// *********************************************************
+// -(free)--------------------------------------------------
+static void mpr_out_free(t_sig *x)
+{
+    remove_instance_ptr(x);
     remove_from_hashtab(x);
-    if (x->buffer.ints)
-        free(x->buffer.ints);
+    if (x->buffer.ints) {
+        if (x->sig_type == 'i')
+            free(x->buffer.ints);
+        else
+            free(x->buffer.floats);
+    }
     if (x->args)
         object_free(x->args);
 }
 
-void mpr_out_loadbang(t_mpr_out *x)
+void mpr_out_loadbang(t_sig *x)
 {
     t_hashtab *ht;
 
@@ -249,7 +260,7 @@ void mpr_out_loadbang(t_mpr_out *x)
 
     t_object *patcher = x->patcher;
     while (patcher) {
-        object_obex_lookup(patcher, gensym("mprhash"), (t_object **)&ht);
+        object_obex_lookup(patcher, gensym("mprhash"), (t_object**) &ht);
         if (ht) {
             add_to_hashtab(x, ht);
             break;
@@ -258,7 +269,7 @@ void mpr_out_loadbang(t_mpr_out *x)
     }
 }
 
-void add_to_hashtab(t_mpr_out *x, t_hashtab *ht)
+void add_to_hashtab(t_sig *x, t_hashtab *ht)
 {
     if (x->connect_state) {
         // already registered
@@ -267,12 +278,12 @@ void add_to_hashtab(t_mpr_out *x, t_hashtab *ht)
 
     // store self in the hashtab. IMPORTANT: set the OBJ_FLAG_REF flag so the
     // hashtab knows not to free us when it is freed.
-    hashtab_storeflags(ht, x->myobjname, (t_object *)x, OBJ_FLAG_REF);
+    hashtab_storeflags(ht, x->myobjname, (t_object*) x, OBJ_FLAG_REF);
     x->ht = ht;
     x->connect_state = 1;
 }
 
-void remove_from_hashtab(t_mpr_out *x)
+void remove_from_hashtab(t_sig *x)
 {
     if (x->ht) {
         hashtab_chuckkey(x->ht, x->myobjname);
@@ -286,9 +297,9 @@ void remove_from_hashtab(t_mpr_out *x)
 
 // *********************************************************
 // -(parse props from object arguments)---------------------
-void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
+void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
 {
-    int i, j, k, length, heterogeneous_types;
+    int i, j, k, length, heterogeneous_types, ephem_set = 0;
     const char *prop_name;
     char type;
 
@@ -342,18 +353,17 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
         }
 
         if (length <= 0) {
-            object_post((t_object*)x, "value missing for property %s", prop_name);
+            object_post((t_object*) x, "value missing for property %s", prop_name);
             continue;
         }
         if (heterogeneous_types == 2) {
-            object_post((t_object*)x, "only numeric types may be mixed in property values!");
+            object_post((t_object*) x, "only numeric types may be mixed in property values!");
             i += length;
             continue;
         }
 
         if (strcmp(prop_name, "instance") == 0) {
-            if ((argv + i)->a_type == A_SYM &&
-                atom_strcmp(argv + i, "polyindex") == 0) {
+            if ((argv + i)->a_type == A_SYM && atom_strcmp(argv + i, "polyindex") == 0) {
                 /* Check if object is embedded in a poly~ object - if so,
                  * retrieve the index and use as instance id. */
                 t_object *patcher = NULL;
@@ -362,10 +372,7 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
                     t_object *assoc = NULL;
                     object_method(patcher, gensym("getassoc"), &assoc);
                     if (assoc) {
-                        method m = zgetfn(assoc, gensym("getindex"));
-                        if (m) {
-                            x->instance_id = (long)(*m)(assoc, patcher);
-                        }
+                        x->instance_id = (long)object_method_direct(long, (t_object*, t_object*), assoc, gensym("getindex"), patcher);
                     }
                 }
             }
@@ -373,31 +380,37 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
                 x->instance_id = atom_getlong(argv + i);
             }
             else {
-                object_post((t_object*)x, "instance value must be an integer or 'polyindex'");
+                object_post((t_object*) x, "instance value must be an integer or 'polyindex'");
                 i += length;
                 continue;
             }
-            if (!x->is_instanced) {
-                /* Set use_inst property to True. */
-                int one = 1;
-                mpr_obj_set_prop(x->sig_ptr, MPR_PROP_USE_INST, NULL, 1, MPR_BOOL, &one, 1);
-                /* Remove the default signal instance (0). */
-                mpr_sig_remove_inst(x->sig_ptr, 0);
-                x->is_instanced = 1;
+            x->is_instanced = 1;
+            if (!ephem_set) {
+                j = 1;
+                mpr_obj_set_prop((mpr_obj) x->sig_ptr, MPR_PROP_EPHEM, NULL, 1, MPR_BOOL, &j, 1);
             }
-            t_mpr_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
+            t_sig_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
             if (!ptrs) {
-                ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
-                ptrs->objs = (t_object **)malloc(sizeof(t_object *));
+                ptrs = (t_sig_ptrs*) malloc(sizeof(struct _mpr_ptrs));
+                ptrs->objs = (t_object**) malloc(sizeof(t_object*));
                 ptrs->num_objs = 1;
-                ptrs->objs[0] = (void*)x;
-                mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&ptrs);
+                ptrs->objs[0] = (t_object*) x;
+                mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void**) &ptrs);
             }
             else {
-                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
-                ptrs->objs[ptrs->num_objs] = (void*)x;
-                ptrs->num_objs++;
+                ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs + 1) * sizeof(t_object*));
+                ptrs->objs[ptrs->num_objs] = (t_object*) x;
+                ++ptrs->num_objs;
             }
+        }
+        else if (strcmp(prop_name, "ephemeral") == 0) {
+            if (type != A_LONG && type != A_FLOAT) {
+                i += length;
+                continue;
+            }
+            j = atom_coerce_int(argv + i) != 0;
+            mpr_obj_set_prop((mpr_obj) x->sig_ptr, MPR_PROP_EPHEM, NULL, 1, MPR_BOOL, &j, 1);
+            ephem_set = 1;
         }
         else if (   strcmp(prop_name, "minimum") == 0 || strcmp(prop_name, "min") == 0
                  || strcmp(prop_name, "maximum") == 0 || strcmp(prop_name, "max") == 0) {
@@ -479,15 +492,15 @@ void parse_extra_properties(t_mpr_out *x, int argc, t_atom *argv)
 
 // *********************************************************
 // -(set the device pointer)--------------------------------
-t_max_err set_dev_obj(t_mpr_out *x, t_object *attr, long argc, t_atom *argv)
+t_max_err set_dev_obj(t_sig *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->dev_obj = (t_object *)argv->a_w.w_obj;
+    x->dev_obj = (t_object*) argv->a_w.w_obj;
     return 0;
 }
 
 // *********************************************************
 // -(set the signal pointer)--------------------------------
-t_max_err set_sig_ptr(t_mpr_out *x, t_object *attr, long argc, t_atom *argv)
+t_max_err set_sig_ptr(t_sig *x, t_object *attr, long argc, t_atom *argv)
 {
     x->sig_ptr = (mpr_sig)argv->a_w.w_obj;
     if (x->sig_ptr) {
@@ -501,7 +514,7 @@ t_max_err set_sig_ptr(t_mpr_out *x, t_object *attr, long argc, t_atom *argv)
 
 // *********************************************************
 // -(check if device and signal pointers have been set)-----
-static int check_ptrs(t_mpr_out *x)
+static int check_ptrs(t_sig *x)
 {
     if (!x || !x->dev_obj || !x->sig_ptr) {
         return 1;
@@ -515,7 +528,7 @@ static int check_ptrs(t_mpr_out *x)
 
 // *********************************************************
 // -(int input)---------------------------------------------
-static void mpr_out_int(t_mpr_out *x, long l)
+static void mpr_out_int(t_sig *x, long l)
 {
     if (check_ptrs(x))
         return;
@@ -527,7 +540,7 @@ static void mpr_out_int(t_mpr_out *x, long l)
 
 // *********************************************************
 // -(float input)-------------------------------------------
-static void mpr_out_float(t_mpr_out *x, double d)
+static void mpr_out_float(t_sig *x, double d)
 {
     if (check_ptrs(x))
         return;
@@ -539,7 +552,7 @@ static void mpr_out_float(t_mpr_out *x, double d)
 
 // *********************************************************
 // -(list input)--------------------------------------------
-static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
+static void mpr_out_list(t_sig *x, t_symbol *s, int argc, t_atom *argv)
 {
     int i, j;
 
@@ -551,15 +564,15 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
         for (i = 0, j = 0; i < x->sig_length; i++, j++) {
             if (j >= argc)
                 j = 0;
-            switch ((argv+j)->a_type) {
+            switch ((argv + j)->a_type) {
                 case A_FLOAT:
-                    payload[i] = (int)atom_getfloat(argv+j);
+                    payload[i] = (int)atom_getfloat(argv + j);
                     break;
                 case A_LONG:
-                    payload[i] = (int)atom_getlong(argv+j);
+                    payload[i] = (int)atom_getlong(argv + j);
                     break;
                 default:
-                    object_post((t_object *)x, "Illegal data type in list!");
+                    object_post((t_object*) x, "Illegal data type in list!");
                     return;
             }
         }
@@ -573,15 +586,15 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
         for (i = 0, j = 0; i < x->sig_length; i++) {
             if (j >= argc)
                 j = 0;
-            switch ((argv+i)->a_type) {
+            switch ((argv + i)->a_type) {
                 case A_FLOAT:
-                    payload[i] = atom_getfloat(argv+i);
+                    payload[i] = atom_getfloat(argv + i);
                     break;
                 case A_LONG:
-                    payload[i] = (float)atom_getlong(argv+i);
+                    payload[i] = (float)atom_getlong(argv + i);
                     break;
                 default:
-                    object_post((t_object *)x, "Illegal data type in list!");
+                    object_post((t_object*) x, "Illegal data type in list!");
                     return;
             }
         }
@@ -594,7 +607,7 @@ static void mpr_out_list(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // -(anything)----------------------------------------------
-static void mpr_out_anything(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
+static void mpr_out_anything(t_sig *x, t_symbol *s, int argc, t_atom *argv)
 {
     if (check_ptrs(x)) {
         // we need to cache any arguments to add later
@@ -608,11 +621,10 @@ static void mpr_out_anything(t_mpr_out *x, t_symbol *s, int argc, t_atom *argv)
 
 // *********************************************************
 // -(release instance)--------------------------------------
-static void mpr_out_release(t_mpr_out *x)
+static void mpr_out_release(t_sig *x)
 {
     if (check_ptrs(x) || !x->is_instanced)
         return;
-
     critical_enter(0);
     mpr_sig_release_inst(x->sig_ptr, x->instance_id);
     critical_exit(0);
@@ -620,39 +632,39 @@ static void mpr_out_release(t_mpr_out *x)
 
 // *********************************************************
 // -(get instance id)---------------------------------------
-t_max_err mpr_out_instance_get(t_mpr_out *x, t_object *attr, long *argc, t_atom **argv)
+t_max_err mpr_out_instance_get(t_sig *x, t_object *attr, long *argc, t_atom **argv)
 {
     char alloc;
     atom_alloc(argc, argv, &alloc); // allocate return atom
-    atom_setlong(*argv, (long)x->instance_id);
+    atom_setlong(*argv, (long) x->instance_id);
     return 0;
 }
 
 // *********************************************************
 // -(set instance id)---------------------------------------
-t_max_err mpr_out_instance_set(t_mpr_out *x, t_object *attr, long argc, t_atom *argv)
+t_max_err mpr_out_instance_set(t_sig *x, t_object *attr, long argc, t_atom *argv)
 {
-    x->instance_id = atom_coerce_int(argv);
-    if (!x->is_instanced) {
-        /* Set use_inst property to True. */
-        int one = 1;
-        mpr_obj_set_prop(x->sig_ptr, MPR_PROP_USE_INST, NULL, 1, MPR_BOOL, &one, 1);
-        /* Remove the default signal instance (0). */
-        mpr_sig_remove_inst(x->sig_ptr, 0);
-        x->is_instanced = 1;
+    mpr_id instance_id = atom_coerce_int(argv);
+    if (x->is_instanced) {
+        if (instance_id == x->instance_id)
+            return 0;
+        // remove previous instance ptr
+        remove_instance_ptr(x);
     }
-    t_mpr_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
+    x->instance_id = instance_id;
+    x->is_instanced = 1;
+    t_sig_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
     if (!ptrs) {
-        ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
-        ptrs->objs = (t_object **)malloc(sizeof(t_object *));
+        ptrs = (t_sig_ptrs*) malloc(sizeof(struct _mpr_ptrs));
+        ptrs->objs = (t_object**) malloc(sizeof(t_object*));
         ptrs->num_objs = 1;
-        ptrs->objs[0] = (void*)x;
-        mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void **)&ptrs);
+        ptrs->objs[0] = (t_object*) x;
+        mpr_sig_reserve_inst(x->sig_ptr, 1, &x->instance_id, (void**) &ptrs);
     }
     else {
-        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
-        ptrs->objs[ptrs->num_objs] = (void*)x;
-        ptrs->num_objs++;
+        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs + 1) * sizeof(t_object*));
+        ptrs->objs[ptrs->num_objs] = (t_object*) x;
+        ++ptrs->num_objs;
     }
     return 0;
 }
@@ -672,10 +684,10 @@ static const char *atom_get_string(t_atom *a)
     return atom_getsym(a)->s_name;
 }
 
-static void atom_set_string(t_atom *a, const char *string)
-{
-    atom_setsym(a, gensym((char *)string));
-}
+//static void atom_set_string(t_atom *a, const char *string)
+//{
+//    atom_setsym(a, gensym((char*) string));
+//}
 
 static int atom_coerce_int(t_atom *a)
 {

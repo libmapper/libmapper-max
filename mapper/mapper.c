@@ -14,7 +14,8 @@
 // -(Includes)----------------------------------------------
 
 #ifdef WIN32
-    #define _WINSOCKAPI_ //for winsock1/2 conflicts
+    #define _WINSOCKAPI_        // for winsock1/2 conflicts
+    #define MAXAPI_USE_MSCRT    // use Microsoft C Runtime Library instead of Max copy
 #endif
 
 #ifdef MAXMSP
@@ -446,8 +447,12 @@ static void mapperobj_add_signal(t_mapper *x, t_symbol *s, int argc, t_atom *arg
         }
     }
     if (!sig_type) {
+#ifdef MAXMSP
         POST(x, "Signal has no declared type!");
         return;
+#else
+        sig_type = MPR_FLT;
+#endif
     }
     if (sig_length < 1) {
         POST(x, "Signals cannot have length < 1!");

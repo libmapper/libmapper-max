@@ -14,11 +14,12 @@
 // -(Includes)----------------------------------------------
 
 #ifdef WIN32
-#define _WINSOCKAPI_ //for winsock1/2 conflicts
+    #define _WINSOCKAPI_        // for winsock1/2 conflicts
+    #define MAXAPI_USE_MSCRT    // use Microsoft C Runtime Library instead of Max copy
 #endif
 
-#include "ext.h"            // standard Max include, always required
-#include "ext_obex.h"       // required for new style Max object
+#include "ext.h"                // standard Max include, always required
+#include "ext_obex.h"           // required for new style Max object
 #include "ext_critical.h"
 #include "jpatcher_api.h"
 #include <mapper/mapper.h>
@@ -81,13 +82,12 @@ static void mpr_device_attach_obj(t_hashtab_entry *e, void *arg);
 static int mpr_device_attach(t_mpr_device *x);
 
 static void mpr_device_add_signal(t_mpr_device *x, t_object *obj);
-static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj);
+static void mpr_device_remove_signal_object(t_mpr_device *x, t_object *obj);
 
 static void mpr_device_poll(t_mpr_device *x);
 
-static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
-                                   int length, mpr_type type, const void *value,
-                                   mpr_time time);
+static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst, int length,
+                                   mpr_type type, const void *value, mpr_time time);
 
 static void mpr_device_print_properties(t_mpr_device *x);
 
@@ -139,38 +139,38 @@ static void *mpr_device_new(t_symbol *s, int argc, t_atom *argv)
         if (argv->a_type == A_SYM && atom_get_string(argv)[0] != '@')
             alias = atom_get_string(argv);
 
-        for (i = 0; i < argc-1; i++) {
-            if ((argv+i)->a_type == A_SYM) {
-                if (atom_strcmp(argv+i, "@alias") == 0) {
-                    if ((argv+i+1)->a_type == A_SYM) {
-                        alias = atom_get_string(argv+i+1);
-                        i++;
+        for (i = 0; i < argc - 1; i++) {
+            if ((argv + i)->a_type == A_SYM) {
+                if (atom_strcmp(argv + i, "@alias") == 0) {
+                    if ((argv + i + 1)->a_type == A_SYM) {
+                        alias = atom_get_string(argv + i + 1);
+                        ++i;
                     }
                 }
-                else if (atom_strcmp(argv+i, "@interface") == 0) {
-                    if ((argv+i+1)->a_type == A_SYM) {
-                        iface = atom_get_string(argv+i+1);
-                        i++;
+                else if (atom_strcmp(argv + i, "@interface") == 0) {
+                    if ((argv + i + 1)->a_type == A_SYM) {
+                        iface = atom_get_string(argv + i + 1);
+                        ++i;
                     }
                 }
-                else if (atom_strcmp(argv+i, "@throttle") == 0) {
-                    if ((argv+i+1)->a_type == A_LONG) {
-                        int throttle = atom_getlong(argv+i+1);
+                else if (atom_strcmp(argv + i, "@throttle") == 0) {
+                    if ((argv + i + 1)->a_type == A_LONG) {
+                        int throttle = atom_getlong(argv + i + 1);
                         if (throttle > 0)
                             x->throttle = throttle;
-                        i++;
+                        ++i;
                     }
-                    else if ((argv+i+1)->a_type == A_FLOAT) {
-                        int throttle = (int)atom_getfloat(argv+i+1);
+                    else if ((argv + i + 1)->a_type == A_FLOAT) {
+                        int throttle = (int)atom_getfloat(argv + i + 1);
                         if (throttle > 0)
                             x->throttle = throttle;
-                        i++;
+                        ++i;
                     }
                 }
             }
         }
         if (alias) {
-            x->name = *alias == '/' ? strdup(alias+1) : strdup(alias);
+            x->name = *alias == '/' ? strdup(alias + 1) : strdup(alias);
         }
         else {
             x->name = strdup("maxmsp");
@@ -200,38 +200,35 @@ static void *mpr_device_new(t_symbol *s, int argc, t_atom *argv)
         for (i = 0; i < argc; i++) {
             if (i > argc - 2) // need 2 arguments for key and value
                 break;
-            if ((atom_strcmp(argv+i, "@alias") == 0) ||
-                (atom_strcmp(argv+i, "@interface") == 0)){
-                i++;
+            if ((atom_strcmp(argv + i, "@alias") == 0) ||
+                (atom_strcmp(argv + i, "@interface") == 0)){
+                ++i;
                 continue;
             }
-            else if (atom_get_string(argv+i)[0] == '@') {
+            else if (atom_get_string(argv + i)[0] == '@') {
                 // TODO: allow vector property values
-                switch ((argv+i+1)->a_type) {
+                switch ((argv + i + 1)->a_type) {
                     case A_SYM: {
-                        const char *value = atom_get_string(argv+i+1);
-                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
-                                         atom_get_string(argv+i)+1, 1, 's',
-                                         value, 1);
-                        i++;
+                        const char *value = atom_get_string(argv + i + 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN, atom_get_string(argv + i) + 1,
+                                         1, MPR_STR, value, 1);
+                        ++i;
                         break;
                     }
                     case A_FLOAT:
                     {
-                        float value = atom_getfloat(argv+i+1);
-                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
-                                         atom_get_string(argv+i)+1, 1, 'f',
-                                         &value, 1);
-                        i++;
+                        float value = atom_getfloat(argv + i + 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN, atom_get_string(argv + i) + 1,
+                                         1, MPR_FLT, &value, 1);
+                        ++i;
                         break;
                     }
                     case A_LONG:
                     {
-                        int value = atom_getlong(argv+i+1);
-                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN,
-                                         atom_get_string(argv+i)+1, 1, 'i',
-                                         &value, 1);
-                        i++;
+                        int value = atom_getlong(argv + i + 1);
+                        mpr_obj_set_prop(x->device, MPR_PROP_UNKNOWN, atom_get_string(argv + i) + 1,
+                                         1, MPR_INT32, &value, 1);
+                        ++i;
                         break;
                     }
                     default:
@@ -266,8 +263,7 @@ static void mpr_device_free(t_mpr_device *x)
     }
 }
 
-void mpr_device_notify(t_mpr_device *x, t_symbol *s, t_symbol *msg, void *sender,
-                       void *data)
+void mpr_device_notify(t_mpr_device *x, t_symbol *s, t_symbol *msg, void *sender, void *data)
 {
     if (msg == gensym("hashtab_entry_new")) { // something arrived in the hashtab
         t_symbol *key = (t_symbol *)data;
@@ -284,7 +280,7 @@ void mpr_device_notify(t_mpr_device *x, t_symbol *s, t_symbol *msg, void *sender
 
         hashtab_lookup(sender, key, &obj);
         if (obj) {
-            mpr_device_remove_signal(x, obj);
+            mpr_device_remove_signal_object(x, obj);
             object_detach_byptr(x, obj); // detach from it
         }
     }
@@ -413,9 +409,9 @@ static void mpr_device_add_signal(t_mpr_device *x, t_object *obj)
     if (list && (sig = *list)) {
         // another max object associated with this signal exists
         t_mpr_ptrs *ptrs = (t_mpr_ptrs *)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
-        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs+1) * sizeof(t_object *));
+        ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs + 1) * sizeof(t_object *));
         ptrs->objs[ptrs->num_objs] = obj;
-        ptrs->num_objs++;
+        ++ptrs->num_objs;
     }
     else {
         t_mpr_ptrs *ptrs = (t_mpr_ptrs *)malloc(sizeof(struct _mpr_ptrs));
@@ -427,20 +423,22 @@ static void mpr_device_add_signal(t_mpr_device *x, t_object *obj)
                           NULL, mpr_device_sig_handler, MPR_SIG_ALL);
         mpr_obj_set_prop(sig, MPR_PROP_DATA, NULL, 1, MPR_PTR, ptrs, 0);
     }
-    //output new numOutputs/numInputs
+
+    // set device and signal ptrs for remote object
+    atom_setobj(x->buffer, (void *)x);
+    object_attr_setvalueof(obj, gensym("dev_obj"), 1, x->buffer);
+    atom_setobj(x->buffer, (void *)sig);
+    object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
+
+    // output new numOutputs/numInputs
     atom_setlong(x->buffer, mpr_list_get_size(mpr_dev_get_sigs(x->device, dir)));
     if (dir == MPR_DIR_OUT)
         outlet_anything(x->outlet, gensym("numOutputs"), 1, x->buffer);
     else
         outlet_anything(x->outlet, gensym("numInputs"), 1, x->buffer);
-
-    atom_setobj(x->buffer, (void *)x);
-    object_attr_setvalueof(obj, gensym("dev_obj"), 1, x->buffer);
-    atom_setobj(x->buffer, (void *)sig);
-    object_attr_setvalueof(obj, gensym("sig_ptr"), 1, x->buffer);
 }
 
-static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj)
+static void mpr_device_remove_signal_object(t_mpr_device *x, t_object *obj)
 {
     mpr_sig sig = 0;
     if (!obj)
@@ -458,6 +456,10 @@ static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj)
 
     if (sig) {
         t_mpr_ptrs *ptrs = (t_mpr_ptrs *)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
+        if (!ptrs) {
+            object_post((t_object *)x, "error: no PROP_DATA!");
+            return;
+        }
         if (ptrs->num_objs == 1) {
             free(ptrs->objs);
             free(ptrs);
@@ -475,13 +477,14 @@ static void mpr_device_remove_signal(t_mpr_device *x, t_object *obj)
                 object_post((t_object *)x, "error: obj ptr not found in signal user_data!");
                 return;
             }
-            i++;
+            ++i;
             for (; i<ptrs->num_objs; i++)
-                ptrs->objs[i-1] = ptrs->objs[i];
-            ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs-1) * sizeof(t_object *));
-            ptrs->num_objs--;
+                ptrs->objs[i - 1] = ptrs->objs[i];
+            ptrs->objs = realloc(ptrs->objs, (ptrs->num_objs - 1) * sizeof(t_object *));
+            --ptrs->num_objs;
         }
     }
+    mpr_list_free(list);
 }
 
 // *********************************************************
@@ -537,11 +540,11 @@ static void mpr_device_print_properties(t_mpr_device *x)
     }
 }
 
-static void outlet_data(void *outlet, char type, short length, t_atom *atoms)
+static void outlet_data(void *outlet, mpr_type type, short length, t_atom *atoms)
 {
     if (length > 1)
         outlet_list(outlet, NULL, length, atoms);
-    else if (type == 'i')
+    else if (type == MPR_INT32)
         outlet_int(outlet, atom_getlong(atoms));
     else
         outlet_float(outlet, atom_getfloat(atoms));
@@ -549,19 +552,16 @@ static void outlet_data(void *outlet, char type, short length, t_atom *atoms)
 
 // *********************************************************
 // -(sig handler)-------------------------------------------
-static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
-                                   int len, mpr_type type, const void *val,
-                                   mpr_time time)
+static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst, int len,
+                                   mpr_type type, const void *val, mpr_time time)
 {
     t_mpr_ptrs *ptrs = (void*)mpr_obj_get_prop_as_ptr(sig, MPR_PROP_DATA, NULL);
-    t_mpr_ptrs *inst_ptrs = 0;
+    t_mpr_ptrs *inst_ptrs = (t_mpr_ptrs*)mpr_sig_get_inst_data(sig, inst);
     t_mpr_device *x = ptrs->home;
 
-    int i;
-
-    if (mpr_sig_get_num_inst(sig, MPR_STATUS_ANY) > 1) {
-        inst_ptrs = (t_mpr_ptrs*)mpr_sig_get_inst_data(sig, inst);
-    }
+    // if the signal is not instanced and ephemeral we will only handle value updates
+    if (MPR_SIG_UPDATE != evt && !mpr_obj_get_prop_as_int32(sig, MPR_PROP_EPHEM, NULL))
+        return;
 
     switch (evt) {
         case MPR_SIG_UPDATE: {
@@ -571,64 +571,63 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst,
                     len = MAX_LIST;
                 }
 
-                if (type == 'i') {
+                if (type == MPR_INT32) {
                     int *vi = (int*)val;
-                    for (i = 0; i < len; i++)
+                    for (int i = 0; i < len; i++)
                         atom_setlong(x->buffer + i, vi[i]);
                 }
-                else if (type == 'f') {
+                else if (type == MPR_FLT) {
                     float *vf = (float*)val;
-                    for (i = 0; i < len; i++)
+                    for (int i = 0; i < len; i++)
                         atom_setfloat(x->buffer + i, vf[i]);
                 }
 
                 if (inst_ptrs) {
-                    for (i = 0; i < inst_ptrs->num_objs; i++)
+                    for (int i = 0; i < inst_ptrs->num_objs; i++)
                         outlet_data(((sig_obj)inst_ptrs->objs[i])->outlet, type, len, x->buffer);
                 }
                 else {
-                    for (i=0; i<ptrs->num_objs; i++)
+                    for (int i = 0; i < ptrs->num_objs; i++)
                         outlet_data(ptrs->objs[i]->o_outlet, type, len, x->buffer);
                 }
             }
             else if (inst_ptrs) {
                 atom_set_string(x->buffer, "release");
                 atom_set_string(x->buffer+1, "upstream");
-                for (i = 0; i < inst_ptrs->num_objs; i++)
+                for (int i = 0; i < inst_ptrs->num_objs; i++)
                     outlet_list(((sig_obj)inst_ptrs->objs[i])->outlet, NULL, 2, x->buffer);
             }
             break;
         }
         case MPR_SIG_REL_UPSTRM:
+            if (!inst_ptrs)
+                break;
             atom_set_string(x->buffer, "release");
             atom_set_string(x->buffer+1, "upstream");
-            for (i = 0; i < inst_ptrs->num_objs; i++)
+            for (int i = 0; i < inst_ptrs->num_objs; i++)
                 outlet_list(((sig_obj)inst_ptrs->objs[i])->outlet, NULL, 2, x->buffer);
             break;
         case MPR_SIG_REL_DNSTRM:
+            if (!inst_ptrs)
+                break;
             atom_set_string(x->buffer, "release");
             atom_set_string(x->buffer+1, "downstream");
-            for (i = 0; i < inst_ptrs->num_objs; i++)
+            for (int i = 0; i < inst_ptrs->num_objs; i++)
                 outlet_list(((sig_obj)inst_ptrs->objs[i])->outlet, NULL, 2, x->buffer);
             break;
         case MPR_SIG_INST_OFLW: {
-            atom_setlong(x->buffer, inst);
             int mode = mpr_obj_get_prop_as_int32(sig, MPR_PROP_STEAL_MODE, NULL);
             switch (mode) {
                 case MPR_STEAL_OLDEST:
-                    inst = mpr_sig_get_oldest_inst_id(sig);
-                    if (inst)
-                        mpr_sig_release_inst(sig, inst);
+                    mpr_sig_release_inst(sig, mpr_sig_get_oldest_inst_id(sig));
                     break;
                 case MPR_STEAL_NEWEST:
-                    inst = mpr_sig_get_newest_inst_id(sig);
-                    if (inst)
-                        mpr_sig_release_inst(sig, inst);
+                    mpr_sig_release_inst(sig, mpr_sig_get_newest_inst_id(sig));
                     break;
-                case 0:
-                    atom_set_string(x->buffer+1, "overflow");
+                case MPR_STEAL_NONE:
+                    atom_set_string(x->buffer, "overflow");
                     // send overflow message to all instances
-                    for (i=0; i<ptrs->num_objs; i++)
+                    for (int i = 0; i < ptrs->num_objs; i++)
                         outlet_list(ptrs->objs[i]->o_outlet, NULL, 2, x->buffer);
                     break;
                 default:
@@ -661,7 +660,6 @@ static void mpr_device_poll(t_mpr_device *x)
     }
     clock_delay(x->clock, INTERVAL);  // Set clock to go off after delay
 }
-
 
 // *********************************************************
 // some helper functions
