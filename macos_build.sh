@@ -151,6 +151,7 @@ cp ../mapper/mapper.help.pd ../dist/pd/mapper/
 
 mv mapper.mxo ../dist/Max/Mapper/externals
 cp ../mapper/mapper.maxhelp ../dist/Max/Mapper/help/
+cp ../mapper/sample_device_definition.json ../dist/Max/Mapper/extra
 
 mv mpr.device.mxo ../dist/Max/Mapper/externals
 cp ../mpr.device/mpr.device.maxhelp ../dist/Max/Mapper/help/
