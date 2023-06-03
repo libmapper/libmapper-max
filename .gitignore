@@ -7,7 +7,6 @@ mpr_in/build
 *.mxo
 *.pd_darwin
 mapper-osx-max-pd*
-oscmulticast
 dist
 ### VisualStudio ###
 build

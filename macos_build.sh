@@ -141,9 +141,7 @@ echo bundling dylibs
 ./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.device.mxo/Contents/MacOS/mpr.device -d ./mpr.device.mxo/Contents/libs/
 ./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.in.mxo/Contents/MacOS/mpr.in -d ./mpr.in.mxo/Contents/libs/
 ./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.out.mxo/Contents/MacOS/mpr.out -d ./mpr.out.mxo/Contents/libs/
-
-#./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.graph.mxo/Contents/MacOS/mpr.graph -d ./mpr.graph.mxo/Contents/libs/
-#./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./oscmulticast.mxo/Contents/MacOS/oscmulticast -d ./oscmulticast.mxo/Contents/libs/
+./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./oscmulticast.mxo/Contents/MacOS/oscmulticast -d ./oscmulticast.mxo/Contents/libs/
 
 echo copying files to dist
 mv mapper/Debug/mapper.pd_darwin ../dist/pd/mapper/
@@ -162,11 +160,8 @@ cp ../mpr.in/mpr.in.maxhelp ../dist/Max/Mapper/help/
 mv mpr.out.mxo ../dist/Max/Mapper/externals
 cp ../mpr.out/mpr.out.maxhelp ../dist/Max/Mapper/help/
 
-#mv mpr.graph.mxo ../dist/Max/Mapper/externals
-#cp ../mpr.graph/mpr.graph.maxhelp ../dist/Max/Mapper/help/
-#
-#mv oscmulticast.mxo ../dist/Max/Mapper/externals
-#cp ../oscmulticast/oscmulticast.maxhelp ../dist/Max/Mapper/help/
+mv oscmulticast.mxo ../dist/Max/Mapper/externals
+cp ../oscmulticast/oscmulticast.maxhelp ../dist/Max/Mapper/help/
 
 #sign externals
 

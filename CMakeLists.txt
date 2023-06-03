@@ -31,7 +31,7 @@ if (APPLE)
 endif()
 
 # Add subdirectories for each external
-set(EXTERNALS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/mapper;${CMAKE_CURRENT_SOURCE_DIR}/mpr.device;${CMAKE_CURRENT_SOURCE_DIR}/mpr.in;${CMAKE_CURRENT_SOURCE_DIR}/mpr.out")
+set(EXTERNALS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/mapper;${CMAKE_CURRENT_SOURCE_DIR}/mpr.device;${CMAKE_CURRENT_SOURCE_DIR}/mpr.in;${CMAKE_CURRENT_SOURCE_DIR}/mpr.out;${CMAKE_CURRENT_SOURCE_DIR}/oscmulticast")
 
 foreach (external_dir ${EXTERNALS_LIST})
   #message("checking in: ${external_dir}")

@@ -1,0 +1,4 @@
+LIBRARY oscmulticast.mxe
+
+EXPORTS
+	main

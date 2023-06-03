@@ -1,0 +1,26 @@
+#N canvas 667 264 390 426 10;
+#X obj 39 194 oscmulticast @group 224.0.1.3 @port 7570;
+#X msg 39 165 /somedata \$1;
+#X floatatom 39 137 5 0 0 0 - - -;
+#X text 13 13 oscmulticast;
+#X text 13 34 Sends and receives Open Sound Control over multicast
+IP.;
+#X text 13 67 This objects requires the group and port attributes to
+be set.;
+#X obj 24 363 oscmulticast @group 224.0.1.3 @port 7570 @interface lo0
+;
+#X text 17 268 The network interface can be set with an argument or
+with the message "interface";
+#X msg 24 317 interface en0;
+#X msg 116 317 interface lo0;
+#X text 240 398 Joseph Malloch 2011;
+#X obj 39 224 print msg;
+#X obj 276 224 print port;
+#X obj 157 225 print host;
+#X connect 0 0 11 0;
+#X connect 0 1 13 0;
+#X connect 0 2 12 0;
+#X connect 1 0 0 0;
+#X connect 2 0 1 0;
+#X connect 8 0 6 0;
+#X connect 9 0 6 0;
