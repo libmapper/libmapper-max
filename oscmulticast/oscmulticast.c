@@ -26,10 +26,12 @@
 #ifdef WIN32
     #include <winsock2.h>
     #include <iphlpapi.h>
+    #define HAVE_LIBIPHLPAPI
 #else
     #include <arpa/inet.h>
     #include <ifaddrs.h>
     #include <net/if.h>
+    #define HAVE_GETIFADDRS
 #endif
 
 #include "lo/lo.h"
@@ -123,21 +125,19 @@ static void handler_error(int num, const char *msg, const char *where)
 }
 
 /*! Local function to get the IP address of a network interface. */
-static int get_interface_addr(const char* pref, struct in_addr* addr,
-                              char **iface)
+static int get_interface_addr(const char* pref, struct in_addr* addr, char **iface)
 {
-    struct in_addr zero;
     struct sockaddr_in *sa;
 
-    *(unsigned int *)&zero = inet_addr("0.0.0.0");
+#ifdef HAVE_GETIFADDRS
 
+    struct in_addr zero;
     struct ifaddrs *ifaphead;
     struct ifaddrs *ifap;
-    struct ifaddrs *iflo=0, *ifchosen=0;
-
-    if (getifaddrs(&ifaphead) != 0)
+    struct ifaddrs *iflo = 0, *ifchosen = 0;
+    if (getifaddrs(&ifaphead))
         return 1;
-
+    *(unsigned int *)&zero = inet_addr("0.0.0.0");
     ifap = ifaphead;
     while (ifap) {
         sa = (struct sockaddr_in *) ifap->ifa_addr;
@@ -146,22 +146,35 @@ static int get_interface_addr(const char* pref, struct in_addr* addr,
             continue;
         }
 
-        if (sa->sin_family == AF_INET && ifap->ifa_flags & IFF_UP
-            && memcmp(&sa->sin_addr, &zero, sizeof(struct in_addr))!=0) {
+        /* Note, we could also check for IFF_MULTICAST-- however this is the
+         * data-sending port, not the libmapper bus port. */
+
+        if (AF_INET == sa->sin_family && ifap->ifa_flags & IFF_UP
+            && memcmp(&sa->sin_addr, &zero, sizeof(struct in_addr)) != 0) {
+            post("oscmulticast: checking network interface '%s' (pref: '%s')\n",
+                 ifap->ifa_name, pref ? pref : "NULL");
             ifchosen = ifap;
-            if (pref && strcmp(ifap->ifa_name, pref)==0)
+            if (pref && 0 == strcmp(ifap->ifa_name, pref)) {
+                post("  preferred interface found!\n");
                 break;
+            }
             else if (ifap->ifa_flags & IFF_LOOPBACK)
                 iflo = ifap;
         }
         ifap = ifap->ifa_next;
     }
 
-        // Default to loopback address in case user is working locally.
-    if (!ifchosen)
+    /* Default to loopback address in case user is working locally. */
+    if (!ifchosen) {
+        post("oscmulticast: defaulting to local loopback interface\n");
         ifchosen = iflo;
+    }
 
     if (ifchosen) {
+        if (*iface && !strcmp(*iface, ifchosen->ifa_name)) {
+            freeifaddrs(ifaphead);
+            return 1;
+        }
         if (*iface)
             free(*iface);
         *iface = strdup(ifchosen->ifa_name);
@@ -172,6 +185,77 @@ static int get_interface_addr(const char* pref, struct in_addr* addr,
     }
 
     freeifaddrs(ifaphead);
+
+#else /* !HAVE_GETIFADDRS */
+
+#ifdef HAVE_LIBIPHLPAPI
+    /* TODO consider "pref" as well */
+
+    /* Start with recommended 15k buffer for GetAdaptersAddresses. */
+    ULONG size = 15 * 1024 / 2;
+    int tries = 3;
+    PIP_ADAPTER_ADDRESSES paa = malloc(size * 2);
+    DWORD rc = ERROR_SUCCESS - 1;
+    while (rc != ERROR_SUCCESS && paa && tries-- > 0) {
+        size *= 2;
+        paa = realloc(paa, size);
+        rc = GetAdaptersAddresses(AF_INET, 0, 0, paa, &size);
+    }
+    if (ERROR_SUCCESS != rc)
+        return 2;
+
+    PIP_ADAPTER_ADDRESSES loaa = 0, aa = paa;
+    PIP_ADAPTER_UNICAST_ADDRESS lopua = 0;
+    while (aa && ERROR_SUCCESS == rc) {
+        PIP_ADAPTER_UNICAST_ADDRESS pua = aa->FirstUnicastAddress;
+        /* Skip adapters that are not "Up". */
+        if (pua && IfOperStatusUp == aa->OperStatus) {
+            if (IF_TYPE_SOFTWARE_LOOPBACK == aa->IfType) {
+                loaa = aa;
+                lopua = pua;
+            }
+            else {
+                /* Skip addresses starting with 0.X.X.X or 169.X.X.X. */
+                sa = (struct sockaddr_in *) pua->Address.lpSockaddr;
+                unsigned char prefix = sa->sin_addr.s_addr & 0xFF;
+                if (prefix != 0xA9 && prefix != 0) {
+                    if (*iface && !strcmp(*iface, aa->AdapterName)) {
+                        free(paa);
+                        return 1;
+                    }
+                    if (*iface)
+                        free(*iface);
+                    *iface = strdup(aa->AdapterName);
+                    *addr = sa->sin_addr;
+                    free(paa);
+                    return 0;
+                }
+            }
+        }
+        aa = aa->Next;
+    }
+
+    if (loaa && lopua) {
+        if (*iface && !strcmp(*iface, loaa->AdapterName)) {
+            free(paa);
+            return 1;
+        }
+        if (*iface)
+            free(*iface);
+        *iface = strdup(loaa->AdapterName);
+        sa = (struct sockaddr_in *) lopua->Address.lpSockaddr;
+        *addr = sa->sin_addr;
+        free(paa);
+        return 0;
+    }
+
+    if (paa)
+        free(paa);
+
+#else
+  #error No known method on this system to get the network interface address.
+#endif /* HAVE_LIBIPHLPAPI */
+#endif /* !HAVE_GETIFADDRS */
 
     return 2;
 }
