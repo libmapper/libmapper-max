@@ -65,7 +65,7 @@ then
     echo libmapper already built
 else
     echo downloading libmapper...
-    curl -L -O https://github.com/libmapper/libmapper/releases/download/2.4/libmapper-2.4.tar.gz
+    curl -L -O https://github.com/libmapper/libmapper/releases/download/2.4.1/libmapper-2.4.tar.gz
     tar -xzf libmapper-2.4.tar.gz
     rm libmapper-2.4.tar.gz
     mv libmapper-2.4 libmapper
