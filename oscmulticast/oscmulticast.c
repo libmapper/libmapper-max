@@ -25,12 +25,13 @@
 
 #ifdef WIN32
     #include <winsock2.h>
+    #include <iphlpapi.h>
 #else
     #include <arpa/inet.h>
+    #include <ifaddrs.h>
+    #include <net/if.h>
 #endif
 
-#include <ifaddrs.h>
-#include <net/if.h>
 #include "lo/lo.h"
 
 #define INTERVAL 1
