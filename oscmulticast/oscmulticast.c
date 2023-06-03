@@ -22,7 +22,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
+
+#ifdef WIN32
+    #include <winsock2.h>
+#else
+    #include <arpa/inet.h>
+#endif
+
 #include <ifaddrs.h>
 #include <net/if.h>
 #include "lo/lo.h"

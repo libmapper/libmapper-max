@@ -130,7 +130,7 @@ int main(void)
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
 
-    CLASS_ATTR_LONG(c, "instance", 0, t_sig, instance_id);
+    CLASS_ATTR_ATOM_LONG(c, "instance", 0, t_sig, instance_id);
     CLASS_ATTR_ACCESSORS(c, "instance", mpr_out_instance_get, mpr_out_instance_set);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
