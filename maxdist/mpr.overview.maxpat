@@ -71,7 +71,7 @@
 , 			{
 				"box" : 				{
 					"bubble" : 1,
-					"bubbleside" : 0,
+					"bubbleside" : 2,
 					"fontname" : "Lato Light",
 					"fontsize" : 15.0,
 					"id" : "obj-43",
@@ -282,7 +282,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 240.0, 315.0, 450.0, 96.0 ],
-					"text" : "Add inputs and outputs to your device using the mpr.in and mpr.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using OSC messages or graphical interfaces such as WebMapper.",
+					"text" : "Add inputs and outputs to your device using the mpr.in and mpr.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using OSC messages or graphical interfaces such as WebMapper:",
 					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ]
 				}
 
@@ -296,8 +296,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 240.0, 105.0, 452.0, 150.0 ],
-					"text" : "The Max objects for libmapper let you declare inputs and outputs for data on your local network, discover those signals using various session managers, and create complex connections (\"mappings\") between them. There are also libmapper APIs and bindings for C, C++, C#, Python, Java, SuperCollider, Pure Data, TouchDesigner, Arduino, and more so you can collaborate with others and freely mix languages and applications, without even needing to agree on an OSC namespace beforehand.",
+					"patching_rect" : [ 240.0, 105.0, 455.0, 150.0 ],
+					"text" : "The Max objects for libmapper let you declare inputs and outputs for data on your local network, discover those signals using various session managers, and create complex connections (\"mappings\") between them. There are also libmapper APIs and bindings for C, C++, C#, Python, Java, SuperCollider, Pure Data, TouchDesigner, Arduino, and more so you can collaborate with others and freely mix languages and applications, without even needing to agree on an OSC namespace beforehand. These tools all are open-source!",
 					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ]
 				}
 
@@ -367,8 +367,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 31.0, 600.0, 154.0, 77.120500782472618 ],
-					"pic" : "/Users/malloch/Documents/Labs/GEM/logos/inkscape/GEM_Logo_row_colour.png"
+					"patching_rect" : [ 31.0, 600.0, 154.0, 77.120500782472618 ]
 				}
 
 			}
@@ -438,8 +437,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ],
-					"pic" : "Macintosh HD:/Users/malloch/Documents/Mappers/mapper-max-pd2/icons/icon.png"
+					"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 				}
 
 			}
@@ -541,14 +539,7 @@
 
 			}
  ],
-		"dependency_cache" : [ 			{
-				"name" : "GEM_Logo_row_colour.png",
-				"bootpath" : "~/Documents/Labs/GEM/logos/inkscape",
-				"patcherrelativepath" : "../../../../Labs/GEM/logos/inkscape",
-				"type" : "PNG",
-				"implicit" : 1
-			}
- ],
+		"dependency_cache" : [],
 		"autosave" : 0
 	}
 
