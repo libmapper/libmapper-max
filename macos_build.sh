@@ -9,12 +9,15 @@ mkdir ./dist/Max/Mapper/extras
 mkdir ./dist/Max/Mapper/help
 mkdir ./dist/Max/Mapper/init
 mkdir ./dist/Max/Mapper/media
+mkdir ./dist/Max/Mapper/support
 mkdir ./dist/pd
 mkdir ./dist/pd/mapper
 
 cp AUTHORS ./dist/
 cp COPYING ./dist/
 cp README ./dist/
+cp README.markdown ./dist/Max/Mapper/readme.md
+cp COPYING ./dist/Max/Mapper/license.txt
 cp ./maxdist/mpr-objectmappings.txt ./dist/Max/Mapper/init/
 cp ./maxdist/mpr.overview.maxpat ./dist/Max/Mapper/extras/
 cp ./maxdist/package-info.json ./dist/Max/Mapper/

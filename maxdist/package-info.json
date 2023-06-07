@@ -1,11 +1,11 @@
 {
-	"author" : "libmapper",
+	"author" : "Joseph Malloch, Brady Boettcher, Stephen Sinclair, and Johnty Wang",
 	"authors" : [],
 	"description" : "A library for connecting things.",
 	"displayname" : "",
 	"extends" : "",
 	"extensible" : 0,
-	"homepatcher" : "libmapper overview.maxpat",
+	"homepatcher" : "mpr.overview.maxpat",
 	"max_version_max" : "none",
 	"max_version_min" : "7.1",
 	"name" : "libmapper",
@@ -23,11 +23,11 @@
 ,
 	"package_extra" : 	{
 		"reverse_domain" : "org.libmapper",
-		"copyright" : "Copyright (c) 2020 libmapper"
+		"copyright" : "Copyright (c) 2023 libmapper"
 	}
 ,
-	"tags" : ["framework", "interactive", "network", "mapping", "OSC"],
-	"version" : "@GIT_SHA@",
+	"tags" : ["framework", "interaction", "networking", "mapping", "OSC"],
+	"version" : "2.4.1",
 	"website" : "https://libmapper.org",
 	"filelist" : 	{
         "examples" : ["instanced_pwm.maxpat", "instanced_sliders.maxpat"],
@@ -36,7 +36,7 @@
         "help" : ["mpr.device.maxhelp", "mpr.in.maxhelp", "mpr.out.maxhelp", "mapper.maxhelp", "oscmulticast.maxhelp"],
         "docs" : ["refpages/mapper.xml", "refpages/mpr.device.xml", "refpages/mpr.in.xml", "refpages/mpr.out.xml", "refpages/oscmulticast.xml"],
 		"code" : [],
-		"extras" : [ "libmapper overview.maxpat" ]
+		"extras" : [ "mpr.overview.maxpat" ]
 	}
 
 }

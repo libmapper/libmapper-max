@@ -13,16 +13,16 @@ This software is licensed under the GNU Lesser Public General License version 2.
 
 ## Building
 
-To build on OSX, you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library.
-
 ### MacOS
 
-You can then build all the binaries by running the script `package-osx.sh` from the command-line:
+On MacOS you can then all the externals by running the script `package-osx.sh` from the command-line:
 
 ```
 ./macos-build.sh
 
 ```
+
+This script will first download the Max SDK, and download and build the library dependencies (liblo, libmapper) as "universal binaries" (x86_64_apple_darwin and aarch64-apple-darwin).
 
 Once the script has run the externals will be found in /dist/Max and dist/pd.
 
@@ -31,6 +31,8 @@ Once the script has run the externals will be found in /dist/Max and dist/pd.
 For Windows machines, run the `./windows_build.ps1` script in this repository's root from powershell. The script will download and install the libmapper and liblo dependencies and build the externals. To use the Max externals on Windows, you'll need to copy the libmapper, liblo and zlib dll's into `C:\Program Files\Cycling '74\Max 8` or equivalent on your machine.
 
 ### Linux
+
+Before building you will first need to install [libmapper][1] and [liblo][2] from their respective repositories. An installation of liblo < v0.30 is not sufficient, as libmapper depends on new functionality in the library.
 
 Since Max is not available for Linux only the Pd bindings can be built. A makefile is included in the `mapper` directory:
 
