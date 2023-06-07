@@ -38,7 +38,7 @@ add_library(
 
 include(${MAX_SDK_DIR}/script/max-posttarget.cmake)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Liblo_LIB})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Liblo_LIB} iphlpapi.lib)
 
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:MSVCRTD")
