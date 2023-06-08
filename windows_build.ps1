@@ -70,6 +70,7 @@ cp ./build/Debug/mapper.mxe64 ./dist/max-8/Mapper/externals/mapper.mxe64
 cp ./build/Debug/mpr.device.mxe64 ./dist/max-8/Mapper/externals/mpr.device.mxe64
 cp ./build/Debug/mpr.in.mxe64 ./dist/max-8/Mapper/externals/mpr.in.mxe64
 cp ./build/Debug/mpr.out.mxe64 ./dist/max-8/Mapper/externals/mpr.out.mxe64
+cp ./build/Debug/oscmulticast.mxe64 ./dist/max-8/Mapper/externals/oscmulticast.mxe64
 cp ./build/mapper/Debug/mapper.dll ./dist/pure-data/mapper.dll
 
 # Copy the help and docs
@@ -78,6 +79,7 @@ cp ./mapper/sample_device_definition.json ./dist/max-8/Mapper/media/
 cp ./mpr.device/mpr.device.maxhelp ./dist/max-8/Mapper/help/
 cp ./mpr.in/mpr.in.maxhelp ./dist/max-8/Mapper/help/
 cp ./mpr.out/mpr.out.maxhelp ./dist/max-8/Mapper/help/
+cp ./oscmulticast/oscmulticast.maxhelp ./dist/max-8/Mapper/help/
 cp ./maxdist/docs/refpages/* ./dist/max-8/Mapper/docs/
 cp ./mapper/mapper.help.pd ./dist/pure-data/help
 
