@@ -178,7 +178,7 @@ static void *mpr_device_new(t_symbol *s, int argc, t_atom *argv)
 
         x->device = mpr_dev_new(x->name, 0);
         if (!x->device) {
-            object_post((t_object *)x, "error initializing libmpr device.");
+            object_post((t_object *)x, "error initializing libmapper device.");
             return 0;
         }
         x->graph = mpr_obj_get_graph(x->device);
@@ -191,7 +191,7 @@ static void *mpr_device_new(t_symbol *s, int argc, t_atom *argv)
             return 0;
         }
 
-        object_post((t_object *)x, "Using libmpr version %s – visit libmapper.org"
+        object_post((t_object *)x, "Using libmapper version %s – visit libmapper.org"
                     " for more information.", mpr_get_version());
         object_post((t_object *)x, "Connecting to network interface %s...",
                     mpr_graph_get_interface(x->graph));
@@ -641,7 +641,7 @@ static void mpr_device_sig_handler(mpr_sig sig, mpr_sig_evt evt, mpr_id inst, in
 }
 
 // *********************************************************
-// -(poll libmpr)-------------------------------------------
+// -(poll libmapper)----------------------------------------
 static void mpr_device_poll(t_mpr_device *x)
 {
     int count = x->throttle;
