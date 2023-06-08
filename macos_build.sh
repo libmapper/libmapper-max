@@ -12,6 +12,7 @@ mkdir ./dist/Max/Mapper/media
 mkdir ./dist/Max/Mapper/support
 mkdir ./dist/pd
 mkdir ./dist/pd/mapper
+mkdir ./dist/pd/mapper/libs
 
 cp AUTHORS ./dist/
 cp COPYING ./dist/
@@ -81,10 +82,10 @@ else
         echo libmapper already downloaded
     else
         echo downloading libmapper...
-        curl -L -O https://github.com/libmapper/libmapper/releases/download/2.4.1/libmapper-2.4.tar.gz
-        tar -xzf libmapper-2.4.tar.gz
-        rm libmapper-2.4.tar.gz
-        mv libmapper-2.4 libmapper
+        curl -L -O https://github.com/libmapper/libmapper/archive/refs/tags/2.4.1.tar.gz
+        tar -xzf 2.4.1.tar.gz
+        rm 2.4.1.tar.gz
+        mv libmapper-2.4.1 libmapper
     fi
     cd libmapper
     echo building libmapper: arm
@@ -147,14 +148,21 @@ echo building externals
 cmake ..
 cmake --build .
 
-echo bundling dylibs
-./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mapper.mxo/Contents/MacOS/mapper -d ./mapper.mxo/Contents/libs/
-./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.device.mxo/Contents/MacOS/mpr.device -d ./mpr.device.mxo/Contents/libs/
-./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.in.mxo/Contents/MacOS/mpr.in -d ./mpr.in.mxo/Contents/libs/
-./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./mpr.out.mxo/Contents/MacOS/mpr.out -d ./mpr.out.mxo/Contents/libs/
-./../dylibbundler/dylibbundler -cd -b -p '@loader_path/../libs/' -x ./oscmulticast.mxo/Contents/MacOS/oscmulticast -d ./oscmulticast.mxo/Contents/libs/
+echo replacing Info.plist
+cp ../mapper/Info.plist mapper.mxo/Contents/Info.plist
+cp ../mpr.device/Info.plist mpr.device.mxo/Contents/Info.plist
+cp ../mpr.in/Info.plist mpr.in.mxo/Contents/Info.plist
+cp ../mpr.out/Info.plist mpr.out.mxo/Contents/Info.plist
+cp ../oscmulticast/Info.plist oscmulticast.mxo/Contents/Info.plist
 
-echo copying files to dist
+echo copy dylibs to dist
+cp ./inst/lib/liblo.7.dylib ../dist/Max/Mapper/support/
+cp ./inst/lib/libmapper.11.dylib ../dist/Max/Mapper/support/
+
+cp ./inst/lib/liblo.7.dylib ../dist/pd/mapper/libs/
+cp ./inst/lib/libmapper.11.dylib ../dist/pd/mapper/libs/
+
+echo copying externals to dist
 mv mapper/Debug/mapper.pd_darwin ../dist/pd/mapper/
 cp ../mapper/mapper.help.pd ../dist/pd/mapper/
 
@@ -173,5 +181,16 @@ cp ../mpr.out/mpr.out.maxhelp ../dist/Max/Mapper/help/
 
 mv oscmulticast.mxo ../dist/Max/Mapper/externals
 cp ../oscmulticast/oscmulticast.maxhelp ../dist/Max/Mapper/help/
+
+echo bundling dylibs
+cd ../
+./dylibbundler/dylibbundler -cd -p '@loader_path/../../../../support/' -x ./dist/Max/Mapper/externals/mapper.mxo/Contents/MacOS/mapper -d ./dist/Max/Mapper/support/
+./dylibbundler/dylibbundler -cd -p '@loader_path/../../../../support/' -x ./dist/Max/Mapper/externals/mpr.device.mxo/Contents/MacOS/mpr.device -d ./dist/Max/Mapper/support/
+./dylibbundler/dylibbundler -cd -p '@loader_path/../../../../support/' -x ./dist/Max/Mapper/externals/mpr.in.mxo/Contents/MacOS/mpr.in -d ./dist/Max/Mapper/support/
+./dylibbundler/dylibbundler -cd -p '@loader_path/../../../../support/' -x ./dist/Max/Mapper/externals/mpr.out.mxo/Contents/MacOS/mpr.out -d ./dist/Max/Mapper/support/
+./dylibbundler/dylibbundler -cd -p '@loader_path/../../../../support/' -x ./dist/Max/Mapper/externals/oscmulticast.mxo/Contents/MacOS/oscmulticast -d ./dist/Max/Mapper/support/
+
+./dylibbundler/dylibbundler -cd -p '@loader_path/libs/' -x ./dist/pd/mapper/mapper.pd_darwin -d ./dist/pd/mapper/libs/
+cd ..
 
 echo Done.
