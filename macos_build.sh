@@ -112,12 +112,6 @@ else
     cd ../..
 fi
 
-# download Max SDK
-# copy source files in SDK source path
-# run Max script to make externals
-# copy dylibs & fix lib paths?
-# sign the externals?
-
 if [ -d "./max-sdk" ]
 then
     echo Max SDK already downloaded
@@ -139,7 +133,7 @@ else
     mv pure-data-0.52-2 pure-data
 fi
 
-if [ "./../dylibbundler/dylibbundler" ]
+if [ -f "./../dylibbundler/dylibbundler" ]
 then
     echo dylibbundler already built
 else
