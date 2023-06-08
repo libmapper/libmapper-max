@@ -33,15 +33,21 @@ fi
 cd ./build
 mkdir inst
 
-if [ -d "./liblo" ]
+if [ -f "./inst/lib/liblo.7.dylib" ]
 then
-    echo liblo already built
+    echo liblo already installed
 else
-    echo downloading liblo...
-    curl -L -O https://downloads.sourceforge.net/project/liblo/liblo/0.31/liblo-0.31.tar.gz
-    tar -xzf liblo-0.31.tar.gz
-    rm liblo-0.31.tar.gz
-    mv liblo-0.31 liblo
+    echo installing liblo
+    if [ -d "./liblo" ]
+    then
+        echo liblo already downloaded
+    else
+        echo downloading liblo...
+        curl -L -O https://downloads.sourceforge.net/project/liblo/liblo/0.31/liblo-0.31.tar.gz
+        tar -xzf liblo-0.31.tar.gz
+        rm liblo-0.31.tar.gz
+        mv liblo-0.31 liblo
+    fi
     cd ./liblo
     echo build liblo: arm
     (./configure CFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -fPIC" CXXFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin" --build=x86_64-apple-darwin19.6.0 --host=aarch64-apple-darwin --prefix=$PWD/../inst --disable-tests --disable-tools --disable-examples || (cat config.log; false))
@@ -63,17 +69,24 @@ else
     cd ../..
 fi
 
-if [ -d "./libmapper" ]
-then
-    echo libmapper already built
-else
-    echo downloading libmapper...
-    curl -L -O https://github.com/libmapper/libmapper/releases/download/2.4.1/libmapper-2.4.tar.gz
-    tar -xzf libmapper-2.4.tar.gz
-    rm libmapper-2.4.tar.gz
-    mv libmapper-2.4 libmapper
-    cd libmapper
+echo PWD: $PWD
 
+if [ -f "./inst/lib/libmapper.11.dylib" ]
+then
+    echo libmapper already installed
+else
+    echo installing libmapper
+    if [ -d "./libmapper" ]
+    then
+        echo libmapper already downloaded
+    else
+        echo downloading libmapper...
+        curl -L -O https://github.com/libmapper/libmapper/releases/download/2.4.1/libmapper-2.4.tar.gz
+        tar -xzf libmapper-2.4.tar.gz
+        rm libmapper-2.4.tar.gz
+        mv libmapper-2.4 libmapper
+    fi
+    cd libmapper
     echo building libmapper: arm
     ./autogen.sh CFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin" CXXFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin" --build=x86_64-apple-darwin19.6.0 --host=aarch64-apple-darwin --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig
     make install
@@ -166,7 +179,5 @@ cp ../mpr.out/mpr.out.maxhelp ../dist/Max/Mapper/help/
 
 mv oscmulticast.mxo ../dist/Max/Mapper/externals
 cp ../oscmulticast/oscmulticast.maxhelp ../dist/Max/Mapper/help/
-
-#sign externals
 
 echo Done.
