@@ -100,7 +100,7 @@ else
 
     echo building libmapper: x86_64
     make clean
-    ./autogen.sh --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig --disable-python --disable-java --disable-csharp --disable-examples --disable-docs --disable-tests
+    ./autogen.sh --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig --disable-python --disable-java --disable-csharp --disable-audio --disable-docs --disable-tests
     make install
     mv ./../inst/lib/libmapper.11.dylib ./../inst/lib/libmapper.11.dylib.x86_64
     echo libmapper: building universal binary
