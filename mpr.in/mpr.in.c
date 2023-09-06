@@ -455,7 +455,7 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                         mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, 1, MPR_STR, value, 1);
                     }
                     else {
-                        char *value = malloc(length);
+                        const char **value = malloc(length * sizeof(const char*));
                         for (j = 0; j < length; j++)
                             value[j] = atom_get_string(argv + i + j);
                         mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_STR, &value, 1);
