@@ -54,7 +54,7 @@ else
     (./configure CFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -fPIC" CXXFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin" --build=x86_64-apple-darwin19.6.0 --host=aarch64-apple-darwin --prefix=$PWD/../inst --disable-tests --disable-tools --disable-examples || (cat config.log; false))
     make install
     cd src
-    gcc -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -o .libs/liblo.7.dylib  .libs/liblo_la-address.o .libs/liblo_la-send.o .libs/liblo_la-message.o .libs/liblo_la-server.o .libs/liblo_la-method.o .libs/liblo_la-blob.o .libs/liblo_la-bundle.o .libs/liblo_la-timetag.o .libs/liblo_la-pattern_match.o .libs/liblo_la-version.o .libs/liblo_la-server_thread.o -O0 -g -install_name  ../inst/lib/liblo.7.dylib -compatibility_version 12 -current_version 12.1 -Wl,-single_module
+    gcc -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -o .libs/liblo.7.dylib  .libs/liblo_la-address.o .libs/liblo_la-send.o .libs/liblo_la-message.o .libs/liblo_la-server.o .libs/liblo_la-method.o .libs/liblo_la-blob.o .libs/liblo_la-bundle.o .libs/liblo_la-timetag.o .libs/liblo_la-pattern_match.o .libs/liblo_la-version.o .libs/liblo_la-server_thread.o -O0 -g -install_name  ../inst/lib/liblo.7.dylib -Wl,-single_module
     cd ..
     mv ./src/.libs/liblo.7.dylib ./../inst/lib/liblo.7.dylib.arm64
     echo build liblo: x86_64
@@ -82,10 +82,10 @@ else
         echo libmapper already downloaded
     else
         echo downloading libmapper...
-        curl -L -O https://github.com/libmapper/libmapper/archive/refs/tags/2.4.1.tar.gz
-        tar -xzf 2.4.1.tar.gz
-        rm 2.4.1.tar.gz
-        mv libmapper-2.4.1 libmapper
+        curl -L -O https://github.com/libmapper/libmapper/archive/refs/tags/2.4.3.tar.gz
+        tar -xzf 2.4.3.tar.gz
+        rm 2.4.3.tar.gz
+        mv libmapper-2.4.3 libmapper
     fi
     cd libmapper
     echo building libmapper: arm
@@ -93,7 +93,7 @@ else
     make install
     echo trying to fix error
     cd ./src/.libs
-    clang -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -o libmapper.11.dylib libmapper_la-device.o libmapper_la-expression.o libmapper_la-graph.o libmapper_la-link.o libmapper_la-list.o libmapper_la-map.o libmapper_la-message.o libmapper_la-network.o libmapper_la-object.o libmapper_la-path.o libmapper_la-property.o libmapper_la-signal.o libmapper_la-slot.o libmapper_la-table.o libmapper_la-time.o libmapper_la-mpr_set_coerced.o libmapper_la-value.o -L$PWD/../../../inst/lib $PWD/../../../inst/lib/liblo.dylib -lz -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -install_name $PWD/../../../inst/lib/libmapper.11.dylib -compatibility_version 10 -current_version 10.0 -Wl,-single_module
+    clang -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -o libmapper.11.dylib libmapper_la-device.o libmapper_la-expression.o libmapper_la-graph.o libmapper_la-link.o libmapper_la-list.o libmapper_la-map.o libmapper_la-message.o libmapper_la-network.o libmapper_la-object.o libmapper_la-path.o libmapper_la-property.o libmapper_la-signal.o libmapper_la-slot.o libmapper_la-table.o libmapper_la-time.o libmapper_la-mpr_set_coerced.o libmapper_la-value.o -L$PWD/../../../inst/lib $PWD/../../../inst/lib/liblo.dylib -lz -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -install_name $PWD/../../../inst/lib/libmapper.11.dylib -Wl,-single_module
     cd ../..
     mv ./src/.libs/libmapper.11.dylib ./../inst/lib/libmapper.11.dylib.arm64
     file ./../inst/lib/libmapper.11.dylib.arm64
