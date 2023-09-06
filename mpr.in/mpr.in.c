@@ -535,8 +535,7 @@ static void mpr_in_int(t_sig *x, long l)
         mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
         critical_exit(0);
     }
-    x->buffer.ints[0] = l;
-    outlet_list(x->outlet, NULL, 1, x->buffer);
+    outlet_int(x->outlet, l);
 }
 
 // *********************************************************
@@ -548,8 +547,7 @@ static void mpr_in_float(t_sig *x, double d)
         mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
         critical_exit(0);
     }
-    x->buffer.floats[0] = d;
-    outlet_list(x->outlet, NULL, 1, x->buffer);
+    outlet_float(x->outlet, d);
 }
 
 // *********************************************************
