@@ -530,79 +530,80 @@ static int check_ptrs(t_sig *x)
 // -(int input)---------------------------------------------
 static void mpr_in_int(t_sig *x, long l)
 {
-    if (check_ptrs(x))
-        return;
-
-    critical_enter(0);
-    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
-    critical_exit(0);
+    if (!check_ptrs(x)) {
+        critical_enter(0);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
+        critical_exit(0);
+    }
+    x->buffer.ints[0] = l;
+    outlet_list(x->outlet, NULL, 1, x->buffer);
 }
 
 // *********************************************************
 // -(float input)-------------------------------------------
 static void mpr_in_float(t_sig *x, double d)
 {
-    if (check_ptrs(x))
-        return;
-
-    critical_enter(0);
-    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
-    critical_exit(0);
+    if (!check_ptrs(x)) {
+        critical_enter(0);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
+        critical_exit(0);
+    }
+    x->buffer.floats[0] = d;
+    outlet_list(x->outlet, NULL, 1, x->buffer);
 }
 
 // *********************************************************
 // -(list input)--------------------------------------------
 static void mpr_in_list(t_sig *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i, j;
-
-    if (check_ptrs(x) || !argc)
-        return;
-
-    if (x->type == 'i') {
-        int *payload = x->buffer.ints;
-        for (i = 0, j = 0; i < x->sig_length; i++, j++) {
-            if (j >= argc)
-                j = 0;
-            switch ((argv + j)->a_type) {
-                case A_FLOAT:
-                    payload[i] = (int)atom_getfloat(argv + j);
-                    break;
-                case A_LONG:
-                    payload[i] = (int)atom_getlong(argv + j);
-                    break;
-                default:
-                    object_post((t_object*) x, "Illegal data type in list!");
-                    return;
+    if (!check_ptrs(x) && argc) {
+        if (x->type == 'i') {
+            int i, j, *payload = x->buffer.ints;
+            for (i = 0, j = 0; i < x->sig_length; i++, j++) {
+                if (j >= argc)
+                    j = 0;
+                switch ((argv + j)->a_type) {
+                    case A_FLOAT:
+                        payload[i] = (int)atom_getfloat(argv + j);
+                        break;
+                    case A_LONG:
+                        payload[i] = (int)atom_getlong(argv + j);
+                        break;
+                    default:
+                        object_post((t_object*) x, "Illegal data type in list!");
+                        return;
+                }
             }
+            //update signal
+            critical_enter(0);
+            mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, payload);
+            critical_exit(0);
         }
-        //update signal
-        critical_enter(0);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, payload);
-        critical_exit(0);
-    }
-    else if (x->type == 'f') {
-        float *payload = x->buffer.floats;
-        for (i = 0, j = 0; i < x->sig_length; i++) {
-            if (j >= argc)
-                j = 0;
-            switch ((argv + i)->a_type) {
-                case A_FLOAT:
-                    payload[i] = atom_getfloat(argv + i);
-                    break;
-                case A_LONG:
-                    payload[i] = (float)atom_getlong(argv + i);
-                    break;
-                default:
-                    object_post((t_object*) x, "Illegal data type in list!");
-                    return;
+        else if (x->type == 'f') {
+            int i, j;
+            float *payload = x->buffer.floats;
+            for (i = 0, j = 0; i < x->sig_length; i++) {
+                if (j >= argc)
+                    j = 0;
+                switch ((argv + i)->a_type) {
+                    case A_FLOAT:
+                        payload[i] = atom_getfloat(argv + i);
+                        break;
+                    case A_LONG:
+                        payload[i] = (float)atom_getlong(argv + i);
+                        break;
+                    default:
+                        object_post((t_object*) x, "Illegal data type in list!");
+                        return;
+                }
             }
+            //update signal
+            critical_enter(0);
+            mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, payload);
+            critical_exit(0);
         }
-        //update signal
-        critical_enter(0);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, payload);
-        critical_exit(0);
     }
+    outlet_list(x->outlet, NULL, argc, argv);
 }
 
 // *********************************************************
