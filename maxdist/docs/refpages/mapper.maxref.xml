@@ -13,7 +13,7 @@
 	<!--METADATA-->
 	<metadatalist>
 		<metadata name="author">Joseph Malloch</metadata>
-		<metadata name="copyright">© 2006 - 2020 Joseph Malloch</metadata>
+		<metadata name="copyright">© 2006 - 2023 Joseph Malloch</metadata>
 		<metadata name="version">1.0</metadata>
         <metadata name="tag">libmapper</metadata>
         <metadata name="tag">GEM Lab</metadata>
