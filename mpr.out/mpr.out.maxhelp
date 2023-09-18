@@ -2,13 +2,14 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 7,
-			"minor" : 3,
-			"revision" : 5,
-			"architecture" : "x86",
+			"major" : 8,
+			"minor" : 5,
+			"revision" : 6,
+			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
+		"classnamespace" : "box",
 		"rect" : [ 222.0, 262.0, 576.0, 443.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -20,7 +21,7 @@
 		"gridsnaponopen" : 1,
 		"objectsnaponopen" : 1,
 		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
+		"toolbarvisible" : 0,
 		"lefttoolbarpinned" : 0,
 		"toptoolbarpinned" : 0,
 		"righttoolbarpinned" : 0,
@@ -38,6 +39,7 @@
 		"subpatcher_template" : "",
 		"showrootpatcherontab" : 0,
 		"showontab" : 0,
+		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
 					"id" : "obj-2",
@@ -47,13 +49,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 576.0, 417.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -82,6 +85,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [  ],
 						"lines" : [  ]
 					}
@@ -91,11 +95,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p ?"
 				}
 
@@ -109,13 +111,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 222.0, 288.0, 576.0, 417.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -144,6 +147,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"fontface" : 1,
@@ -154,7 +158,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.out"
 								}
 
@@ -169,7 +172,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper output signal."
 								}
 
@@ -182,6 +184,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -213,7 +216,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -228,7 +230,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 135.0, 315.0, 230.0, 57.0 ],
-									"style" : "",
 									"text" : "There needs to be a mpr.device object somewhere in the patcher, or in a parent patcher."
 								}
 
@@ -244,7 +245,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 315.0, 69.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.device"
 								}
 
@@ -259,8 +259,7 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 135.0, 165.0, 50.0, 22.0 ],
-									"style" : ""
+									"patching_rect" : [ 135.0, 165.0, 50.0, 22.0 ]
 								}
 
 							}
@@ -275,8 +274,7 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 45.0, 165.0, 50.0, 22.0 ],
-									"style" : ""
+									"patching_rect" : [ 45.0, 165.0, 50.0, 22.0 ]
 								}
 
 							}
@@ -291,7 +289,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 135.0, 195.0, 77.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out bar i"
 								}
 
@@ -307,7 +304,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 195.0, 77.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out foo f"
 								}
 
@@ -322,7 +318,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 225.0, 165.0, 282.0, 107.0 ],
-									"style" : "",
 									"text" : "The mpr.in object creates a discoverable, dynamically-mappable output in your patch.\n\nMapping connections can be created, edited, and destroyed using OSC messages or graphical interfaces."
 								}
 
@@ -358,11 +353,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p basic"
 				}
 
@@ -376,13 +369,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 576.0, 417.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -411,6 +405,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"fontface" : 1,
@@ -421,7 +416,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.out"
 								}
 
@@ -436,7 +430,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper output signal."
 								}
 
@@ -449,6 +442,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -480,7 +474,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -495,7 +488,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 45.0, 331.0, 480.0, 40.0 ],
-									"style" : "",
 									"text" : "Tip #2: You can use \"polyindex\" as the instance id if your patch will be instantiated inside a poly or poly~ object and it will be replaced automatically."
 								}
 
@@ -510,7 +502,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 45.0, 240.0, 480.0, 40.0 ],
-									"style" : "",
 									"text" : "Tip #1: For mpr.in instances that will be instantiated in abstractions, you can simply use the #0 argument to get a unique instance id."
 								}
 
@@ -526,7 +517,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 375.0, 191.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out foo f @instance polyindex"
 								}
 
@@ -542,7 +532,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 285.0, 154.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out foo f @instance #0"
 								}
 
@@ -558,7 +547,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 195.0, 195.0, 161.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out foo f @instance 876"
 								}
 
@@ -574,7 +562,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 195.0, 147.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out foo f @instance 0"
 								}
 
@@ -589,7 +576,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 45.0, 135.0, 480.0, 57.0 ],
-									"style" : "",
 									"text" : "The mpr.out object supports multiple instances of the same named signal – simply provide an @instance id. The index ids can be any integer and do not need to be sequential."
 								}
 
@@ -604,7 +590,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 30.0, 90.0, 94.0, 28.0 ],
-									"style" : "",
 									"text" : "Instances:"
 								}
 
@@ -626,11 +611,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p instances"
 				}
 
@@ -646,13 +629,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 576.0, 417.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -681,6 +665,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"fontface" : 1,
@@ -691,7 +676,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 30.0, 90.0, 135.0, 28.0 ],
-									"style" : "",
 									"text" : "Metadata:"
 								}
 
@@ -706,7 +690,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.out"
 								}
 
@@ -721,7 +704,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper output signal."
 								}
 
@@ -734,6 +716,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -765,7 +748,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -780,7 +762,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 45.0, 150.0, 278.0, 107.0 ],
-									"style" : "",
 									"text" : "Labelling your object with metadata helps with mapping later – for example, if you provide ranges libmapper can automatically set up linear scaling for new maps. Feel free to add any metadata you think might be useful."
 								}
 
@@ -796,7 +777,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 270.0, 293.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out frequency f @unit Hz @min 20 @max 20000"
 								}
 
@@ -818,18 +798,24 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p metadata"
 				}
 
 			}
  ],
 		"lines" : [  ],
-		"dependency_cache" : [],
+		"dependency_cache" : [ 			{
+				"name" : "mpr.device.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "mpr.out.mxo",
+				"type" : "iLaX"
+			}
+ ],
 		"autosave" : 0
 	}
 

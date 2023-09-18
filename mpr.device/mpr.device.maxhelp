@@ -2,14 +2,15 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 7,
-			"minor" : 3,
-			"revision" : 5,
-			"architecture" : "x86",
+			"major" : 8,
+			"minor" : 5,
+			"revision" : 6,
+			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 665.0, 285.0, 616.0, 514.0 ],
+		"classnamespace" : "box",
+		"rect" : [ 219.0, 280.0, 616.0, 514.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -20,7 +21,7 @@
 		"gridsnaponopen" : 2,
 		"objectsnaponopen" : 1,
 		"statusbarvisible" : 2,
-		"toolbarvisible" : 1,
+		"toolbarvisible" : 0,
 		"lefttoolbarpinned" : 0,
 		"toptoolbarpinned" : 0,
 		"righttoolbarpinned" : 0,
@@ -38,6 +39,7 @@
 		"subpatcher_template" : "",
 		"showrootpatcherontab" : 0,
 		"showontab" : 0,
+		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
 					"id" : "obj-1",
@@ -47,13 +49,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -82,6 +85,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"fontname" : "Lato Light",
@@ -92,7 +96,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 285.0, 135.0, 255.0, 40.0 ],
-									"style" : "",
 									"text" : "Clicking on these buttons edits the map. Try writing your own expression!"
 								}
 
@@ -105,7 +108,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 450.0, 180.0, 80.0, 22.0 ],
-									"style" : "",
 									"text" : "y=(x*2)%127"
 								}
 
@@ -118,7 +120,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 332.0, 180.0, 30.0, 22.0 ],
-									"style" : "",
 									"text" : "y=x"
 								}
 
@@ -131,7 +132,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 375.0, 180.0, 54.0, 22.0 ],
-									"style" : "",
 									"text" : "y=127-x"
 								}
 
@@ -144,7 +144,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 285.0, 180.0, 37.0, 22.0 ],
-									"style" : "",
 									"text" : "none"
 								}
 
@@ -158,13 +157,14 @@
 									"patcher" : 									{
 										"fileversion" : 1,
 										"appversion" : 										{
-											"major" : 7,
-											"minor" : 3,
-											"revision" : 5,
-											"architecture" : "x86",
+											"major" : 8,
+											"minor" : 5,
+											"revision" : 6,
+											"architecture" : "x64",
 											"modernui" : 1
 										}
 ,
+										"classnamespace" : "box",
 										"rect" : [ 59.0, 104.0, 422.0, 389.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
@@ -192,6 +192,7 @@
 										"tags" : "",
 										"style" : "",
 										"subpatcher_template" : "",
+										"assistshowspatchername" : 0,
 										"boxes" : [ 											{
 												"box" : 												{
 													"id" : "obj-21",
@@ -200,7 +201,6 @@
 													"numoutlets" : 2,
 													"outlettype" : [ "", "" ],
 													"patching_rect" : [ 30.0, 270.0, 49.0, 22.0 ],
-													"style" : "",
 													"text" : "zl reg"
 												}
 
@@ -216,7 +216,6 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 60.0, 120.0, 60.0, 49.0 ],
-													"style" : "",
 													"text" : "/unmap $1/foo -> $1/bar"
 												}
 
@@ -229,7 +228,6 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 135.0, 120.0, 93.0, 22.0 ],
-													"style" : "",
 													"text" : "prepend @expr"
 												}
 
@@ -242,7 +240,6 @@
 													"numoutlets" : 2,
 													"outlettype" : [ "bang", "" ],
 													"patching_rect" : [ 30.0, 75.0, 124.0, 22.0 ],
-													"style" : "",
 													"text" : "sel none"
 												}
 
@@ -255,7 +252,6 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "bang" ],
 													"patching_rect" : [ 180.0, 195.0, 60.0, 22.0 ],
-													"style" : "",
 													"text" : "loadbang"
 												}
 
@@ -268,7 +264,6 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 180.0, 225.0, 92.0, 22.0 ],
-													"style" : "",
 													"text" : "@expr y=127-x"
 												}
 
@@ -282,8 +277,7 @@
 													"numinlets" : 0,
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
-													"patching_rect" : [ 30.0, 30.0, 30.0, 30.0 ],
-													"style" : ""
+													"patching_rect" : [ 30.0, 30.0, 30.0, 30.0 ]
 												}
 
 											}
@@ -295,7 +289,6 @@
 													"numoutlets" : 2,
 													"outlettype" : [ "bang", "" ],
 													"patching_rect" : [ 135.0, 150.0, 45.0, 22.0 ],
-													"style" : "",
 													"text" : "t b l"
 												}
 
@@ -308,7 +301,6 @@
 													"numoutlets" : 2,
 													"outlettype" : [ "", "" ],
 													"patching_rect" : [ 135.0, 270.0, 45.0, 22.0 ],
-													"style" : "",
 													"text" : "zl join"
 												}
 
@@ -321,7 +313,6 @@
 													"numoutlets" : 2,
 													"outlettype" : [ "", "" ],
 													"patching_rect" : [ 255.0, 75.0, 71.0, 22.0 ],
-													"style" : "",
 													"text" : "route name"
 												}
 
@@ -336,7 +327,6 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 255.0, 120.0, 126.0, 22.0 ],
-													"style" : "",
 													"text" : "/map $1/foo -> $1/bar"
 												}
 
@@ -352,7 +342,6 @@
 													"numoutlets" : 3,
 													"outlettype" : [ "list", "list", "list" ],
 													"patching_rect" : [ 30.0, 315.0, 242.0, 22.0 ],
-													"style" : "",
 													"text" : "oscmulticast @group 224.0.1.3 @port 7570"
 												}
 
@@ -366,8 +355,7 @@
 													"numinlets" : 0,
 													"numoutlets" : 1,
 													"outlettype" : [ "list" ],
-													"patching_rect" : [ 255.0, 30.0, 30.0, 30.0 ],
-													"style" : ""
+													"patching_rect" : [ 255.0, 30.0, 30.0, 30.0 ]
 												}
 
 											}
@@ -501,11 +489,9 @@
 										"description" : "",
 										"digest" : "",
 										"globalpatchername" : "",
-										"style" : "",
 										"tags" : ""
 									}
 ,
-									"style" : "",
 									"text" : "p map"
 								}
 
@@ -518,8 +504,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 45.0, 195.0, 180.0, 45.0 ],
-									"style" : ""
+									"patching_rect" : [ 45.0, 195.0, 180.0, 45.0 ]
 								}
 
 							}
@@ -534,7 +519,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 255.0, 77.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.out foo f"
 								}
 
@@ -547,8 +531,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 45.0, 360.0, 180.0, 45.0 ],
-									"style" : ""
+									"patching_rect" : [ 45.0, 360.0, 180.0, 45.0 ]
 								}
 
 							}
@@ -563,7 +546,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 330.0, 71.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.in bar f"
 								}
 
@@ -578,7 +560,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 270.0, 330.0, 316.0, 124.0 ],
-									"style" : "",
 									"text" : "In a real mapping scenario this editing would likely be done using a mapping GUI such as WebMapper, and the source and destination signals could belong to devices in other Max patches or implemented in Pure Data, C/C++, Python, SuperCollider, etc. These devices could be located on other computers on your local network."
 								}
 
@@ -594,7 +575,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 315.0, 225.0, 117.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.device example"
 								}
 
@@ -609,7 +589,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.device"
 								}
 
@@ -624,7 +603,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper device."
 								}
 
@@ -637,6 +615,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -668,7 +647,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -682,7 +660,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 30.0, 105.0, 150.0, 20.0 ],
-									"style" : "",
 									"text" : "Simple mapping example:"
 								}
 
@@ -756,11 +733,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p example"
 				}
 
@@ -774,13 +749,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -809,6 +785,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"fontname" : "Lato Light",
@@ -818,8 +795,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 360.0, 225.0, 203.0, 107.0 ],
-									"style" : "",
+									"patching_rect" : [ 360.0, 225.0, 207.0, 107.0 ],
 									"text" : "Your can label object with arbitrary metadata to distinguish it from other devices or to stay organized. Feel free to add any metadata you think might be useful."
 								}
 
@@ -834,7 +810,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 45.0, 225.0, 119.0, 22.0 ],
-									"style" : "",
 									"text" : "loadmess refer info2"
 								}
 
@@ -872,7 +847,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 45.0, 165.0, 85.0, 22.0 ],
-									"style" : "",
 									"text" : "prepend store"
 								}
 
@@ -888,10 +862,10 @@
 									"outlettype" : [ "", "", "", "" ],
 									"patching_rect" : [ 45.0, 195.0, 68.0, 22.0 ],
 									"saved_object_attributes" : 									{
-										"embed" : 0
+										"embed" : 0,
+										"precision" : 6
 									}
 ,
-									"style" : "",
 									"text" : "coll info2 1"
 								}
 
@@ -907,7 +881,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 135.0, 310.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.device my_device @location lab1 @projectid 12345"
 								}
 
@@ -922,7 +895,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.device"
 								}
 
@@ -937,7 +909,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper device."
 								}
 
@@ -950,6 +921,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -981,7 +953,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -995,7 +966,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 30.0, 105.0, 150.0, 20.0 ],
-									"style" : "",
 									"text" : "Metadata:"
 								}
 
@@ -1038,11 +1008,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p metadata"
 				}
 
@@ -1056,13 +1024,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -1091,6 +1060,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"id" : "obj-5",
@@ -1099,7 +1069,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 45.0, 270.0, 50.0, 22.0 ],
-									"style" : "",
 									"text" : "en0"
 								}
 
@@ -1114,7 +1083,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.device"
 								}
 
@@ -1129,7 +1097,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper device."
 								}
 
@@ -1142,6 +1109,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -1173,7 +1141,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -1188,7 +1155,6 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "" ],
 									"patching_rect" : [ 45.0, 210.0, 87.0, 22.0 ],
-									"style" : "",
 									"text" : "route interface"
 								}
 
@@ -1204,7 +1170,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 180.0, 214.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.device my_device @interface en0"
 								}
 
@@ -1219,7 +1184,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 315.0, 180.0, 243.0, 127.0 ],
-									"style" : "",
 									"text" : "By default the mpr.device object will try to use your computer's ethernet port, then wifi if ethernet is not available, and finally falling back to the local-loopback interfaces if wifi is not available either.\n\nThe default behaviour can be over-ridden by specifying the network interface to use as an argument:"
 								}
 
@@ -1233,7 +1197,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 30.0, 105.0, 150.0, 20.0 ],
-									"style" : "",
 									"text" : "Network interfaces:"
 								}
 
@@ -1269,11 +1232,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p \"network interface\""
 				}
 
@@ -1287,13 +1248,14 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
+						"classnamespace" : "box",
 						"rect" : [ 0.0, 26.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
@@ -1322,6 +1284,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [  ],
 						"lines" : [  ]
 					}
@@ -1331,11 +1294,9 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p ?"
 				}
 
@@ -1349,14 +1310,15 @@
 					"patcher" : 					{
 						"fileversion" : 1,
 						"appversion" : 						{
-							"major" : 7,
-							"minor" : 3,
-							"revision" : 5,
-							"architecture" : "x86",
+							"major" : 8,
+							"minor" : 5,
+							"revision" : 6,
+							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 665.0, 311.0, 616.0, 488.0 ],
+						"classnamespace" : "box",
+						"rect" : [ 219.0, 306.0, 616.0, 488.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1367,7 +1329,7 @@
 						"gridsnaponopen" : 2,
 						"objectsnaponopen" : 1,
 						"statusbarvisible" : 2,
-						"toolbarvisible" : 1,
+						"toolbarvisible" : 0,
 						"lefttoolbarpinned" : 0,
 						"toptoolbarpinned" : 0,
 						"righttoolbarpinned" : 0,
@@ -1384,6 +1346,7 @@
 						"style" : "",
 						"subpatcher_template" : "",
 						"showontab" : 1,
+						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
 									"fontname" : "Arial",
@@ -1394,7 +1357,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 45.0, 210.0, 113.0, 22.0 ],
-									"style" : "",
 									"text" : "loadmess refer info"
 								}
 
@@ -1432,7 +1394,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 45.0, 150.0, 85.0, 22.0 ],
-									"style" : "",
 									"text" : "prepend store"
 								}
 
@@ -1448,10 +1409,10 @@
 									"outlettype" : [ "", "", "", "" ],
 									"patching_rect" : [ 45.0, 180.0, 61.0, 22.0 ],
 									"saved_object_attributes" : 									{
-										"embed" : 0
+										"embed" : 0,
+										"precision" : 6
 									}
 ,
-									"style" : "",
 									"text" : "coll info 1"
 								}
 
@@ -1467,7 +1428,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
 									"patching_rect" : [ 45.0, 120.0, 129.0, 22.0 ],
-									"style" : "",
 									"text" : "mpr.device my_device"
 								}
 
@@ -1482,7 +1442,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 330.0, 120.0, 270.0, 275.0 ],
-									"style" : "",
 									"text" : "The mpr.device object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata\n\nAdd inputs and outputs to your device using the mpr.in and mpr.out objects. These inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
 								}
 
@@ -1497,7 +1456,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-									"style" : "",
 									"text" : "mpr.device"
 								}
 
@@ -1512,7 +1470,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 84.0, 59.0, 272.0, 23.0 ],
-									"style" : "",
 									"text" : "A libmapper device."
 								}
 
@@ -1525,6 +1482,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
+									"parameter_enable" : 0,
 									"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
 								}
 
@@ -1556,7 +1514,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
-									"style" : "",
 									"text" : ";\rmax launchbrowser http://libmapper.org"
 								}
 
@@ -1599,18 +1556,32 @@
 						"description" : "",
 						"digest" : "",
 						"globalpatchername" : "",
-						"style" : "",
 						"tags" : ""
 					}
 ,
-					"style" : "",
 					"text" : "p basic"
 				}
 
 			}
  ],
 		"lines" : [  ],
-		"dependency_cache" : [],
+		"dependency_cache" : [ 			{
+				"name" : "mpr.device.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "mpr.in.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "mpr.out.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "oscmulticast.mxo",
+				"type" : "iLaX"
+			}
+ ],
 		"autosave" : 0
 	}
 
