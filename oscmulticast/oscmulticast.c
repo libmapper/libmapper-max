@@ -490,7 +490,7 @@ static void oscmulticast_port(t_oscmulticast *x, t_symbol *s, int argc, t_atom *
     }
 #endif
 
-    if (x->port) {
+    if (x->port[0]) {
         if (strcmp(x->port, port)==0)
             return;
     }
@@ -592,11 +592,6 @@ int generic_handler(const char *path, const char *types, lo_arg ** argv,
     char my_string[2];
 
     j=0;
-
-    if (!x->buffer) {
-        post("oscmulticast: error receiving message!");
-        return 0;
-    }
 
     lo_address address = lo_message_get_source(msg);
     if (address) {
