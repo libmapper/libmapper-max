@@ -97,24 +97,32 @@ else
     fi
     cd libmapper
     echo building libmapper: arm
+    make clean
     ./autogen.sh CFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -mmacosx-version-min=10.10" CXXFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -mmacosx-version-min=10.10" LDFLAGS="-mmacosx-version-min=10.10" --build=x86_64-apple-darwin19.6.0 --host=aarch64-apple-darwin --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig --disable-python --disable-java --disable-csharp --disable-audio --disable-docs --disable-tests
     make install
-    echo trying to fix error
-    cd ./src/.libs
-    gcc -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -o libmapper.11.dylib libmapper_la-device.o libmapper_la-expression.o libmapper_la-graph.o libmapper_la-link.o libmapper_la-list.o libmapper_la-map.o libmapper_la-message.o libmapper_la-network.o libmapper_la-object.o libmapper_la-path.o libmapper_la-property.o libmapper_la-signal.o libmapper_la-slot.o libmapper_la-table.o libmapper_la-time.o libmapper_la-mpr_set_coerced.o libmapper_la-value.o -L$PWD/../../../inst/lib $PWD/../../../inst/lib/liblo.dylib -lz -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -install_name $PWD/../../../inst/lib/libmapper.11.dylib -Wl,-single_module
-    cd ../..
+    if [ "$(uname -m)" != "arm64" ]
+    then
+        echo fixing cross-compilation error for target arm64
+        cd ./src/.libs
+        gcc -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=arm64-apple-darwin -o libmapper.11.dylib libmapper_la-device.o libmapper_la-expression.o libmapper_la-graph.o libmapper_la-link.o libmapper_la-list.o libmapper_la-map.o libmapper_la-message.o libmapper_la-network.o libmapper_la-object.o libmapper_la-path.o libmapper_la-property.o libmapper_la-signal.o libmapper_la-slot.o libmapper_la-table.o libmapper_la-time.o libmapper_la-mpr_set_coerced.o libmapper_la-value.o -L$PWD/../../../inst/lib $PWD/../../../inst/lib/liblo.dylib -lz -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -install_name $PWD/../../../inst/lib/libmapper.11.dylib -Wl,-single_module
+        cd ../..
+    fi
     mv ./src/.libs/libmapper.11.dylib ./../inst/lib/libmapper.11.dylib.arm64
     file ./../inst/lib/libmapper.11.dylib.arm64
 
     echo building libmapper: x86_64
     make clean
-#    ./autogen.sh --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig --disable-python --disable-java --disable-csharp --disable-audio --disable-docs --disable-tests
-    ./configure CFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=x86_64-apple-darwin -mmacosx-version-min=10.10" CXXFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=x86_64-apple-darwin -mmacosx-version-min=10.10" LDFLAGS="-mmacosx-version-min=10.10" --build=arm-apple-darwin --host=x86_64-apple-darwin --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig --disable-python --disable-java --disable-csharp --disable-audio --disable-docs --disable-tests
+    ./autogen.sh CFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=x86_64-apple-darwin -mmacosx-version-min=10.10" CXXFLAGS="-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=x86_64-apple-darwin -mmacosx-version-min=10.10" LDFLAGS="-mmacosx-version-min=10.10" --build=arm-apple-darwin --host=x86_64-apple-darwin --prefix=$PWD/../inst PKG_CONFIG_PATH=$PWD/../inst/lib/pkgconfig --disable-python --disable-java --disable-csharp --disable-audio --disable-docs --disable-tests
     make install
-    cd ./src/.libs
-    gcc -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=x86_64-apple-darwin -o libmapper.11.dylib libmapper_la-device.o libmapper_la-expression.o libmapper_la-graph.o libmapper_la-link.o libmapper_la-list.o libmapper_la-map.o libmapper_la-message.o libmapper_la-network.o libmapper_la-object.o libmapper_la-path.o libmapper_la-property.o libmapper_la-signal.o libmapper_la-slot.o libmapper_la-table.o libmapper_la-time.o libmapper_la-mpr_set_coerced.o libmapper_la-value.o -L$PWD/../../../inst/lib $PWD/../../../inst/lib/liblo.dylib -lz -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -install_name $PWD/../../../inst/lib/libmapper.11.dylib -Wl,-single_module
-    cd ../..
+    if [ "$(uname -m)" != "x86_64" ]
+    then
+        echo fixing cross-compilation error for target x86_64
+        cd ./src/.libs
+        gcc -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk --target=x86_64-apple-darwin -o libmapper.11.dylib libmapper_la-device.o libmapper_la-expression.o libmapper_la-graph.o libmapper_la-link.o libmapper_la-list.o libmapper_la-map.o libmapper_la-message.o libmapper_la-network.o libmapper_la-object.o libmapper_la-path.o libmapper_la-property.o libmapper_la-signal.o libmapper_la-slot.o libmapper_la-table.o libmapper_la-time.o libmapper_la-mpr_set_coerced.o libmapper_la-value.o -L$PWD/../../../inst/lib $PWD/../../../inst/lib/liblo.dylib -lz -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -install_name $PWD/../../../inst/lib/libmapper.11.dylib -Wl,-single_module
+        cd ../..
+    fi
     mv ./src/.libs/libmapper.11.dylib ./../inst/lib/libmapper.11.dylib.x86_64
+    file ./../inst/lib/libmapper.11.dylib.x86_64
     echo libmapper: building universal binary
     cd ./../inst/lib
     file ./libmapper.11.dylib.arm64
@@ -149,15 +157,15 @@ else
     mv pure-data-0.52-2 pure-data
 fi
 
-if [ -f "./../dylibbundler/dylibbundler" ]
-then
-    echo dylibbundler already built
-else
-    echo building dylibbundler
-    cd ./../dylibbundler
-    make
-    cd ../build
-fi
+#if [ -f "./../dylibbundler/dylibbundler" ]
+#then
+#    echo dylibbundler already built
+#else
+#    echo building dylibbundler
+#    cd ./../dylibbundler
+#    make
+#    cd ../build
+#fi
 
 echo building externals
 cmake ..
