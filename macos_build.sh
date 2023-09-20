@@ -91,10 +91,10 @@ else
         echo libmapper already downloaded
     else
         echo downloading libmapper...
-        curl -L -O https://github.com/libmapper/libmapper/archive/refs/tags/2.4.3.tar.gz
-        tar -xzf 2.4.3.tar.gz
-        rm 2.4.3.tar.gz
-        mv libmapper-2.4.3 libmapper
+        curl -L -O https://github.com/libmapper/libmapper/archive/refs/tags/2.4.4.tar.gz
+        tar -xzf 2.4.4.tar.gz
+        rm 2.4.4.tar.gz
+        mv libmapper-2.4.4 libmapper
     fi
     cd libmapper
     echo building libmapper: arm
@@ -152,10 +152,10 @@ then
     echo Pure Data already downloaded
 else
     echo downloading Pure Data
-    curl -L -O https://github.com/pure-data/pure-data/archive/refs/tags/0.52-2.zip
-    unzip 0.52-2.zip
-    rm 0.52-2.zip
-    mv pure-data-0.52-2 pure-data
+    curl -L -O https://github.com/pure-data/pure-data/archive/refs/tags/0.54-0.zip
+    unzip 0.54-0.zip
+    rm 0.54-0.zip
+    mv pure-data-0.54-0 pure-data
 fi
 
 #if [ -f "./../dylibbundler/dylibbundler" ]
