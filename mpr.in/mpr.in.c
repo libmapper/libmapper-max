@@ -60,6 +60,7 @@ typedef struct _sig
     long                connect_state;
     int                 length;
     char                type;
+    char                thru;
 } t_sig;
 
 typedef struct _mpr_ptrs
@@ -82,6 +83,7 @@ static void mpr_in_loadbang(t_sig *x);
 static void mpr_in_int(t_sig *x, long i);
 static void mpr_in_float(t_sig *x, double f);
 static void mpr_in_list(t_sig *x, t_symbol *s, int argc, t_atom *argv);
+static void mpr_in_value_set(t_sig *x, t_symbol *s, int argc, t_atom *argv);
 static void mpr_in_release(t_sig *x);
 static void mpr_in_anything(t_sig *x, t_symbol *s, int argc, t_atom *argv);
 
@@ -117,6 +119,7 @@ int main(void)
     class_addmethod(c, (method)mpr_in_int, "int", A_LONG, 0);
     class_addmethod(c, (method)mpr_in_float, "float", A_FLOAT, 0);
     class_addmethod(c, (method)mpr_in_list, "list", A_GIMME, 0);
+    class_addmethod(c, (method)mpr_in_value_set, "set", A_GIMME, 0);
     class_addmethod(c, (method)mpr_in_release, "release", 0);
     class_addmethod(c, (method)mpr_in_anything, "anything", A_GIMME, 0);
     class_addmethod(c, (method)add_to_hashtab, "add_to_hashtab", A_CANT, 0);
@@ -132,6 +135,9 @@ int main(void)
 
     CLASS_ATTR_LONG(c, "instance", 0, t_sig, instance_id);
     CLASS_ATTR_ACCESSORS(c, "instance", (method)mpr_in_instance_get, (method)mpr_in_instance_set);
+
+    CLASS_ATTR_CHAR(c, "thru", 0, t_sig, thru);
+    CLASS_ATTR_STYLE_LABEL(c, "thru", 0, "onoff", "thru");
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mpr_in_class = c;
@@ -175,6 +181,7 @@ static void *mpr_in_new(t_symbol *s, int argc, t_atom *argv)
         x->instance_id = 0;
         x->is_instanced = 0;
         x->connect_state = 0;
+        x->thru = 0;
 
         if (argc >= 3 && (argv + 2)->a_type == A_LONG) {
             x->sig_length = atom_getlong(argv + 2);
@@ -465,6 +472,11 @@ void parse_extra_properties(t_sig *x, t_symbol *s, int argc, t_atom *argv)
                     break;
             }
         }
+        else if (strcmp(prop_name, "thru") == 0) {
+            if (type == A_LONG || type == A_FLOAT) {
+                x->thru = atom_coerce_int(argv + i);
+            }
+        }
         else {
             switch (type) {
                 case A_SYM: {
@@ -553,7 +565,8 @@ static void mpr_in_int(t_sig *x, long l)
         mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
         critical_exit(0);
     }
-    outlet_int(x->outlet, l);
+    if (x->thru)
+        outlet_int(x->outlet, l);
 }
 
 // *********************************************************
@@ -565,7 +578,8 @@ static void mpr_in_float(t_sig *x, double d)
         mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
         critical_exit(0);
     }
-    outlet_float(x->outlet, d);
+    if (x->thru)
+        outlet_float(x->outlet, d);
 }
 
 // *********************************************************
@@ -619,7 +633,18 @@ static void mpr_in_list(t_sig *x, t_symbol *s, int argc, t_atom *argv)
             critical_exit(0);
         }
     }
-    outlet_list(x->outlet, NULL, argc, argv);
+    if (x->thru)
+        outlet_list(x->outlet, NULL, argc, argv);
+}
+
+// *********************************************************
+// -(set)---------------------------------------------------
+static void mpr_in_value_set(t_sig *x, t_symbol *s, int argc, t_atom *argv)
+{
+    char temp = x->thru;
+    x->thru = 0;
+    mpr_in_list(x, NULL, argc, argv);
+    x->thru = temp;
 }
 
 // *********************************************************
