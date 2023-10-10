@@ -4,7 +4,7 @@
 
 Released 20 September 2023
 
-This release is built against libmapper version 2.4.1. It also includes the following improvements:
+This release is built against libmapper version 2.4.4. It also includes the following improvements:
 
 - Improvements to help patchers.
 - The `mpr.in` object now echoes its input to its outlet (e.g. when setting the value using a locally-generated update).
