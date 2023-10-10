@@ -133,6 +133,7 @@ int main(void)
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
 
+    /* Using CLASS_ATTR_LONG here causes Windows build to fail */
     CLASS_ATTR_ATOM_LONG(c, "instance", 0, t_sig, instance_id);
     CLASS_ATTR_ACCESSORS(c, "instance", (method)mpr_in_instance_get, (method)mpr_in_instance_set);
 
