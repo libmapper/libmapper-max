@@ -130,8 +130,8 @@ int main(void)
     CLASS_ATTR_OBJ(c, "sig_ptr", ATTR_GET_OPAQUE_USER | ATTR_SET_OPAQUE_USER, t_sig, sig_ptr);
     CLASS_ATTR_ACCESSORS(c, "sig_ptr", 0, set_sig_ptr);
 
-    CLASS_ATTR_ATOM_LONG(c, "instance", 0, t_sig, instance_id);
-    CLASS_ATTR_ACCESSORS(c, "instance", mpr_out_instance_get, mpr_out_instance_set);
+    CLASS_ATTR_LONG(c, "instance", 0, t_sig, instance_id);
+    CLASS_ATTR_ACCESSORS(c, "instance", (method)mpr_out_instance_get, (method)mpr_out_instance_set);
 
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     mpr_out_class = c;
@@ -297,36 +297,54 @@ void remove_from_hashtab(t_sig *x)
 
 // *********************************************************
 // -(parse props from object arguments)---------------------
-void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
+void parse_extra_properties(t_sig *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i, j, k, length, heterogeneous_types, ephem_set = 0;
+    int i, length, heterogeneous_types, ephem_set = 0;
     const char *prop_name;
-    char type;
+    char type, remove_at = (s == NULL);
 
     // try to parse atom array as list of properties in form @key [value]
     for (i = 0; i < argc;) {
-        if (i > argc - 2) // need at least 2 arguments for key and value
-            break;
-        else if ((argv + i)->a_type != A_SYM) {
-            ++i;
-            continue;
+        if (s) {
+            if (argc < 1)
+                return;
+            prop_name = s->s_name;
         }
-        prop_name = atom_get_string(argv + i);
+        else {
+            if (i > argc - 2) // need at least 2 arguments for key and value
+                break;
+            else if ((argv + i)->a_type != A_SYM) {
+                ++i;
+                continue;
+            }
+            prop_name = atom_get_string(argv + i);
+        }
+
+        if (remove_at) {
+            if (prop_name[0] != '@')
+                continue;
+            // ignore leading '@'
+            ++prop_name;
+        }
+        else if (prop_name[0] == '@') {
+            object_error((t_object *) x, "doesn't understand \"%s\"", prop_name);
+            return;
+        }
 
         // ignore some properties
-        if (   (prop_name[0] != '@')
-            || (strcmp(prop_name, "@name") == 0)
-            || (strcmp(prop_name, "@type") == 0)
-            || (strcmp(prop_name, "@length") == 0)) {
+        if (   (strcmp(prop_name, "name") == 0)
+            || (strcmp(prop_name, "type") == 0)
+            || (strcmp(prop_name, "length") == 0)) {
+            object_error((t_object *) x, "Cannot edit static property '%s'", prop_name);
             ++i;
             continue;
         }
 
-        // ignore leading '@'
-        ++prop_name;
-
         // advance to first value atom
-        ++i;
+        if (s)
+            s = NULL;
+        else
+            ++i;
 
         // find length and type of property value
         length = 0;
@@ -353,11 +371,11 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
         }
 
         if (length <= 0) {
-            object_post((t_object*) x, "value missing for property %s", prop_name);
+            object_error((t_object*) x, "value missing for property %s", prop_name);
             continue;
         }
         if (heterogeneous_types == 2) {
-            object_post((t_object*) x, "only numeric types may be mixed in property values!");
+            object_error((t_object*) x, "only numeric types may be mixed in property values!");
             i += length;
             continue;
         }
@@ -380,14 +398,14 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                 x->instance_id = atom_getlong(argv + i);
             }
             else {
-                object_post((t_object*) x, "instance value must be an integer or 'polyindex'");
+                object_error((t_object*) x, "instance value must be an integer or 'polyindex'");
                 i += length;
                 continue;
             }
             x->is_instanced = 1;
             if (!ephem_set) {
-                j = 1;
-                mpr_obj_set_prop((mpr_obj) x->sig_ptr, MPR_PROP_EPHEM, NULL, 1, MPR_BOOL, &j, 1);
+                int ephem = 1;
+                mpr_obj_set_prop((mpr_obj) x->sig_ptr, MPR_PROP_EPHEM, NULL, 1, MPR_BOOL, &ephem, 1);
             }
             t_sig_ptrs *ptrs = mpr_sig_get_inst_data(x->sig_ptr, x->instance_id);
             if (!ptrs) {
@@ -408,8 +426,8 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                 i += length;
                 continue;
             }
-            j = atom_coerce_int(argv + i) != 0;
-            mpr_obj_set_prop((mpr_obj) x->sig_ptr, MPR_PROP_EPHEM, NULL, 1, MPR_BOOL, &j, 1);
+            int ephem = atom_coerce_int(argv + i) != 0;
+            mpr_obj_set_prop((mpr_obj) x->sig_ptr, MPR_PROP_EPHEM, NULL, 1, MPR_BOOL, &ephem, 1);
             ephem_set = 1;
         }
         else if (   strcmp(prop_name, "minimum") == 0 || strcmp(prop_name, "min") == 0
@@ -423,7 +441,7 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
             switch (x->sig_type) {
                 case 'i': {
                     int *val = malloc(x->sig_length * sizeof(int));
-                    for (j = 0, k = 0; j < x->sig_length; j++, k++) {
+                    for (int j = 0, k = 0; j < x->sig_length; j++, k++) {
                         if (k >= length)
                             k = 0;
                         val[j] = atom_coerce_int(argv + i + k);
@@ -434,7 +452,7 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                 }
                 case 'f': {
                     float *val = malloc(x->sig_length * sizeof(float));
-                    for (j = 0, k = 0; j < x->sig_length; j++, k++) {
+                    for (int j = 0, k = 0; j < x->sig_length; j++, k++) {
                         if (k >= length)
                             k = 0;
                         val[j] = atom_coerce_float(argv + i + k);
@@ -456,7 +474,7 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                     }
                     else {
                         const char **value = malloc(length * sizeof(const char*));
-                        for (j = 0; j < length; j++)
+                        for (int j = 0; j < length; j++)
                             value[j] = atom_get_string(argv + i + j);
                         mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_STR, &value, 1);
                         free(value);
@@ -465,7 +483,7 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                 }
                 case A_FLOAT: {
                     float *value = malloc(length * sizeof(float));
-                    for (j = 0; j < length; j++)
+                    for (int j = 0; j < length; j++)
                         value[j] = atom_coerce_float(argv + i + j);
                     mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_FLT, value, 1);
                     free(value);
@@ -473,7 +491,7 @@ void parse_extra_properties(t_sig *x, int argc, t_atom *argv)
                 }
                 case A_LONG: {
                     int *value = malloc(length * sizeof(int));
-                    for (j = 0; j < length; j++)
+                    for (int j = 0; j < length; j++)
                         value[j] = atom_coerce_int(argv + i + j);
                     mpr_obj_set_prop(x->sig_ptr, MPR_PROP_UNKNOWN, prop_name, length, MPR_INT32, value, 1);
                     free(value);
@@ -507,7 +525,7 @@ t_max_err set_sig_ptr(t_sig *x, t_object *attr, long argc, t_atom *argv)
         long num_atoms;
         t_atom *atoms;
         atomarray_getatoms(x->args, &num_atoms, &atoms);
-        parse_extra_properties(x, num_atoms, atoms);
+        parse_extra_properties(x, NULL, num_atoms, atoms);
     }
     return 0;
 }
@@ -530,78 +548,74 @@ static int check_ptrs(t_sig *x)
 // -(int input)---------------------------------------------
 static void mpr_out_int(t_sig *x, long l)
 {
-    if (check_ptrs(x))
-        return;
-
-    critical_enter(0);
-    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
-    critical_exit(0);
+    if (!check_ptrs(x)) {
+        critical_enter(0);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_INT32, &l);
+        critical_exit(0);
+    }
 }
 
 // *********************************************************
 // -(float input)-------------------------------------------
 static void mpr_out_float(t_sig *x, double d)
 {
-    if (check_ptrs(x))
-        return;
-
-    critical_enter(0);
-    mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
-    critical_exit(0);
+    if (!check_ptrs(x)) {
+        critical_enter(0);
+        mpr_sig_set_value(x->sig_ptr, x->instance_id, 1, MPR_DBL, &d);
+        critical_exit(0);
+    }
 }
 
 // *********************************************************
 // -(list input)--------------------------------------------
 static void mpr_out_list(t_sig *x, t_symbol *s, int argc, t_atom *argv)
 {
-    int i, j;
-
-    if (check_ptrs(x) || !argc)
-        return;
-
-    if (x->type == 'i') {
-        int *payload = x->buffer.ints;
-        for (i = 0, j = 0; i < x->sig_length; i++, j++) {
-            if (j >= argc)
-                j = 0;
-            switch ((argv + j)->a_type) {
-                case A_FLOAT:
-                    payload[i] = (int)atom_getfloat(argv + j);
-                    break;
-                case A_LONG:
-                    payload[i] = (int)atom_getlong(argv + j);
-                    break;
-                default:
-                    object_post((t_object*) x, "Illegal data type in list!");
-                    return;
+    if (!check_ptrs(x) && argc) {
+        if (x->type == 'i') {
+            int i, j, *payload = x->buffer.ints;
+            for (i = 0, j = 0; i < x->sig_length; i++, j++) {
+                if (j >= argc)
+                    j = 0;
+                switch ((argv + j)->a_type) {
+                    case A_FLOAT:
+                        payload[i] = (int)atom_getfloat(argv + j);
+                        break;
+                    case A_LONG:
+                        payload[i] = (int)atom_getlong(argv + j);
+                        break;
+                    default:
+                        object_error((t_object*) x, "Illegal data type in list!");
+                        return;
+                }
             }
+            //update signal
+            critical_enter(0);
+            mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, payload);
+            critical_exit(0);
         }
-        //update signal
-        critical_enter(0);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_INT32, payload);
-        critical_exit(0);
-    }
-    else if (x->type == 'f') {
-        float *payload = x->buffer.floats;
-        for (i = 0, j = 0; i < x->sig_length; i++) {
-            if (j >= argc)
-                j = 0;
-            switch ((argv + i)->a_type) {
-                case A_FLOAT:
-                    payload[i] = atom_getfloat(argv + i);
-                    break;
-                case A_LONG:
-                    payload[i] = (float)atom_getlong(argv + i);
-                    break;
-                default:
-                    object_post((t_object*) x, "Illegal data type in list!");
-                    return;
+        else if (x->type == 'f') {
+            int i, j;
+            float *payload = x->buffer.floats;
+            for (i = 0, j = 0; i < x->sig_length; i++) {
+                if (j >= argc)
+                    j = 0;
+                switch ((argv + i)->a_type) {
+                    case A_FLOAT:
+                        payload[i] = atom_getfloat(argv + i);
+                        break;
+                    case A_LONG:
+                        payload[i] = (float)atom_getlong(argv + i);
+                        break;
+                    default:
+                        object_error((t_object*) x, "Illegal data type in list!");
+                        return;
+                }
             }
+            //update signal
+            critical_enter(0);
+            mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, payload);
+            critical_exit(0);
         }
-        //update signal
-        critical_enter(0);
-        mpr_sig_set_value(x->sig_ptr, x->instance_id, argc, MPR_FLT, payload);
-        critical_exit(0);
     }
 }
 
@@ -611,11 +625,14 @@ static void mpr_out_anything(t_sig *x, t_symbol *s, int argc, t_atom *argv)
 {
     if (check_ptrs(x)) {
         // we need to cache any arguments to add later
+        t_atom a;
+        atom_setsym(&a, s);
+        atomarray_appendatoms(x->args, 1, &a);
         atomarray_appendatoms(x->args, argc, argv);
     }
     else {
         // we can call parse_extra_properties() immediately
-        parse_extra_properties(x, argc, argv);
+        parse_extra_properties(x, s, argc, argv);
     }
 }
 
