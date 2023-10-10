@@ -2,13 +2,14 @@
 	"patcher" : 	{
 		"fileversion" : 1,
 		"appversion" : 		{
-			"major" : 7,
-			"minor" : 3,
-			"revision" : 5,
-			"architecture" : "x86",
+			"major" : 8,
+			"minor" : 5,
+			"revision" : 6,
+			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
+		"classnamespace" : "box",
 		"rect" : [ 100.0, 100.0, 510.0, 514.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
@@ -36,7 +37,24 @@
 		"tags" : "",
 		"style" : "",
 		"subpatcher_template" : "",
+		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"border" : 0,
+					"filename" : "helpdetails.js",
+					"id" : "obj-16",
+					"ignoreclick" : 1,
+					"jsarguments" : [ "oscmulticast" ],
+					"maxclass" : "jsui",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 10.0, 10.0, 485.0, 110.0 ]
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
@@ -44,8 +62,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 142.0, 300.0, 63.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 142.0, 315.0, 63.0, 22.0 ],
 					"text" : "print reply"
 				}
 
@@ -59,9 +76,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 142.0, 270.0, 55.0, 22.0 ],
-					"presentation_rect" : [ 140.0, 269.0, 0.0, 0.0 ],
-					"style" : "",
+					"patching_rect" : [ 142.0, 285.0, 55.0, 22.0 ],
 					"text" : "prepend"
 				}
 
@@ -77,39 +92,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 285.0, 285.0, 220.0, 220.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 14.0,
-					"id" : "obj-3",
-					"linecount" : 2,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 0.0, 32.0, 491.0, 38.0 ],
-					"style" : "",
-					"text" : "Sends and receives Open Sound Control over multicast IP. Similar to the mxj objects net.multi.send/recv but doesn't garble OSC messages.",
-					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 3,
-					"fontsize" : 24.0,
-					"id" : "obj-18",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 0.0, 0.0, 510.0, 33.0 ],
-					"style" : "",
-					"text" : "oscmulticast",
-					"textcolor" : [ 1.0, 1.0, 1.0, 1.0 ],
-					"varname" : "autohelp_top_title[1]"
+					"patching_rect" : [ 330.0, 330.0, 160.0, 160.0 ]
 				}
 
 			}
@@ -121,8 +104,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 300.0, 85.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 30.0, 315.0, 85.0, 22.0 ],
 					"text" : "print multicast"
 				}
 
@@ -136,8 +118,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 255.0, 225.0, 90.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 255.0, 255.0, 90.0, 22.0 ],
 					"text" : "sprintf set %s •"
 				}
 
@@ -151,8 +132,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 270.0, 55.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 30.0, 285.0, 55.0, 22.0 ],
 					"text" : "prepend"
 				}
 
@@ -166,8 +146,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 255.0, 180.0, 79.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 255.0, 225.0, 79.0, 22.0 ],
 					"text" : "route symbol"
 				}
 
@@ -182,7 +161,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 121.0, 405.0, 76.0, 22.0 ],
-					"style" : "",
 					"text" : "interface lo0"
 				}
 
@@ -197,7 +175,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 31.0, 405.0, 80.0, 22.0 ],
-					"style" : "",
 					"text" : "interface en0"
 				}
 
@@ -212,7 +189,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 31.0, 360.0, 235.0, 33.0 ],
-					"style" : "",
 					"text" : "The network interface can be set with an argument or a message."
 				}
 
@@ -228,7 +204,6 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "list", "list", "list" ],
 					"patching_rect" : [ 31.0, 450.0, 189.0, 35.0 ],
-					"style" : "",
 					"text" : "oscmulticast @group 224.0.1.3 @port 7570 @interface lo0"
 				}
 
@@ -238,12 +213,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-10",
-					"linecount" : 3,
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 300.0, 90.0, 150.0, 47.0 ],
-					"style" : "",
+					"patching_rect" : [ 300.0, 135.0, 195.0, 33.0 ],
 					"text" : "This object requires the group and port attributes to be set."
 				}
 
@@ -259,8 +233,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 90.0, 50.0, 22.0 ],
-					"style" : ""
+					"patching_rect" : [ 30.0, 135.0, 50.0, 22.0 ]
 				}
 
 			}
@@ -273,8 +246,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 120.0, 123.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 30.0, 165.0, 123.0, 22.0 ],
 					"text" : "/send_some_data $1"
 				}
 
@@ -288,27 +260,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "list", "list", "list" ],
-					"patching_rect" : [ 30.0, 150.0, 244.0, 22.0 ],
-					"style" : "",
+					"patching_rect" : [ 30.0, 195.0, 244.0, 22.0 ],
 					"text" : "oscmulticast @group 224.0.1.3 @port 7570"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"angle" : 270.0,
-					"background" : 1,
-					"bgcolor" : [ 0.745098, 0.0, 0.0, 1.0 ],
-					"id" : "obj-23",
-					"maxclass" : "panel",
-					"mode" : 0,
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 0.0, 0.0, 510.0, 70.0 ],
-					"proportion" : 0.39,
-					"rounded" : 0,
-					"style" : "",
-					"varname" : "autohelp_top_panel[2]"
 				}
 
 			}
@@ -352,7 +305,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-15", 0 ],
-					"midpoints" : [ 324.5, 213.0, 264.5, 213.0 ],
+					"midpoints" : [ 324.5, 250.5, 264.5, 250.5 ],
 					"source" : [ "obj-13", 1 ]
 				}
 
@@ -374,7 +327,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-14", 0 ],
-					"midpoints" : [ 264.5, 258.0, 151.5, 258.0 ],
+					"midpoints" : [ 264.5, 280.5, 151.5, 280.5 ],
 					"order" : 0,
 					"source" : [ "obj-15", 0 ]
 				}
@@ -383,7 +336,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-6", 0 ],
-					"midpoints" : [ 264.5, 258.0, 39.5, 258.0 ],
+					"midpoints" : [ 264.5, 280.5, 39.5, 280.5 ],
 					"order" : 1,
 					"source" : [ "obj-15", 0 ]
 				}
@@ -412,6 +365,12 @@
 			}
  ],
 		"dependency_cache" : [ 			{
+				"name" : "helpdetails.js",
+				"bootpath" : "C74:/help/resources",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "oscmulticast.mxo",
 				"type" : "iLaX"
 			}

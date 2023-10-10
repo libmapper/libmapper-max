@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 214.0, 169.0, 679.0, 516.0 ],
+		"rect" : [ 100.0, 100.0, 679.0, 516.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -119,7 +119,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 214.0, 195.0, 679.0, 490.0 ],
+						"rect" : [ 100.0, 126.0, 679.0, 490.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -150,21 +150,50 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"fontname" : "Arial",
+									"fontsize" : 13.0,
+									"id" : "obj-22",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 34.0, 232.0, 135.0, 21.0 ],
+									"text" : "Device metadata"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"bgmode" : 0,
 									"border" : 0,
 									"clickthrough" : 0,
 									"enablehscroll" : 0,
 									"enablevscroll" : 0,
-									"id" : "obj-11",
+									"id" : "obj-2",
 									"lockeddragscroll" : 0,
 									"lockedsize" : 0,
 									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
+									"name" : "mpr.logolink.maxpat",
 									"numinlets" : 0,
 									"numoutlets" : 0,
 									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
+									"patching_rect" : [ 195.0, 10.0, 195.0, 60.0 ],
 									"viewvisibility" : 1
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"border" : 0,
+									"filename" : "helpdetails.js",
+									"id" : "obj-3",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mapper" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 637.0, 123.0 ]
 								}
 
 							}
@@ -176,7 +205,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 330.0, 375.0, 317.0, 23.0 ],
+									"patching_rect" : [ 330.0, 450.0, 317.0, 23.0 ],
 									"text" : "For more information visit www.libmapper.org"
 								}
 
@@ -190,7 +219,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 330.0, 120.0, 317.0, 57.0 ],
+									"patching_rect" : [ 330.0, 195.0, 317.0, 57.0 ],
 									"text" : "Note: the mapper object provides legacy support. More modern bindings are provided by the objects mpr.device, mpr.in, and mpr.out."
 								}
 
@@ -204,7 +233,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 330.0, 210.0, 315.0, 124.0 ],
+									"patching_rect" : [ 330.0, 285.0, 315.0, 124.0 ],
 									"text" : "The mapper object forms part of a distributed network of devices communicating over the local network. The inputs and outputs of each device can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces."
 								}
 
@@ -213,12 +242,13 @@
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
+									"hidden" : 1,
 									"id" : "obj-24",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 210.0, 113.0, 22.0 ],
+									"patching_rect" : [ 45.0, 225.0, 113.0, 22.0 ],
 									"text" : "loadmess refer info"
 								}
 
@@ -236,8 +266,8 @@
 									"numinlets" : 2,
 									"numoutlets" : 4,
 									"outlettype" : [ "list", "", "", "" ],
-									"patching_rect" : [ 45.0, 240.0, 255.0, 225.0 ],
-									"rows" : 7
+									"patching_rect" : [ 45.0, 255.0, 255.0, 210.0 ],
+									"rows" : 17
 								}
 
 							}
@@ -245,12 +275,13 @@
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
+									"hidden" : 1,
 									"id" : "obj-21",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 210.0, 165.0, 85.0, 22.0 ],
+									"patching_rect" : [ 240.0, 195.0, 85.0, 22.0 ],
 									"text" : "prepend store"
 								}
 
@@ -259,12 +290,13 @@
 								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
+									"hidden" : 1,
 									"id" : "obj-20",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
 									"numoutlets" : 4,
 									"outlettype" : [ "", "", "", "" ],
-									"patching_rect" : [ 210.0, 195.0, 61.0, 22.0 ],
+									"patching_rect" : [ 240.0, 225.0, 61.0, 22.0 ],
 									"saved_object_attributes" : 									{
 										"embed" : 0,
 										"precision" : 6
@@ -283,7 +315,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 45.0, 105.0, 59.0, 22.0 ],
+									"patching_rect" : [ 45.0, 165.0, 59.0, 22.0 ],
 									"text" : "r mapper"
 								}
 
@@ -298,7 +330,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 2,
 									"outlettype" : [ "list", "list" ],
-									"patching_rect" : [ 45.0, 135.0, 184.0, 22.0 ],
+									"patching_rect" : [ 45.0, 195.0, 150.0, 22.0 ],
 									"text" : "mapper @alias my_device"
 								}
 
@@ -314,6 +346,7 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-20", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-21", 0 ]
 								}
 
@@ -321,6 +354,7 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-23", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-24", 0 ]
 								}
 
@@ -328,6 +362,7 @@
 , 							{
 								"patchline" : 								{
 									"destination" : [ "obj-21", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-6", 1 ]
 								}
 
@@ -397,21 +432,17 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
 									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-11",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"filename" : "helpname.js",
+									"id" : "obj-1",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mapper" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 164.960006713867188, 57.599853515625 ]
 								}
 
 							}
@@ -576,21 +607,17 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
 									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-11",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"filename" : "helpname.js",
+									"id" : "obj-4",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mapper" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 164.960006713867188, 57.599853515625 ]
 								}
 
 							}
@@ -706,21 +733,17 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
 									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-1",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"filename" : "helpname.js",
+									"id" : "obj-4",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mapper" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 164.960006713867188, 57.599853515625 ]
 								}
 
 							}
@@ -1447,21 +1470,17 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
 									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-11",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"filename" : "helpname.js",
+									"id" : "obj-4",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mapper" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 164.960006713867188, 57.599853515625 ]
 								}
 
 							}
@@ -1643,21 +1662,17 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
 									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
+									"filename" : "helpname.js",
 									"id" : "obj-2",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mapper" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 164.960006713867188, 57.599853515625 ]
 								}
 
 							}
@@ -2071,13 +2086,25 @@
  ],
 		"lines" : [  ],
 		"dependency_cache" : [ 			{
+				"name" : "helpdetails.js",
+				"bootpath" : "C74:/help/resources",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "helpname.js",
+				"bootpath" : "C74:/help/resources",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "mapper.mxo",
 				"type" : "iLaX"
 			}
 , 			{
-				"name" : "mpr.header.maxpat",
-				"bootpath" : "~/Documents/Software2/libmapper-max",
-				"patcherrelativepath" : "..",
+				"name" : "mpr.logolink.maxpat",
+				"bootpath" : "~/Documents/Software2/libmapper-max/maxdist",
+				"patcherrelativepath" : "../maxdist",
 				"type" : "JSON",
 				"implicit" : 1
 			}

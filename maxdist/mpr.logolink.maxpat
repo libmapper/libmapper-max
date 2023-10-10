@@ -40,29 +40,14 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
-					"fontface" : 1,
-					"fontname" : "Lato Light",
-					"fontsize" : 36.0,
-					"id" : "obj-7",
+					"bubble" : 1,
+					"id" : "obj-2",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 84.0, 14.5, 272.0, 50.0 ],
-					"text" : "mapper"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 0,
-					"fontname" : "Lato Light",
-					"fontsize" : 14.0,
-					"id" : "obj-8",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 84.0, 59.0, 366.0, 23.0 ],
-					"text" : "A MaxMSP wrapper for libmapper/Digital Orchestra Tools"
+					"patching_rect" : [ 52.0, 6.5, 128.0, 37.0 ],
+					"text" : "Click the logo to visit libmapper.org"
 				}
 
 			}
@@ -77,7 +62,7 @@
 					"outlettype" : [ "bang", "bang", "", "int" ],
 					"parameter_enable" : 0,
 					"parameter_mappable" : 0,
-					"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ]
+					"patching_rect" : [ 0.0, 0.0, 50.0, 50.0 ]
 				}
 
 			}
@@ -91,7 +76,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 30.0, 30.0, 50.0, 50.0 ],
+					"patching_rect" : [ 0.0, 0.0, 50.0, 50.0 ],
 					"pic" : "Macintosh HD:/Users/malloch/Documents/Mappers/mapper-max-pd2/icons/icon.png"
 				}
 
@@ -107,7 +92,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 420.0, 30.0, 135.0, 52.0 ],
+					"patching_rect" : [ 0.0, 60.0, 135.0, 52.0 ],
 					"text" : ";\rmax launchbrowser http://libmapper.org"
 				}
 

@@ -23,7 +23,7 @@ cp README.markdown ./dist/Max/Mapper/readme.md
 cp COPYING ./dist/Max/Mapper/license.txt
 cp ./maxdist/mpr-objectmappings.txt ./dist/Max/Mapper/init/
 cp ./maxdist/mpr.overview.maxpat ./dist/Max/Mapper/extras/
-cp ./maxdist/mpr.header.maxpat ./dist/Max/Mapper/help/
+cp ./maxdist/mpr.logolink.maxpat ./dist/Max/Mapper/help/
 cp ./maxdist/package-info.json ./dist/Max/Mapper/
 cp -r ./maxdist/docs ./dist/Max/Mapper/
 cp -r ./maxdist/examples ./dist/Max/Mapper/

@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 222.0, 262.0, 576.0, 443.0 ],
+		"rect" : [ 461.0, 329.0, 576.0, 443.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -119,7 +119,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 222.0, 288.0, 576.0, 417.0 ],
+						"rect" : [ 461.0, 355.0, 576.0, 417.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -159,12 +159,28 @@
 									"lockeddragscroll" : 0,
 									"lockedsize" : 0,
 									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
+									"name" : "mpr.logolink.maxpat",
 									"numinlets" : 0,
 									"numoutlets" : 0,
 									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
+									"patching_rect" : [ 195.0, 10.0, 195.0, 60.0 ],
 									"viewvisibility" : 1
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"border" : 0,
+									"filename" : "helpdetails.js",
+									"id" : "obj-3",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mpr.out" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 530.0, 95.0 ]
 								}
 
 							}
@@ -348,21 +364,17 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
 									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-11",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
-									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"filename" : "helpname.js",
+									"id" : "obj-3",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mpr.out" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 169.472000122070312, 57.599853515625 ]
 								}
 
 							}
@@ -548,21 +560,44 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
-									"bgmode" : 0,
-									"border" : 0,
-									"clickthrough" : 0,
-									"enablehscroll" : 0,
-									"enablevscroll" : 0,
-									"id" : "obj-11",
-									"lockeddragscroll" : 0,
-									"lockedsize" : 0,
-									"maxclass" : "bpatcher",
-									"name" : "mpr.header.maxpat",
-									"numinlets" : 0,
+									"fontname" : "Lato Light",
+									"fontsize" : 14.0,
+									"id" : "obj-8",
+									"linecount" : 4,
+									"maxclass" : "comment",
+									"numinlets" : 1,
 									"numoutlets" : 0,
-									"offset" : [ 0.0, 0.0 ],
-									"patching_rect" : [ 0.0, 0.0, 450.0, 106.0 ],
-									"viewvisibility" : 1
+									"patching_rect" : [ 45.0, 150.0, 410.0, 74.0 ],
+									"text" : "Labelling your object with metadata helps with mapping later – for example, if you provide ranges libmapper can automatically set up linear scaling for new maps. Feel free to add any metadata you think might be useful."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontname" : "Lato Light",
+									"fontsize" : 14.0,
+									"id" : "obj-1",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 45.0, 285.0, 408.0, 23.0 ],
+									"text" : "Metadata can also be added and modified using messages."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"border" : 0,
+									"filename" : "helpname.js",
+									"id" : "obj-3",
+									"ignoreclick" : 1,
+									"jsarguments" : [ "mpr.out" ],
+									"maxclass" : "jsui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 10.0, 10.0, 169.472000122070312, 57.599853515625 ]
 								}
 
 							}
@@ -582,20 +617,6 @@
 							}
 , 							{
 								"box" : 								{
-									"fontname" : "Lato Light",
-									"fontsize" : 14.0,
-									"id" : "obj-8",
-									"linecount" : 6,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 45.0, 150.0, 278.0, 107.0 ],
-									"text" : "Labelling your object with metadata helps with mapping later – for example, if you provide ranges libmapper can automatically set up linear scaling for new maps. Feel free to add any metadata you think might be useful."
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"color" : [ 0.745098, 0.0, 0.0, 1.0 ],
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
@@ -604,7 +625,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "list" ],
-									"patching_rect" : [ 45.0, 270.0, 293.0, 22.0 ],
+									"patching_rect" : [ 45.0, 240.0, 293.0, 22.0 ],
 									"text" : "mpr.out frequency f @unit Hz @min 20 @max 20000"
 								}
 
@@ -628,13 +649,25 @@
  ],
 		"lines" : [  ],
 		"dependency_cache" : [ 			{
+				"name" : "helpdetails.js",
+				"bootpath" : "C74:/help/resources",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "helpname.js",
+				"bootpath" : "C74:/help/resources",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "mpr.device.mxo",
 				"type" : "iLaX"
 			}
 , 			{
-				"name" : "mpr.header.maxpat",
-				"bootpath" : "~/Documents/Software2/libmapper-max",
-				"patcherrelativepath" : "..",
+				"name" : "mpr.logolink.maxpat",
+				"bootpath" : "~/Documents/Software2/libmapper-max/maxdist",
+				"patcherrelativepath" : "../maxdist",
 				"type" : "JSON",
 				"implicit" : 1
 			}

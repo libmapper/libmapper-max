@@ -7,7 +7,7 @@
 		A Max wrapper for a libmapper device.
 	</digest>
 	<description>
-		The <o>mpr.device</o> object forms part of a distributed network of devices communicating over the local network. There are also bindings for creating such devices in C, Python, Pure Data, SuperCollider, Java/Processing, Arduino/Firmata
+        The <o>mpr.device</o> object forms part of a distributed network of devices communicating over the local network. If you add inputs (<o>mpr.in</o>) and/or outputs (<o>mpr.out</o>) to your patch they can be discovered and queried by other participants in the network, and mapping connections can be created, edited, and destroyed using messages or graphical interfaces.
 	</description>
 
 	<!--METADATA-->
