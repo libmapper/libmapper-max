@@ -665,6 +665,11 @@ t_max_err mpr_in_instance_get(t_sig *x, t_object *attr, long *argc, t_atom **arg
 t_max_err mpr_in_instance_set(t_sig *x, t_object *attr, long argc, t_atom *argv)
 {
     mpr_id instance_id = atom_coerce_int(argv);
+    if (check_ptrs(x)) {
+        object_error((t_object *) x, "not connected to mpr.device!");
+        return 0;
+    }
+
     if (x->is_instanced) {
         if (instance_id == x->instance_id)
             return 0;
