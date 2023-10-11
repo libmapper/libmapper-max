@@ -1,5 +1,18 @@
 # News
 
+## Version 2.4.4b
+
+Released 11 October 2023
+
+This release is built against libmapper version 2.4.4. It also includes the following improvements:
+
+- Fix for crash if the `instance` attribute was set on an unconnected `mpr.in` or `mpr.out` object, i.e. if no `mpr.device` object was present in the patcher or (grand)parent patcher.
+- Fix for parsing object metadata added using messages rather than object arguments.
+- Improvements to help patchers and documentation files.
+- The `mpr.in` object now has an attribute `thru` which controls whether input will be echoed to its outlet.
+- The `mpr.in` object now accepts a `set` message which will update the signal value without echoing to the object outlet, regardless of whether the `thru` attribute is set to `1`.
+- added `.plist` files for macOS externals.
+
 ## Version 2.4.4
 
 Released 20 September 2023
@@ -8,7 +21,7 @@ This release is built against libmapper version 2.4.4. It also includes the foll
 
 - Improvements to help patchers.
 - The `mpr.in` object now echoes its input to its outlet (e.g. when setting the value using a locally-generated update).
-- Fix for storing string list properties for `mpr.in` and `mpr.out` objects. 
+- Fix for storing string list properties for `mpr.in` and `mpr.out` objects.
 
 ## Version 2.4.1
 
